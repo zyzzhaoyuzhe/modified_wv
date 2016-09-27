@@ -105,7 +105,6 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
         if model.wPMI:
             inner = np.dot(l1, l2b.T)
             # get counts of contexts
@@ -114,12 +113,14 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             # joint counts of (w,c) from <w,c>
             jcounts = helpers.inner2prob(count_context, counts_word, model.cum_table[-1], inner)
             weight = len(model.vocab) ** 2 / model.cum_table[-1] * jcounts
-            # print weight
+            # calculate gradient
+            fb = 1. / (1. + np.exp(-1/weight*np.dot(l1, l2b.T)))  # propagate hidden -> output
             gb = (model.neg_labels - fb) * alpha * 1 / weight
             if model.neg_mean:
                 # use mean for negative sampling
                 gb = gb * model.neg_mean_weight
         else:
+            fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
             gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
 
         if learn_hidden:
