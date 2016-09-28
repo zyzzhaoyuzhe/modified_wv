@@ -16,7 +16,9 @@ from timeit import default_timer
 import helpers, mathhelpers
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s : %(levelname)s : %(message)s')
 logger = logging.getLogger(__name__)
+logger.setLevel(0)
 
 MAX_WORDS_IN_BATCH = 10000
 FAST_VERSION = -1
@@ -110,9 +112,14 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             # get counts of contexts
             count_context = model.vocab[model.index2word[context_index]].count
             counts_word = [model.vocab[model.index2word[idx]].count for idx in word_indices]
+            logger.debug("Show the max joint prob " + " ".join(str(e) for e in np.minimum(count_context, counts_word)))
+            logger.debug("show the inner prod " + " ".join(str(e) for e in inner))
             # joint counts of (w,c) from <w,c>
-            jcounts = helpers.inner2prob(count_context, counts_word, model.cum_table[-1], inner)
-            weight = len(model.vocab) ** 2 / model.cum_table[-1] * jcounts
+            C = len(model.vocab) ** 2
+            D = model.cum_table[-1]
+            jcounts = helpers.inner2prob(count_context, counts_word, D, C, inner)
+            weight = C / D * jcounts
+            logger.debug("Temperature " + " ".join(str(e) for e in weight))
             # calculate gradient
             fb = 1. / (1. + np.exp(-1/weight*np.dot(l1, l2b.T)))  # propagate hidden -> output
             gb = (model.neg_labels - fb) * alpha * 1 / weight
@@ -122,6 +129,8 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         else:
             fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
             gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
+
+        logger.debug("Show the gradient " + " ".join(str(e) for e in gb))
 
         if learn_hidden:
             model.syn1neg[word_indices] += np.outer(gb, l1)  # learn hidden -> output
@@ -168,7 +177,7 @@ class mWord2Vec():
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             negative=5, smooth_power=0.75, neg_mean=0, hashfxn=hash, epoch=5, null_word=0, wPMI=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            trim_rule=None, sorted_vocab=1, init="uniform", batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -242,6 +251,7 @@ class mWord2Vec():
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.vector_size = int(size)
         self.layer1_size = int(size)
+        self.weight_init = init
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
 
@@ -629,14 +639,15 @@ class mWord2Vec():
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # debug
-        # sentences, alpha = job_queue.get()
-        # tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
-
         example_count, trained_word_count, raw_word_count = 0, 0, word_count
         start, next_report = default_timer() - 0.00001, 1.0
 
         while unfinished_worker_count > 0:
+
+            # # debug
+            # sentences, alpha = job_queue.get()
+            # tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
+
             report = progress_queue.get()  # blocks if workers too slow
             if report is None:  # a thread reporting that it finished
                 unfinished_worker_count -= 1
@@ -821,7 +832,10 @@ class mWord2Vec():
         """Create one 'random' vector (but deterministic by seed_string)"""
         # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
         once = np.random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
-        return (once.rand(self.vector_size) - 0.5) / self.vector_size
+        if self.weight_init == "uniform":
+            return (once.rand(self.vector_size) - 0.5) / self.vector_size
+        elif self.weight_init == "gaussian":
+            return once.normal(size=self.vector_size) / self.vector_size
 
     def init_sims(self, replace=False):
         """

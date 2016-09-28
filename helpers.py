@@ -9,19 +9,20 @@ def sigma(x):
     return 1 / (1 + np.exp(-x))
 
 
-def inner2prob(count_c, count_w, D, inner, niter=3):
+def inner2prob(count_c, count_w, D, C, inner, niter=3):
     """
-    Use newtown method to convert embedding vectors inner product to joint probability.
-    :param count_c: input of the network that is always a scalar.
-    :param count_w: output of the network that outputs positive contexts and negtive contexts. An array.
+
+    :param count_c:
+    :param count_w:
     :param D:
+    :param C:
     :param inner:
     :param niter:
     :return:
     """
     # print count_c, count_w, D, inner
     count_w = np.asarray(count_w)
-    jcount_m, m, M = inner_minmax(count_c, count_w, D)
+    jcount_m, m, M = inner_minmax(count_c, count_w, D, C)
     output = np.zeros(jcount_m.shape)
     idx1 = inner < m
     output[idx1] = jcount_m[idx1]
@@ -32,7 +33,7 @@ def inner2prob(count_c, count_w, D, inner, niter=3):
         pp = count_c * np.asarray(count_w[idx])
 
         def func(x):
-            return x - (x * np.log(x * D / pp) - np.asarray(inner[idx]) * D) / (np.log(x * D / pp) + 1)
+            return x - (x * np.log(x * D / pp) - np.asarray(inner[idx]) * D / C) / (np.log(x * D / pp) + 1)
 
         foo = np.minimum(count_c, count_w[idx])
         for i in range(niter):
@@ -41,12 +42,12 @@ def inner2prob(count_c, count_w, D, inner, niter=3):
     return output.astype(int)+1
 
 
-def inner_minmax(count_c, count_w, D):
+def inner_minmax(count_c, count_w, D, C):
     count_c = np.asarray(count_c)
     count_w = np.asarray(count_w)
 
     def func(x):
-        return x / D * np.log(x * D / count_c / count_w)
+        return x * C / D * np.log(x * D / count_c / count_w)
 
     foo = (count_c * count_w) / D * np.exp(-1)
     return (foo, func(foo), func(np.minimum(count_c, count_w)))
