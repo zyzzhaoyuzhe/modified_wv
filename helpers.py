@@ -47,6 +47,7 @@ def inner_minmax(count_c, count_w, D, C):
     count_w = np.asarray(count_w)
 
     def func(x):
+        # joint counts to inner product
         return x * C / D * np.log(x * D / count_c / count_w)
 
     foo = (count_c * count_w) / D * np.exp(-1)

@@ -21,132 +21,137 @@ logger = logging.getLogger(__name__)
 logger.setLevel(0)
 
 MAX_WORDS_IN_BATCH = 10000
-FAST_VERSION = -1
+try:
+    from mword2vec_inner import train_batch_sg
+    from mword2vec_inner import FAST_VERSION
+except ImportError:
+    FAST_VERSION = -1
 
 
-def train_batch_sg(model, sentences, alpha, work=None):
-    """
-    Update skip-gram model by training on a sequence of sentences.
+    def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
+                      context_vectors=None, context_locks=None):
+        if context_vectors is None:
+            context_vectors = model.syn0
+        if context_locks is None:
+            context_locks = model.syn0_lockf
 
-    Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from `Word2Vec.train()`.
+        if word not in model.vocab:
+            return
+        predict_word = model.vocab[word]  # target word (NN output)
 
-    This is the non-optimized, Python version. If you have cython installed, gensim
-    will use the optimized version from word2vec_inner instead.
+        l1 = context_vectors[context_index]  # input word (NN input/projection layer)
+        lock_factor = context_locks[context_index]
 
-    """
-    result = 0
-    for sentence in sentences:
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        neu1e = np.zeros(l1.shape)
+
+        if model.negative:
+            # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+            word_indices = [predict_word.index]
+            while len(word_indices) < model.negative + 1:
+                w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
+                if w != predict_word.index:
+                    word_indices.append(w)
+            l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
+            if model.wPMI:
+                inner = np.dot(l1, l2b.T)
+                # get counts of contexts
+                count_context = model.vocab[model.index2word[context_index]].count
+                counts_word = [model.vocab[model.index2word[idx]].count for idx in word_indices]
+                logger.debug(
+                    "Show the max joint prob " + " ".join(str(e) for e in np.minimum(count_context, counts_word)))
+                logger.debug("show the inner prod " + " ".join(str(e) for e in inner))
+                # joint counts of (w,c) from <w,c>
+                C = len(model.vocab) ** 2
+                D = model.cum_table[-1]
+                jcounts = helpers.inner2prob(count_context, counts_word, D, C, inner)
+                weight = C / D * jcounts
+                logger.debug("Temperature " + " ".join(str(e) for e in weight))
+                # calculate gradient
+                fb = 1. / (1. + np.exp(-1 / weight * inner))  # propagate hidden -> output
+                gb = (model.neg_labels - fb) * alpha / weight
+                if model.neg_mean:
+                    # use mean for negative sampling
+                    gb = gb * model.neg_mean_weight
+            else:
+                fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
+                gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
+
+            logger.debug("Show the gradient " + " ".join(str(e) for e in gb))
+
+            if learn_hidden:
+                model.syn1neg[word_indices] += np.outer(gb, l1)  # learn hidden -> output
+            neu1e += np.dot(gb, l2b)  # save error
+
+        if learn_vectors:
+            l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
+        return neu1e
+
+
+    def train_batch_sg(model, sentences, alpha, work=None):
+        """
+        Update skip-gram model by training on a sequence of sentences.
+
+        Each sentence is a list of string tokens, which are looked up in the model's
+        vocab dictionary. Called internally from `Word2Vec.train()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+        result = 0
+        for sentence in sentences:
+            word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
+                           model.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            for pos, word in enumerate(word_vocabs):
+                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+
+                # now go over all words from the (reduced) window, predicting each one in turn
+                start = max(0, pos - model.window + reduced_window)
+                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                    # don't train on the `word` itself
+                    if pos2 != pos:
+                        train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
+            result += len(word_vocabs)
+        return result
+
+
+    def score_sg_pair(model, word, word2):
+        l1 = model.syn0[word2.index]
+        l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+        sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
+        lprob = -np.log(1.0 + np.exp(-sgn * np.dot(l1, l2a.T)))
+        return sum(lprob)
+
+
+    def score_sentence_sg(model, sentence, work=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
+
+        The sentence is a list of Vocab objects (or None, when the corresponding
+        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
         for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+            if word is None:
+                continue  # OOV word in the input sentence => skip
 
-            # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                # don't train on the `word` itself
-                if pos2 != pos:
-                    train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
-        result += len(word_vocabs)
-    return result
+            # now go over all words from the window, predicting each one in turn
+            start = max(0, pos - model.window)
+            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
+                # don't train on OOV words and on the `word` itself
+                if word2 is not None and pos2 != pos:
+                    log_prob_sentence += score_sg_pair(model, word, word2)
 
-
-def score_sentence_sg(model, sentence, work=None):
-    """
-    Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
-
-    The sentence is a list of Vocab objects (or None, when the corresponding
-    word is not in the vocabulary). Called internally from `Word2Vec.score()`.
-
-    This is the non-optimized, Python version. If you have cython installed, gensim
-    will use the optimized version from word2vec_inner instead.
-
-    """
-
-    log_prob_sentence = 0.0
-    if model.negative:
-        raise RuntimeError("scoring is only available for HS=True")
-
-    word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
-    for pos, word in enumerate(word_vocabs):
-        if word is None:
-            continue  # OOV word in the input sentence => skip
-
-        # now go over all words from the window, predicting each one in turn
-        start = max(0, pos - model.window)
-        for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
-            # don't train on OOV words and on the `word` itself
-            if word2 is not None and pos2 != pos:
-                log_prob_sentence += score_sg_pair(model, word, word2)
-
-    return log_prob_sentence
-
-
-def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
-                  context_vectors=None, context_locks=None):
-    if context_vectors is None:
-        context_vectors = model.syn0
-    if context_locks is None:
-        context_locks = model.syn0_lockf
-
-    if word not in model.vocab:
-        return
-    predict_word = model.vocab[word]  # target word (NN output)
-
-    l1 = context_vectors[context_index]  # input word (NN input/projection layer)
-    lock_factor = context_locks[context_index]
-
-    neu1e = np.zeros(l1.shape)
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [predict_word.index]
-        while len(word_indices) < model.negative + 1:
-            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
-            if w != predict_word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        if model.wPMI:
-            inner = np.dot(l1, l2b.T)
-            # get counts of contexts
-            count_context = model.vocab[model.index2word[context_index]].count
-            counts_word = [model.vocab[model.index2word[idx]].count for idx in word_indices]
-            logger.debug("Show the max joint prob " + " ".join(str(e) for e in np.minimum(count_context, counts_word)))
-            logger.debug("show the inner prod " + " ".join(str(e) for e in inner))
-            # joint counts of (w,c) from <w,c>
-            C = len(model.vocab) ** 2
-            D = model.cum_table[-1]
-            jcounts = helpers.inner2prob(count_context, counts_word, D, C, inner)
-            weight = C / D * jcounts
-            logger.debug("Temperature " + " ".join(str(e) for e in weight))
-            # calculate gradient
-            fb = 1. / (1. + np.exp(-1/weight*np.dot(l1, l2b.T)))  # propagate hidden -> output
-            gb = (model.neg_labels - fb) * alpha * 1 / weight
-            if model.neg_mean:
-                # use mean for negative sampling
-                gb = gb * model.neg_mean_weight
-        else:
-            fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
-            gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
-
-        logger.debug("Show the gradient " + " ".join(str(e) for e in gb))
-
-        if learn_hidden:
-            model.syn1neg[word_indices] += np.outer(gb, l1)  # learn hidden -> output
-        neu1e += np.dot(gb, l2b)  # save error
-
-    if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
-    return neu1e
-
-
-def score_sg_pair(model, word, word2):
-    l1 = model.syn0[word2.index]
-    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-    sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = -np.log(1.0 + np.exp(-sgn * np.dot(l1, l2a.T)))
-    return sum(lprob)
+        return log_prob_sentence
 
 
 class Vocab(object):
@@ -264,7 +269,7 @@ class mWord2Vec():
         self.seed = seed
         self.random = np.random.RandomState(seed)
 
-        self.sample = sample    # For downsampling
+        self.sample = sample  # For downsampling
         self.workers = int(workers)
         self.iter = epoch
 
@@ -281,7 +286,6 @@ class mWord2Vec():
         self.cum_table = None  # for negative sampling
         self.wPMI = wPMI
         self.smooth_power = smooth_power
-
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
