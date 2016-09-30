@@ -3,7 +3,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 from wikicorpus import WikiCorpus
 
-folder = "/media/vincent/Data/Dataset/wiki_en/"
+folder = "../DATA/"
 fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz2"
 fout = folder + "enwiki-20160920"
 
