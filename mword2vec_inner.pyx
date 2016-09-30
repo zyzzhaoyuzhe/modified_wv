@@ -14,6 +14,7 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
+from libc.stdio cimport printf, getc
 
 # scipy <= 0.15
 try:
@@ -94,21 +95,22 @@ cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long 
         return a
 
 
-cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:
+cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table, REAL_t count_adjust) nogil:
     if word_index == 0:
-        return cum_table[0]
+        return <unsigned long long>(cum_table[0] * count_adjust)
     else:
-        return cum_table[word_index] - cum_table[word_index-1]
+        return <unsigned long long>((cum_table[word_index] - cum_table[word_index-1]) * count_adjust)
 
 
 cdef REAL_t jcount2inner(unsigned long long jcounts, unsigned long long count1, unsigned long long count2,
     unsigned long long D, unsigned long long C) nogil:
-    return <REAL_t>jcounts / D * C * log(jcounts / count1 * D / count2)
+    return <REAL_t>jcounts / D * C * log(<REAL_t>jcounts / count1 * D / count2)
+
 
 cdef void inner_minmax(unsigned long long count1, unsigned long long count2, unsigned long long D, unsigned long long C,
     unsigned long long *jcount_min, REAL_t *inner_min, REAL_t *inner_max) nogil:
     cdef REAL_t foo
-    jcount_min[0] = <unsigned long long>(<REAL_t>(count1 * count2) / D * exp(-ONEF) + 1)
+    jcount_min[0] = <unsigned long long>((count1 * count2) / <double> D * exp(-1.0) + 1)
     inner_min[0] = jcount2inner(jcount_min[0], count1, count2, D, C)
     inner_max[0] = jcount2inner(min_ull(count1, count2), count1, count2, D, C)
 
@@ -119,13 +121,14 @@ cdef unsigned long long jcount_newton(unsigned long long x, unsigned long long c
     return <unsigned long long>(x - (x * foo - inner * D / C) / (foo + 1))
 
 
-
 cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long long count2, 
     unsigned long long D, unsigned long long C, REAL_t inner, int niter) nogil:
     cdef unsigned long long jcount_min, foo
     cdef REAL_t inner_min
     cdef REAL_t inner_max
     inner_minmax(count1, count2, D, C, &jcount_min, &inner_min, &inner_max)
+    # ## for debug
+    # printf("jcount_min %d, min inner %f, max inner %f\n", jcount_min, inner_min, inner_max)
     if inner < inner_min:
         return jcount_min
     elif inner > inner_max:
@@ -138,7 +141,8 @@ cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long lo
 ##
 
 cdef unsigned long long fast_sentence_sg_neg(
-    const int negative, const int neg_mean, const int wPMI, const long long vocab_size, np.uint32_t *cum_table, unsigned long long cum_table_len,
+    const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
+    unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks) nogil:
@@ -152,10 +156,16 @@ cdef unsigned long long fast_sentence_sg_neg(
     # variables for wPMI mode
     cdef unsigned long long count1, count2, jcounts
     cdef REAL_t weight, neg_mean_weight
+    cdef unsigned long long domain = 2 ** 31 - 1
+    cdef REAL_t count_adjust = <REAL_t>total_words/domain
     cdef unsigned long long C, D
+    cdef REAL_t foo
+
     if wPMI:
-        D = cum_table[cum_table_len-1]
-        C = vocab_size * vocab_size
+        # D = cum_table[cum_table_len-1]
+        # C = vocab_size * vocab_size
+        D = total_words
+        C = 344622
     memset(work, 0, size * cython.sizeof(REAL_t))
 
     for d in range(negative+1):
@@ -174,14 +184,23 @@ cdef unsigned long long fast_sentence_sg_neg(
         row2 = target_index * size
         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
         if wPMI:
-            count1 = word_count(word_index, cum_table)
-            count2 = word_count(word2_index, cum_table)
+            count1 = word_count(word2_index, cum_table, count_adjust)
+            count2 = word_count(target_index, cum_table, count_adjust)
             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
             weight = <REAL_t>  C / D * jcounts
-            f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+            foo = 1 / weight * inner
+            if foo <= -MAX_EXP:
+                f = EXP_TABLE[0]
+            elif foo >= MAX_EXP:
+                f = EXP_TABLE[EXP_TABLE_SIZE]
+            else:
+                f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
             g = (label - f) * alpha / weight
             if neg_mean:
                 g = g * neg_mean_weight
+            # debug 
+            # printf("count1 %d, count2 %d,jcounts %d,inner %f, exp %f,weight %f, gradient %f\n", 
+            #     count1, count2, jcounts, inner, 1/weight*inner, weight, g)
         else:
             if inner <= -MAX_EXP or inner >= MAX_EXP:
                 continue
@@ -205,6 +224,7 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef int neg_mean = model.neg_mean
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
+    cdef unsigned long long total_words = model.total_words
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
@@ -299,7 +319,9 @@ def train_batch_sg(model, sentences, alpha, _work):
                     # if hs:
                     #     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                        next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size, 
+                            total_words, cum_table, cum_table_len, syn0, syn1neg, 
+                            size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
     return effective_words
 

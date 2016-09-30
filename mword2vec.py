@@ -57,15 +57,19 @@ except ImportError:
                 # get counts of contexts
                 count_context = model.vocab[model.index2word[context_index]].count
                 counts_word = [model.vocab[model.index2word[idx]].count for idx in word_indices]
-                logger.debug(
-                    "Show the max joint prob " + " ".join(str(e) for e in np.minimum(count_context, counts_word)))
-                logger.debug("show the inner prod " + " ".join(str(e) for e in inner))
                 # joint counts of (w,c) from <w,c>
-                C = len(model.vocab) ** 2
-                D = model.cum_table[-1]
+                C = 344622
+                D = model.total_words
+                # C = len(model.vocab) ** 2
+                # D = model.cum_table[-1]
                 jcounts = helpers.inner2prob(count_context, counts_word, D, C, inner)
                 weight = C / D * jcounts
-                logger.debug("Temperature " + " ".join(str(e) for e in weight))
+                # For debug
+                logger.debug(
+                    "Show the max joint prob: " + " ".join(str(e) for e in np.minimum(count_context, counts_word)))
+                logger.debug("Show the joint prob: " + " ".join(str(e) for e in jcounts))
+                logger.debug("show the inner prod: " + " ".join(str(e) for e in inner))
+                logger.debug("Temperature: " + " ".join(str(e) for e in weight))
                 # calculate gradient
                 fb = 1. / (1. + np.exp(-1 / weight * inner))  # propagate hidden -> output
                 gb = (model.neg_labels - fb) * alpha / weight
@@ -76,7 +80,7 @@ except ImportError:
                 fb = 1. / (1. + np.exp(-np.dot(l1, l2b.T)))  # propagate hidden -> output
                 gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
 
-            logger.debug("Show the gradient " + " ".join(str(e) for e in gb))
+            logger.debug("Show the gradient: " + " ".join(str(e) for e in gb))
 
             if learn_hidden:
                 model.syn1neg[word_indices] += np.outer(gb, l1)  # learn hidden -> output
@@ -315,6 +319,8 @@ class mWord2Vec():
             self.cum_table[word_index] = round(cumulative * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
+        # calculate total number of words
+        self.total_words = train_words_pow
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
         """
@@ -490,7 +496,8 @@ class mWord2Vec():
         Train a single batch of sentences. Return 2-tuple `(effective word count after
         ignoring unknown words and sentence length trimming, total word count)`.
         """
-        work, neu1 = inits
+        # work, neu1 = inits
+        work = inits
         tally = 0
         tally += train_batch_sg(self, sentences, alpha, work)
         return tally, self._raw_word_count(sentences)
@@ -552,8 +559,8 @@ class mWord2Vec():
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
-            # work = mathelpers.np.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
-            # neu1 = mathelpers.np.zeros_aligned(self.layer1_size, dtype=REAL)
+            work = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
+            # neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
             jobs_processed = 0
             while True:
                 job = job_queue.get()
@@ -561,8 +568,7 @@ class mWord2Vec():
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                # tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1))
-                tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
+                tally, raw_tally = self._do_train_job(sentences, alpha, work)
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
@@ -637,6 +643,7 @@ class mWord2Vec():
         unfinished_worker_count = len(workers)
         workers.append(threading.Thread(target=job_producer))
 
+        ## debug
         # workers = [threading.Thread(target=job_producer)]
 
         for thread in workers:
@@ -648,7 +655,7 @@ class mWord2Vec():
 
         while unfinished_worker_count > 0:
 
-            # # debug
+            ## debug
             # sentences, alpha = job_queue.get()
             # tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
 
