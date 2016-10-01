@@ -331,6 +331,10 @@ class WikiCorpus(TextCorpus):
             # sents, title, pageid = process_article(group[1])
             for sents, title, pageid in pool.imap(process_article, group):  # chunksize=10):
                 articles_all += 1
+
+                if articles_all%1000 == 0:
+                    logger.info("Have processed %d articles and %d effective articles (out of about 5,000,000)!!", articles_all, articles)
+
                 num_words = sum([len(sent) for sent in sents])
                 positions_all += num_words
                 # article redirects and short stubs are pruned here
