@@ -7,7 +7,7 @@ folder = sys.argv[1]
 nprocess = None
 if len(sys.argv) > 2:
     nprocess = int(sys.argv[2])
-fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz"
+fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz2"
 fout = folder + "enwiki-20160920"
 
 wiki = WikiCorpus(fpre, lemmatize=True, dictionary=False, processes=nprocess)
