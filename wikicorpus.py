@@ -73,7 +73,27 @@ def filter_wiki(raw):
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text)
+    text = remove_markup(text)
+    return remove_section(text)
+
+
+def remove_section(text, whole_sec=("See also", "Notes", "References", "Further reading", "External links")):
+    """
+    Remove section titles and whole section content if the titile is in the set whole_sec
+    :param text:
+    :param whole_sec:
+    :return:
+    """
+    pattern = re.compile('==.{1,100}==')
+    pos = [obj for obj in re.finditer(pattern, text)]
+    last = len(text)
+    for sn in reversed(pos):
+        if sn.group(0).replace('=', '').encode('utf8') in whole_sec:
+            text = text[:sn.start()] + text[last:]
+        else:
+            text = text[:sn.start()] + text[sn.end():]
+        last = sn.start()
+    return text
 
 
 def remove_markup(text):
@@ -301,12 +321,12 @@ class WikiCorpus(TextCorpus):
         if self.fname[-3:] == 'bz2':
             fin = bz2.BZ2File(self.fname)
         else:
-            fin = open(self.fname,'r')
+            fin = open(self.fname, 'r')
         texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in extract_pages(fin, self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
-        for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
+        for group in utils.chunkize(texts, chunksize=15 * self.processes, maxsize=1):
             # # for debug
             # sents, title, pageid = process_article(group[1])
             for sents, title, pageid in pool.imap(process_article, group):  # chunksize=10):
