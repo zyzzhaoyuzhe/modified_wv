@@ -6,25 +6,11 @@ import pickle
 from helpers import inner2prob
 from wikicorpus import WikiCorpus
 
-# inner2prob(10, [10,10], 100, [0, 0.2], niter=3)
-# inner2prob(3522, [3522, 1932, 3, 2, 9, 1031], 2147483647, [-5.70502721e-07, 0.00000000e+00, 0.00000000e+00,
-#                                                            0.00000000e+00, 0.00000000e+00, 0.00000000e+00], niter=2)
+# data = picklkle.load(open('ap.p','rb'))
 
-wiki_file = '/media/vincent/Data/Dataset/wiki_en/enwiki-20160920-pages-articles-multistream.xml'
+text = open('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920', 'r')
 
-corpus = WikiCorpus(wiki_file, dictionary=False)
-
-gen = corpus.get_texts()
-
-print gen.next()
-
-
-
-
-
-# data = pickle.load(open('ap.p','rb'))
-#
-# model1 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=1)
+model1 = mword2vec.mWord2Vec(text, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=4)
 # model2 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=0, workers=1)
 #
 # model3 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=0, smooth_power=1, negative=5, neg_mean=1, workers=1)

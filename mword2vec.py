@@ -13,6 +13,7 @@ from copy import deepcopy
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from timeit import default_timer
+from gensim import utils, matutils
 import helpers, mathhelpers
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
@@ -177,7 +178,7 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-class mWord2Vec():
+class mWord2Vec(utils.SaveLoad):
     """
     A modified skip gram model with negative sampling for word embedding.
     """
@@ -870,6 +871,48 @@ class mWord2Vec():
             else:
                 self.syn0norm = (self.syn0 / np.sqrt((self.syn0 ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
 
+    def similarity(self, w1, w2, unit=True):
+        """
+        Compute cosine similarity between two words.
+    
+        Example::
+    
+          >>> trained_model.similarity('woman', 'man')
+          0.73723527
+    
+          >>> trained_model.similarity('woman', 'woman')
+          1.0
+    
+        """
+        if unit:
+            return np.dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
+        else:
+            return np.dot(self[w1], self[w2])
+
+    def n_similarity(self, ws1, ws2, unit=True):
+        """
+        Compute cosine similarity between two sets of words.
+
+        Example::
+
+          >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+          0.61540466561049689
+
+          >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
+          1.0000000000000004
+
+          >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
+          True
+
+        """
+        v1 = [self[word] for word in ws1]
+        v2 = [self[word] for word in ws2]
+        if unit:
+            return np.dot(matutils.unitvec(np.array(v1).mean(axis=0)), matutils.unitvec(np.array(v2).mean(axis=0)))
+        else:
+            return np.dot(np.array(v1).mean(axis=0), np.array(v2).mean(axis=0))
+
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
@@ -921,7 +964,7 @@ class mWord2Vec():
                 raise KeyError("word '%s' not in vocabulary" % word)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
-        mean = mathhelpers.unitvec(np.array(mean).mean(axis=0)).astype(REAL)
+        mean = matutils.unitvec(np.array(mean).mean(axis=0)).astype(REAL)
 
         if indexer is not None:
             return indexer.most_similar(mean, topn)
@@ -1136,6 +1179,38 @@ class mWord2Vec():
         if not words:
             raise ValueError("cannot select a word from an empty list")
         vectors = np.vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
-        mean = mathhelpers.unitvec(vectors.mean(axis=0)).astype(REAL)
+        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = np.dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
+
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors, recalculable table
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])
+        super(mWord2Vec, self).save(*args, **kwargs)
+
+    save.__doc__ = utils.SaveLoad.save.__doc__
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        model = super(mWord2Vec, cls).load(*args, **kwargs)
+        # update older models
+        if hasattr(model, 'table'):
+            delattr(model, 'table')  # discard in favor of cum_table
+        if model.negative and hasattr(model, 'index2word'):
+            model.make_cum_table()  # rebuild cum_table from vocabulary
+        if not hasattr(model, 'corpus_count'):
+            model.corpus_count = None
+        for v in model.vocab.values():
+            if hasattr(v, 'sample_int'):
+                break  # already 0.12.0+ style int probabilities
+            elif hasattr(v, 'sample_probability'):
+                v.sample_int = int(round(v.sample_probability * 2 ** 32))
+                del v.sample_probability
+        if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
+            model.syn0_lockf = np.ones(len(model.syn0), dtype=REAL)
+        if not hasattr(model, 'random'):
+            model.random = np.random.RandomState(model.seed)
+        if not hasattr(model, 'train_count'):
+            model.train_count = 0
+            model.total_train_time = 0
+        return model
