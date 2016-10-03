@@ -190,3 +190,11 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'),
         result.append(foo)
     return result
 
+
+class smartfile(object):
+    def __init__(self, filename):
+        self.fin = open(filename, 'r')
+    def __iter__(self):
+        self.fin.seek(0)
+        for line in self.fin:
+            yield line.split()
