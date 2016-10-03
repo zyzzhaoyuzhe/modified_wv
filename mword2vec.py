@@ -60,7 +60,7 @@ except ImportError:
                 counts_word = [model.vocab[model.index2word[idx]].count for idx in word_indices]
                 # joint counts of (w,c) from <w,c>
                 C = 344622
-                D = model.total_words
+                D = model.words_cumnum
                 # C = len(model.vocab) ** 2
                 # D = model.cum_table[-1]
                 jcounts = helpers.inner2prob(count_context, counts_word, D, C, inner)
@@ -321,7 +321,7 @@ class mWord2Vec(utils.SaveLoad):
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
         # calculate total number of words
-        self.total_words = train_words_pow
+        self.words_cumnum = train_words_pow
 
     def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
         """

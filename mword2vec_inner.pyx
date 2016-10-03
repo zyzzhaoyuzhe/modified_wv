@@ -110,7 +110,7 @@ cdef REAL_t jcount2inner(unsigned long long jcounts, unsigned long long count1, 
 cdef void inner_minmax(unsigned long long count1, unsigned long long count2, unsigned long long D, unsigned long long C,
     unsigned long long *jcount_min, REAL_t *inner_min, REAL_t *inner_max) nogil:
     cdef REAL_t foo
-    jcount_min[0] = <unsigned long long>((count1 * count2) / <double> D * exp(-1.0) + 1)
+    jcount_min[0] = <unsigned long long>((count1 * count2) / <double> D * exp(-ONEF) + 1)
     inner_min[0] = jcount2inner(jcount_min[0], count1, count2, D, C)
     inner_max[0] = jcount2inner(min_ull(count1, count2), count1, count2, D, C)
 
@@ -127,8 +127,6 @@ cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long lo
     cdef REAL_t inner_min
     cdef REAL_t inner_max
     inner_minmax(count1, count2, D, C, &jcount_min, &inner_min, &inner_max)
-    # ## for debug
-    # printf("jcount_min %d, min inner %f, max inner %f\n", jcount_min, inner_min, inner_max)
     if inner < inner_min:
         return jcount_min
     elif inner > inner_max:
@@ -187,6 +185,8 @@ cdef unsigned long long fast_sentence_sg_neg(
             count1 = word_count(word2_index, cum_table, count_adjust)
             count2 = word_count(target_index, cum_table, count_adjust)
             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
+            # # for debug
+            # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
             weight = <REAL_t>  C / D * jcounts
             foo = ONEF / weight * inner
             if foo <= -MAX_EXP:
@@ -198,9 +198,6 @@ cdef unsigned long long fast_sentence_sg_neg(
             g = (label - f) * alpha / weight
             if neg_mean:
                 g = g * neg_mean_weight
-            # debug 
-            # printf("count1 %d, count2 %d,jcounts %d,inner %f, exp %f,weight %f, gradient %f\n", 
-            #     count1, count2, jcounts, inner, 1/weight*inner, weight, g)
         else:
             if inner <= -MAX_EXP or inner >= MAX_EXP:
                 continue
@@ -224,7 +221,7 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef int neg_mean = model.neg_mean
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
-    cdef unsigned long long total_words = model.total_words
+    cdef unsigned long long total_words = model.words_cumnum
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
