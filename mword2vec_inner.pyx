@@ -188,13 +188,13 @@ cdef unsigned long long fast_sentence_sg_neg(
             count2 = word_count(target_index, cum_table, count_adjust)
             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
             weight = <REAL_t>  C / D * jcounts
-            foo = 1 / weight * inner
+            foo = ONEF / weight * inner
             if foo <= -MAX_EXP:
                 f = EXP_TABLE[0]
             elif foo >= MAX_EXP:
-                f = EXP_TABLE[EXP_TABLE_SIZE]
+                f = EXP_TABLE[EXP_TABLE_SIZE-1]
             else:
-                f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+                f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
             g = (label - f) * alpha / weight
             if neg_mean:
                 g = g * neg_mean_weight

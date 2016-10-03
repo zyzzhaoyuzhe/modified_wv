@@ -2563,7 +2563,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  *             count2 = word_count(target_index, cum_table, count_adjust)
  *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)             # <<<<<<<<<<<<<<
  *             weight = <REAL_t>  C / D * jcounts
- *             foo = 1 / weight * inner
+ *             foo = ONEF / weight * inner
  */
       __pyx_v_jcounts = __pyx_f_11modified_wv_15mword2vec_inner_inner2jcount(__pyx_v_count1, __pyx_v_count2, __pyx_v_D, __pyx_v_C, __pyx_v_inner, 3);
 
@@ -2571,7 +2571,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  *             count2 = word_count(target_index, cum_table, count_adjust)
  *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
  *             weight = <REAL_t>  C / D * jcounts             # <<<<<<<<<<<<<<
- *             foo = 1 / weight * inner
+ *             foo = ONEF / weight * inner
  *             if foo <= -MAX_EXP:
  */
       __pyx_v_weight = ((((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)__pyx_v_C) / __pyx_v_D) * __pyx_v_jcounts);
@@ -2579,15 +2579,15 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
       /* "modified_wv/mword2vec_inner.pyx":191
  *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
  *             weight = <REAL_t>  C / D * jcounts
- *             foo = 1 / weight * inner             # <<<<<<<<<<<<<<
+ *             foo = ONEF / weight * inner             # <<<<<<<<<<<<<<
  *             if foo <= -MAX_EXP:
  *                 f = EXP_TABLE[0]
  */
-      __pyx_v_foo = ((1.0 / __pyx_v_weight) * __pyx_v_inner);
+      __pyx_v_foo = ((__pyx_v_11modified_wv_15mword2vec_inner_ONEF / __pyx_v_weight) * __pyx_v_inner);
 
       /* "modified_wv/mword2vec_inner.pyx":192
  *             weight = <REAL_t>  C / D * jcounts
- *             foo = 1 / weight * inner
+ *             foo = ONEF / weight * inner
  *             if foo <= -MAX_EXP:             # <<<<<<<<<<<<<<
  *                 f = EXP_TABLE[0]
  *             elif foo >= MAX_EXP:
@@ -2596,17 +2596,17 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
       if (__pyx_t_1) {
 
         /* "modified_wv/mword2vec_inner.pyx":193
- *             foo = 1 / weight * inner
+ *             foo = ONEF / weight * inner
  *             if foo <= -MAX_EXP:
  *                 f = EXP_TABLE[0]             # <<<<<<<<<<<<<<
  *             elif foo >= MAX_EXP:
- *                 f = EXP_TABLE[EXP_TABLE_SIZE]
+ *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
  */
         __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[0]);
 
         /* "modified_wv/mword2vec_inner.pyx":192
  *             weight = <REAL_t>  C / D * jcounts
- *             foo = 1 / weight * inner
+ *             foo = ONEF / weight * inner
  *             if foo <= -MAX_EXP:             # <<<<<<<<<<<<<<
  *                 f = EXP_TABLE[0]
  *             elif foo >= MAX_EXP:
@@ -2618,7 +2618,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  *             if foo <= -MAX_EXP:
  *                 f = EXP_TABLE[0]
  *             elif foo >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[EXP_TABLE_SIZE]
+ *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
  *             else:
  */
       __pyx_t_1 = ((__pyx_v_foo >= 6.0) != 0);
@@ -2627,37 +2627,37 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
         /* "modified_wv/mword2vec_inner.pyx":195
  *                 f = EXP_TABLE[0]
  *             elif foo >= MAX_EXP:
- *                 f = EXP_TABLE[EXP_TABLE_SIZE]             # <<<<<<<<<<<<<<
+ *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]             # <<<<<<<<<<<<<<
  *             else:
- *                 f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  */
-        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[0x3E8]);
+        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[0x3E7]);
 
         /* "modified_wv/mword2vec_inner.pyx":194
  *             if foo <= -MAX_EXP:
  *                 f = EXP_TABLE[0]
  *             elif foo >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[EXP_TABLE_SIZE]
+ *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
  *             else:
  */
         goto __pyx_L9;
       }
 
       /* "modified_wv/mword2vec_inner.pyx":197
- *                 f = EXP_TABLE[EXP_TABLE_SIZE]
+ *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
  *             else:
- *                 f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
+ *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
  *             g = (label - f) * alpha / weight
  *             if neg_mean:
  */
       /*else*/ {
-        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[((int)((((1.0 / __pyx_v_weight) * __pyx_v_inner) + 6.0) * 83.0))]);
+        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[((int)((((__pyx_v_11modified_wv_15mword2vec_inner_ONEF / __pyx_v_weight) * __pyx_v_inner) + 6.0) * 83.0))]);
       }
       __pyx_L9:;
 
       /* "modified_wv/mword2vec_inner.pyx":198
  *             else:
- *                 f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  *             g = (label - f) * alpha / weight             # <<<<<<<<<<<<<<
  *             if neg_mean:
  *                 g = g * neg_mean_weight
@@ -2665,7 +2665,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
       __pyx_v_g = (((__pyx_v_label - __pyx_v_f) * __pyx_v_alpha) / __pyx_v_weight);
 
       /* "modified_wv/mword2vec_inner.pyx":199
- *                 f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  *             g = (label - f) * alpha / weight
  *             if neg_mean:             # <<<<<<<<<<<<<<
  *                 g = g * neg_mean_weight
@@ -2684,7 +2684,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
         __pyx_v_g = (__pyx_v_g * __pyx_v_neg_mean_weight);
 
         /* "modified_wv/mword2vec_inner.pyx":199
- *                 f = EXP_TABLE[<int>((1 / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  *             g = (label - f) * alpha / weight
  *             if neg_mean:             # <<<<<<<<<<<<<<
  *                 g = g * neg_mean_weight

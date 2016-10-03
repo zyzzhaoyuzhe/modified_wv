@@ -14,7 +14,7 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from timeit import default_timer
 from gensim import utils, matutils
-import helpers, mathhelpers
+import helpers
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s : %(levelname)s : %(message)s')
@@ -391,7 +391,7 @@ class mWord2Vec(utils.SaveLoad):
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
-            if helpers.keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+            if utils.keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
                 retain_words.append(word)
                 retain_total += v
                 original_total += v
@@ -554,13 +554,13 @@ class mWord2Vec(utils.SaveLoad):
 
         if self.iter > 1:
             # Create an iterator that repeats sentences self.iter times
-            sentences = helpers.RepeatCorpusNTimes(sentences, self.iter)
+            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
             total_words = total_words and total_words * self.iter
             total_examples = total_examples and total_examples * self.iter
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
-            work = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
+            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             # neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
             jobs_processed = 0
             while True:
@@ -681,13 +681,13 @@ class mWord2Vec(utils.SaveLoad):
                     logger.info(
                         "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                         100.0 * example_count / total_examples, trained_word_count / elapsed,
-                        helpers.qsize(job_queue), helpers.qsize(progress_queue))
+                        utils.qsize(job_queue), utils.qsize(progress_queue))
                 else:
                     # words-based progress %
                     logger.info(
                         "PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
                         100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                        helpers.qsize(job_queue), helpers.qsize(progress_queue))
+                        utils.qsize(job_queue), utils.qsize(progress_queue))
                 next_report = elapsed + report_delay
 
         # all done; report the final stats
@@ -747,7 +747,7 @@ class mWord2Vec(utils.SaveLoad):
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
             work = np.zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
-            neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
+            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
                 job = job_queue.get()
                 if job is None:  # signal to finish
@@ -772,7 +772,7 @@ class mWord2Vec(utils.SaveLoad):
             thread.start()
 
         sentence_count = 0
-        sentence_scores = mathhelpers.zeros_aligned(total_sentences, dtype=REAL)
+        sentence_scores = utils.zeros_aligned(total_sentences, dtype=REAL)
 
         push_done = False
         done_jobs = 0
@@ -973,7 +973,7 @@ class mWord2Vec(utils.SaveLoad):
         dists = np.dot(limited, mean)
         if not topn:
             return dists
-        best = mathhelpers.argsort(dists, topn=topn + len(all_words), reverse=True)
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
@@ -1117,7 +1117,7 @@ class mWord2Vec(utils.SaveLoad):
 
         if not topn:
             return dists
-        best = mathhelpers.argsort(dists, topn=topn + len(all_words), reverse=True)
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
