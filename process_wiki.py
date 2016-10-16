@@ -3,14 +3,15 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 from wikicorpus import WikiCorpus
 
-folder = sys.argv[1]
+folder = '/media/vincent/Data/Dataset/wiki_en/'
 nprocess = None
-if len(sys.argv) > 2:
-    nprocess = int(sys.argv[2])
-fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz2"
-fout = folder + "enwiki-20160920"
+# if len(sys.argv) > 2:
+#     nprocess = int(sys.argv[2])
+nprocess = 4
+fpre = folder + "enwiki-20160920-pages-articles-multistream.xml"
+fout = folder + "enwiki-20160920_basic"
 
-wiki = WikiCorpus(fpre, lemmatize=True, dictionary=False, processes=nprocess)
+wiki = WikiCorpus(fpre, lemmatize=True, dictionary=False, processes=4)
 gen = wiki.get_texts()
 
 count = 1

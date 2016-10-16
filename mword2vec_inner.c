@@ -1327,12 +1327,10 @@ static void __pyx_f_11modified_wv_15mword2vec_inner_our_saxpy_noblas(int const *
 static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_bisect_left(__pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG); /*proto*/
 static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_random_int32(unsigned PY_LONG_LONG *); /*proto*/
 static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_min_ull(unsigned PY_LONG_LONG, unsigned PY_LONG_LONG); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_word_count(__pyx_t_5numpy_uint32_t const , __pyx_t_5numpy_uint32_t *, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t); /*proto*/
 static __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_f_11modified_wv_15mword2vec_inner_jcount2inner(unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG); /*proto*/
 static void __pyx_f_11modified_wv_15mword2vec_inner_inner_minmax(unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG *, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *); /*proto*/
 static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_jcount_newton(unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_inner2jcount(unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t, int); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(int const , int const , int const , PY_LONG_LONG const , unsigned PY_LONG_LONG, __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const , __pyx_t_5numpy_uint32_t const , __pyx_t_11modified_wv_15mword2vec_inner_REAL_t const , __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *); /*proto*/
+static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(int const , __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const , __pyx_t_5numpy_uint32_t const , __pyx_t_11modified_wv_15mword2vec_inner_REAL_t const , __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *, unsigned PY_LONG_LONG, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *); /*proto*/
 #define __Pyx_MODULE_NAME "modified_wv.mword2vec_inner"
 int __pyx_module_is_main_modified_wv__mword2vec_inner = 0;
 
@@ -2244,7 +2242,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_inner2jcoun
  *         for i in range(niter):
  *             foo = jcount_newton(foo, count1, count2, D, C, inner)             # <<<<<<<<<<<<<<
  *         return foo
- * ##
+ * 
  */
       __pyx_v_foo = __pyx_f_11modified_wv_15mword2vec_inner_jcount_newton(__pyx_v_foo, __pyx_v_count1, __pyx_v_count2, __pyx_v_D, __pyx_v_C, __pyx_v_inner);
     }
@@ -2253,7 +2251,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_inner2jcoun
  *         for i in range(niter):
  *             foo = jcount_newton(foo, count1, count2, D, C, inner)
  *         return foo             # <<<<<<<<<<<<<<
- * ##
+ * 
  * 
  */
     __pyx_r = __pyx_v_foo;
@@ -2273,37 +2271,26 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_inner2jcoun
   return __pyx_r;
 }
 
-/* "modified_wv/mword2vec_inner.pyx":141
- * ##
+/* "modified_wv/mword2vec_inner.pyx":142
  * 
+ * ## old fast_sentence_sg_net
  * cdef unsigned long long fast_sentence_sg_neg(             # <<<<<<<<<<<<<<
- *     const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
- *     unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
+ *     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
+ *     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
  */
 
-static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(int const __pyx_v_negative, int const __pyx_v_neg_mean, int const __pyx_v_wPMI, CYTHON_UNUSED PY_LONG_LONG const __pyx_v_vocab_size, unsigned PY_LONG_LONG __pyx_v_total_words, __pyx_t_5numpy_uint32_t *__pyx_v_cum_table, unsigned PY_LONG_LONG __pyx_v_cum_table_len, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_syn0, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_syn1neg, int const __pyx_v_size, __pyx_t_5numpy_uint32_t const __pyx_v_word_index, __pyx_t_5numpy_uint32_t const __pyx_v_word2_index, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t const __pyx_v_alpha, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_work, unsigned PY_LONG_LONG __pyx_v_next_random, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_word_locks) {
+static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(int const __pyx_v_negative, __pyx_t_5numpy_uint32_t *__pyx_v_cum_table, unsigned PY_LONG_LONG __pyx_v_cum_table_len, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_syn0, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_syn1neg, int const __pyx_v_size, __pyx_t_5numpy_uint32_t const __pyx_v_word_index, __pyx_t_5numpy_uint32_t const __pyx_v_word2_index, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t const __pyx_v_alpha, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_work, unsigned PY_LONG_LONG __pyx_v_next_random, __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_word_locks) {
   PY_LONG_LONG __pyx_v_row1;
   PY_LONG_LONG __pyx_v_row2;
   unsigned PY_LONG_LONG __pyx_v_modulo;
-  __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_inner;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_f;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_g;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_label;
   __pyx_t_5numpy_uint32_t __pyx_v_target_index;
   int __pyx_v_d;
-  unsigned PY_LONG_LONG __pyx_v_count1;
-  unsigned PY_LONG_LONG __pyx_v_count2;
-  unsigned PY_LONG_LONG __pyx_v_jcounts;
-  __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_weight;
-  __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_neg_mean_weight;
-  unsigned PY_LONG_LONG __pyx_v_domain;
-  __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_count_adjust;
-  unsigned PY_LONG_LONG __pyx_v_C;
-  unsigned PY_LONG_LONG __pyx_v_D;
-  __pyx_t_11modified_wv_15mword2vec_inner_REAL_t __pyx_v_foo;
   unsigned PY_LONG_LONG __pyx_r;
-  int __pyx_t_1;
-  long __pyx_t_2;
+  long __pyx_t_1;
+  int __pyx_t_2;
   int __pyx_t_3;
   int __pyx_t_4;
 
@@ -2312,7 +2299,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  *     cdef long long a
  *     cdef long long row1 = word2_index * size, row2             # <<<<<<<<<<<<<<
  *     cdef unsigned long long modulo = 281474976710655ULL
- *     cdef REAL_t inner, f, g, label
+ *     cdef REAL_t f, g, label
  */
   __pyx_v_row1 = (__pyx_v_word2_index * __pyx_v_size);
 
@@ -2320,135 +2307,71 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  *     cdef long long a
  *     cdef long long row1 = word2_index * size, row2
  *     cdef unsigned long long modulo = 281474976710655ULL             # <<<<<<<<<<<<<<
- *     cdef REAL_t inner, f, g, label
+ *     cdef REAL_t f, g, label
  *     cdef np.uint32_t target_index
  */
   __pyx_v_modulo = 281474976710655ULL;
 
-  /* "modified_wv/mword2vec_inner.pyx":157
- *     cdef unsigned long long count1, count2, jcounts
- *     cdef REAL_t weight, neg_mean_weight
- *     cdef unsigned long long domain = 2 ** 31 - 1             # <<<<<<<<<<<<<<
- *     cdef REAL_t count_adjust = <REAL_t>total_words/domain
- *     cdef unsigned long long C, D
- */
-  __pyx_v_domain = 0x7FFFFFFF;
-
-  /* "modified_wv/mword2vec_inner.pyx":158
- *     cdef REAL_t weight, neg_mean_weight
- *     cdef unsigned long long domain = 2 ** 31 - 1
- *     cdef REAL_t count_adjust = <REAL_t>total_words/domain             # <<<<<<<<<<<<<<
- *     cdef unsigned long long C, D
- *     cdef REAL_t foo
- */
-  __pyx_v_count_adjust = (((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)__pyx_v_total_words) / __pyx_v_domain);
-
-  /* "modified_wv/mword2vec_inner.pyx":162
- *     cdef REAL_t foo
+  /* "modified_wv/mword2vec_inner.pyx":155
+ *     cdef int d
  * 
- *     if wPMI:             # <<<<<<<<<<<<<<
- *         # D = cum_table[cum_table_len-1]
- *         # C = vocab_size * vocab_size
- */
-  __pyx_t_1 = (__pyx_v_wPMI != 0);
-  if (__pyx_t_1) {
-
-    /* "modified_wv/mword2vec_inner.pyx":165
- *         # D = cum_table[cum_table_len-1]
- *         # C = vocab_size * vocab_size
- *         D = total_words             # <<<<<<<<<<<<<<
- *         C = 344622
- *     memset(work, 0, size * cython.sizeof(REAL_t))
- */
-    __pyx_v_D = __pyx_v_total_words;
-
-    /* "modified_wv/mword2vec_inner.pyx":166
- *         # C = vocab_size * vocab_size
- *         D = total_words
- *         C = 344622             # <<<<<<<<<<<<<<
- *     memset(work, 0, size * cython.sizeof(REAL_t))
- * 
- */
-    __pyx_v_C = 0x5422E;
-
-    /* "modified_wv/mword2vec_inner.pyx":162
- *     cdef REAL_t foo
- * 
- *     if wPMI:             # <<<<<<<<<<<<<<
- *         # D = cum_table[cum_table_len-1]
- *         # C = vocab_size * vocab_size
- */
-  }
-
-  /* "modified_wv/mword2vec_inner.pyx":167
- *         D = total_words
- *         C = 344622
  *     memset(work, 0, size * cython.sizeof(REAL_t))             # <<<<<<<<<<<<<<
  * 
  *     for d in range(negative+1):
  */
   memset(__pyx_v_work, 0, (__pyx_v_size * (sizeof(__pyx_t_11modified_wv_15mword2vec_inner_REAL_t))));
 
-  /* "modified_wv/mword2vec_inner.pyx":169
+  /* "modified_wv/mword2vec_inner.pyx":157
  *     memset(work, 0, size * cython.sizeof(REAL_t))
  * 
  *     for d in range(negative+1):             # <<<<<<<<<<<<<<
  *         if d == 0:
  *             target_index = word_index
  */
-  __pyx_t_2 = (__pyx_v_negative + 1);
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_d = __pyx_t_3;
+  __pyx_t_1 = (__pyx_v_negative + 1);
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_d = __pyx_t_2;
 
-    /* "modified_wv/mword2vec_inner.pyx":170
+    /* "modified_wv/mword2vec_inner.pyx":158
  * 
  *     for d in range(negative+1):
  *         if d == 0:             # <<<<<<<<<<<<<<
  *             target_index = word_index
  *             label = ONEF
  */
-    __pyx_t_1 = ((__pyx_v_d == 0) != 0);
-    if (__pyx_t_1) {
+    __pyx_t_3 = ((__pyx_v_d == 0) != 0);
+    if (__pyx_t_3) {
 
-      /* "modified_wv/mword2vec_inner.pyx":171
+      /* "modified_wv/mword2vec_inner.pyx":159
  *     for d in range(negative+1):
  *         if d == 0:
  *             target_index = word_index             # <<<<<<<<<<<<<<
  *             label = ONEF
- *             neg_mean_weight = ONEF
+ *         else:
  */
       __pyx_v_target_index = __pyx_v_word_index;
 
-      /* "modified_wv/mword2vec_inner.pyx":172
+      /* "modified_wv/mword2vec_inner.pyx":160
  *         if d == 0:
  *             target_index = word_index
  *             label = ONEF             # <<<<<<<<<<<<<<
- *             neg_mean_weight = ONEF
- *         else:
- */
-      __pyx_v_label = __pyx_v_11modified_wv_15mword2vec_inner_ONEF;
-
-      /* "modified_wv/mword2vec_inner.pyx":173
- *             target_index = word_index
- *             label = ONEF
- *             neg_mean_weight = ONEF             # <<<<<<<<<<<<<<
  *         else:
  *             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
  */
-      __pyx_v_neg_mean_weight = __pyx_v_11modified_wv_15mword2vec_inner_ONEF;
+      __pyx_v_label = __pyx_v_11modified_wv_15mword2vec_inner_ONEF;
 
-      /* "modified_wv/mword2vec_inner.pyx":170
+      /* "modified_wv/mword2vec_inner.pyx":158
  * 
  *     for d in range(negative+1):
  *         if d == 0:             # <<<<<<<<<<<<<<
  *             target_index = word_index
  *             label = ONEF
  */
-      goto __pyx_L6;
+      goto __pyx_L5;
     }
 
-    /* "modified_wv/mword2vec_inner.pyx":175
- *             neg_mean_weight = ONEF
+    /* "modified_wv/mword2vec_inner.pyx":162
+ *             label = ONEF
  *         else:
  *             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)             # <<<<<<<<<<<<<<
  *             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
@@ -2457,7 +2380,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
     /*else*/ {
       __pyx_v_target_index = __pyx_f_11modified_wv_15mword2vec_inner_bisect_left(__pyx_v_cum_table, ((__pyx_v_next_random >> 16) % (__pyx_v_cum_table[(__pyx_v_cum_table_len - 1)])), 0, __pyx_v_cum_table_len);
 
-      /* "modified_wv/mword2vec_inner.pyx":176
+      /* "modified_wv/mword2vec_inner.pyx":163
  *         else:
  *             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
  *             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo             # <<<<<<<<<<<<<<
@@ -2466,26 +2389,26 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  */
       __pyx_v_next_random = (((__pyx_v_next_random * ((unsigned PY_LONG_LONG)25214903917ULL)) + 11) & __pyx_v_modulo);
 
-      /* "modified_wv/mword2vec_inner.pyx":177
+      /* "modified_wv/mword2vec_inner.pyx":164
  *             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
  *             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *             if target_index == word_index:             # <<<<<<<<<<<<<<
  *                 continue
  *             label = <REAL_t>0.0
  */
-      __pyx_t_1 = ((__pyx_v_target_index == __pyx_v_word_index) != 0);
-      if (__pyx_t_1) {
+      __pyx_t_3 = ((__pyx_v_target_index == __pyx_v_word_index) != 0);
+      if (__pyx_t_3) {
 
-        /* "modified_wv/mword2vec_inner.pyx":178
+        /* "modified_wv/mword2vec_inner.pyx":165
  *             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *             if target_index == word_index:
  *                 continue             # <<<<<<<<<<<<<<
  *             label = <REAL_t>0.0
- *             neg_mean_weight = 1 / <REAL_t>negative
+ * 
  */
-        goto __pyx_L4_continue;
+        goto __pyx_L3_continue;
 
-        /* "modified_wv/mword2vec_inner.pyx":177
+        /* "modified_wv/mword2vec_inner.pyx":164
  *             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
  *             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *             if target_index == word_index:             # <<<<<<<<<<<<<<
@@ -2494,294 +2417,110 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  */
       }
 
-      /* "modified_wv/mword2vec_inner.pyx":179
+      /* "modified_wv/mword2vec_inner.pyx":166
  *             if target_index == word_index:
  *                 continue
  *             label = <REAL_t>0.0             # <<<<<<<<<<<<<<
- *             neg_mean_weight = 1 / <REAL_t>negative
- * 
- */
-      __pyx_v_label = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)0.0);
-
-      /* "modified_wv/mword2vec_inner.pyx":180
- *                 continue
- *             label = <REAL_t>0.0
- *             neg_mean_weight = 1 / <REAL_t>negative             # <<<<<<<<<<<<<<
  * 
  *         row2 = target_index * size
  */
-      __pyx_v_neg_mean_weight = (1.0 / ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)__pyx_v_negative));
+      __pyx_v_label = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)0.0);
     }
-    __pyx_L6:;
+    __pyx_L5:;
 
-    /* "modified_wv/mword2vec_inner.pyx":182
- *             neg_mean_weight = 1 / <REAL_t>negative
+    /* "modified_wv/mword2vec_inner.pyx":168
+ *             label = <REAL_t>0.0
  * 
  *         row2 = target_index * size             # <<<<<<<<<<<<<<
- *         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
- *         if wPMI:
+ *         f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+ *         if f <= -MAX_EXP or f >= MAX_EXP:
  */
     __pyx_v_row2 = (__pyx_v_target_index * __pyx_v_size);
 
-    /* "modified_wv/mword2vec_inner.pyx":183
+    /* "modified_wv/mword2vec_inner.pyx":169
  * 
  *         row2 = target_index * size
- *         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)             # <<<<<<<<<<<<<<
- *         if wPMI:
- *             count1 = word_count(word2_index, cum_table, count_adjust)
+ *         f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)             # <<<<<<<<<<<<<<
+ *         if f <= -MAX_EXP or f >= MAX_EXP:
+ *             continue
  */
-    __pyx_v_inner = __pyx_v_11modified_wv_15mword2vec_inner_our_dot((&__pyx_v_size), (&(__pyx_v_syn0[__pyx_v_row1])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), (&(__pyx_v_syn1neg[__pyx_v_row2])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
+    __pyx_v_f = __pyx_v_11modified_wv_15mword2vec_inner_our_dot((&__pyx_v_size), (&(__pyx_v_syn0[__pyx_v_row1])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), (&(__pyx_v_syn1neg[__pyx_v_row2])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
 
-    /* "modified_wv/mword2vec_inner.pyx":184
+    /* "modified_wv/mword2vec_inner.pyx":170
  *         row2 = target_index * size
- *         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
- *         if wPMI:             # <<<<<<<<<<<<<<
- *             count1 = word_count(word2_index, cum_table, count_adjust)
- *             count2 = word_count(target_index, cum_table, count_adjust)
+ *         f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+ *         if f <= -MAX_EXP or f >= MAX_EXP:             # <<<<<<<<<<<<<<
+ *             continue
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  */
-    __pyx_t_1 = (__pyx_v_wPMI != 0);
-    if (__pyx_t_1) {
+    __pyx_t_4 = ((__pyx_v_f <= -6.0) != 0);
+    if (!__pyx_t_4) {
+    } else {
+      __pyx_t_3 = __pyx_t_4;
+      goto __pyx_L8_bool_binop_done;
+    }
+    __pyx_t_4 = ((__pyx_v_f >= 6.0) != 0);
+    __pyx_t_3 = __pyx_t_4;
+    __pyx_L8_bool_binop_done:;
+    if (__pyx_t_3) {
 
-      /* "modified_wv/mword2vec_inner.pyx":185
- *         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
- *         if wPMI:
- *             count1 = word_count(word2_index, cum_table, count_adjust)             # <<<<<<<<<<<<<<
- *             count2 = word_count(target_index, cum_table, count_adjust)
- *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
+      /* "modified_wv/mword2vec_inner.pyx":171
+ *         f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+ *         if f <= -MAX_EXP or f >= MAX_EXP:
+ *             continue             # <<<<<<<<<<<<<<
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *         g = (label - f) * alpha
  */
-      __pyx_v_count1 = __pyx_f_11modified_wv_15mword2vec_inner_word_count(__pyx_v_word2_index, __pyx_v_cum_table, __pyx_v_count_adjust);
+      goto __pyx_L3_continue;
 
-      /* "modified_wv/mword2vec_inner.pyx":186
- *         if wPMI:
- *             count1 = word_count(word2_index, cum_table, count_adjust)
- *             count2 = word_count(target_index, cum_table, count_adjust)             # <<<<<<<<<<<<<<
- *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
- *             # # for debug
- */
-      __pyx_v_count2 = __pyx_f_11modified_wv_15mword2vec_inner_word_count(__pyx_v_target_index, __pyx_v_cum_table, __pyx_v_count_adjust);
-
-      /* "modified_wv/mword2vec_inner.pyx":187
- *             count1 = word_count(word2_index, cum_table, count_adjust)
- *             count2 = word_count(target_index, cum_table, count_adjust)
- *             jcounts = inner2jcount(count1, count2, D, C, inner, 3)             # <<<<<<<<<<<<<<
- *             # # for debug
- *             # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
- */
-      __pyx_v_jcounts = __pyx_f_11modified_wv_15mword2vec_inner_inner2jcount(__pyx_v_count1, __pyx_v_count2, __pyx_v_D, __pyx_v_C, __pyx_v_inner, 3);
-
-      /* "modified_wv/mword2vec_inner.pyx":190
- *             # # for debug
- *             # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
- *             weight = <REAL_t>  C / D * jcounts             # <<<<<<<<<<<<<<
- *             foo = ONEF / weight * inner
- *             if foo <= -MAX_EXP:
- */
-      __pyx_v_weight = ((((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)__pyx_v_C) / __pyx_v_D) * __pyx_v_jcounts);
-
-      /* "modified_wv/mword2vec_inner.pyx":191
- *             # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
- *             weight = <REAL_t>  C / D * jcounts
- *             foo = ONEF / weight * inner             # <<<<<<<<<<<<<<
- *             if foo <= -MAX_EXP:
- *                 f = EXP_TABLE[0]
- */
-      __pyx_v_foo = ((__pyx_v_11modified_wv_15mword2vec_inner_ONEF / __pyx_v_weight) * __pyx_v_inner);
-
-      /* "modified_wv/mword2vec_inner.pyx":192
- *             weight = <REAL_t>  C / D * jcounts
- *             foo = ONEF / weight * inner
- *             if foo <= -MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[0]
- *             elif foo >= MAX_EXP:
- */
-      __pyx_t_1 = ((__pyx_v_foo <= -6.0) != 0);
-      if (__pyx_t_1) {
-
-        /* "modified_wv/mword2vec_inner.pyx":193
- *             foo = ONEF / weight * inner
- *             if foo <= -MAX_EXP:
- *                 f = EXP_TABLE[0]             # <<<<<<<<<<<<<<
- *             elif foo >= MAX_EXP:
- *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
- */
-        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[0]);
-
-        /* "modified_wv/mword2vec_inner.pyx":192
- *             weight = <REAL_t>  C / D * jcounts
- *             foo = ONEF / weight * inner
- *             if foo <= -MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[0]
- *             elif foo >= MAX_EXP:
- */
-        goto __pyx_L9;
-      }
-
-      /* "modified_wv/mword2vec_inner.pyx":194
- *             if foo <= -MAX_EXP:
- *                 f = EXP_TABLE[0]
- *             elif foo >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
- *             else:
- */
-      __pyx_t_1 = ((__pyx_v_foo >= 6.0) != 0);
-      if (__pyx_t_1) {
-
-        /* "modified_wv/mword2vec_inner.pyx":195
- *                 f = EXP_TABLE[0]
- *             elif foo >= MAX_EXP:
- *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]             # <<<<<<<<<<<<<<
- *             else:
- *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- */
-        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[0x3E7]);
-
-        /* "modified_wv/mword2vec_inner.pyx":194
- *             if foo <= -MAX_EXP:
- *                 f = EXP_TABLE[0]
- *             elif foo >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
- *             else:
- */
-        goto __pyx_L9;
-      }
-
-      /* "modified_wv/mword2vec_inner.pyx":197
- *                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
- *             else:
- *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
- *             g = (label - f) * alpha / weight
- *             if neg_mean:
- */
-      /*else*/ {
-        __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[((int)((((__pyx_v_11modified_wv_15mword2vec_inner_ONEF / __pyx_v_weight) * __pyx_v_inner) + 6.0) * 83.0))]);
-      }
-      __pyx_L9:;
-
-      /* "modified_wv/mword2vec_inner.pyx":198
- *             else:
- *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha / weight             # <<<<<<<<<<<<<<
- *             if neg_mean:
- *                 g = g * neg_mean_weight
- */
-      __pyx_v_g = (((__pyx_v_label - __pyx_v_f) * __pyx_v_alpha) / __pyx_v_weight);
-
-      /* "modified_wv/mword2vec_inner.pyx":199
- *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha / weight
- *             if neg_mean:             # <<<<<<<<<<<<<<
- *                 g = g * neg_mean_weight
- *         else:
- */
-      __pyx_t_1 = (__pyx_v_neg_mean != 0);
-      if (__pyx_t_1) {
-
-        /* "modified_wv/mword2vec_inner.pyx":200
- *             g = (label - f) * alpha / weight
- *             if neg_mean:
- *                 g = g * neg_mean_weight             # <<<<<<<<<<<<<<
- *         else:
- *             if inner <= -MAX_EXP or inner >= MAX_EXP:
- */
-        __pyx_v_g = (__pyx_v_g * __pyx_v_neg_mean_weight);
-
-        /* "modified_wv/mword2vec_inner.pyx":199
- *                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha / weight
- *             if neg_mean:             # <<<<<<<<<<<<<<
- *                 g = g * neg_mean_weight
- *         else:
- */
-      }
-
-      /* "modified_wv/mword2vec_inner.pyx":184
+      /* "modified_wv/mword2vec_inner.pyx":170
  *         row2 = target_index * size
- *         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
- *         if wPMI:             # <<<<<<<<<<<<<<
- *             count1 = word_count(word2_index, cum_table, count_adjust)
- *             count2 = word_count(target_index, cum_table, count_adjust)
+ *         f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+ *         if f <= -MAX_EXP or f >= MAX_EXP:             # <<<<<<<<<<<<<<
+ *             continue
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  */
-      goto __pyx_L8;
     }
 
-    /* "modified_wv/mword2vec_inner.pyx":202
- *                 g = g * neg_mean_weight
- *         else:
- *             if inner <= -MAX_EXP or inner >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 continue
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- */
-    /*else*/ {
-      __pyx_t_4 = ((__pyx_v_inner <= -6.0) != 0);
-      if (!__pyx_t_4) {
-      } else {
-        __pyx_t_1 = __pyx_t_4;
-        goto __pyx_L12_bool_binop_done;
-      }
-      __pyx_t_4 = ((__pyx_v_inner >= 6.0) != 0);
-      __pyx_t_1 = __pyx_t_4;
-      __pyx_L12_bool_binop_done:;
-      if (__pyx_t_1) {
-
-        /* "modified_wv/mword2vec_inner.pyx":203
- *         else:
- *             if inner <= -MAX_EXP or inner >= MAX_EXP:
- *                 continue             # <<<<<<<<<<<<<<
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha
- */
-        goto __pyx_L4_continue;
-
-        /* "modified_wv/mword2vec_inner.pyx":202
- *                 g = g * neg_mean_weight
- *         else:
- *             if inner <= -MAX_EXP or inner >= MAX_EXP:             # <<<<<<<<<<<<<<
- *                 continue
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- */
-      }
-
-      /* "modified_wv/mword2vec_inner.pyx":204
- *             if inner <= -MAX_EXP or inner >= MAX_EXP:
- *                 continue
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
- *             g = (label - f) * alpha
+    /* "modified_wv/mword2vec_inner.pyx":172
+ *         if f <= -MAX_EXP or f >= MAX_EXP:
+ *             continue
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
+ *         g = (label - f) * alpha
  *         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
  */
-      __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[((int)((__pyx_v_inner + 6.0) * 83.0))]);
+    __pyx_v_f = (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[((int)((__pyx_v_f + 6.0) * 83.0))]);
 
-      /* "modified_wv/mword2vec_inner.pyx":205
- *                 continue
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha             # <<<<<<<<<<<<<<
+    /* "modified_wv/mword2vec_inner.pyx":173
+ *             continue
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *         g = (label - f) * alpha             # <<<<<<<<<<<<<<
  *         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
  *         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
  */
-      __pyx_v_g = ((__pyx_v_label - __pyx_v_f) * __pyx_v_alpha);
-    }
-    __pyx_L8:;
+    __pyx_v_g = ((__pyx_v_label - __pyx_v_f) * __pyx_v_alpha);
 
-    /* "modified_wv/mword2vec_inner.pyx":206
- *             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
- *             g = (label - f) * alpha
+    /* "modified_wv/mword2vec_inner.pyx":174
+ *         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+ *         g = (label - f) * alpha
  *         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)             # <<<<<<<<<<<<<<
  *         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
  * 
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), (&(__pyx_v_syn1neg[__pyx_v_row2])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), __pyx_v_work, (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
 
-    /* "modified_wv/mword2vec_inner.pyx":207
- *             g = (label - f) * alpha
+    /* "modified_wv/mword2vec_inner.pyx":175
+ *         g = (label - f) * alpha
  *         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
  *         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)             # <<<<<<<<<<<<<<
  * 
  *     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), (&(__pyx_v_syn0[__pyx_v_row1])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), (&(__pyx_v_syn1neg[__pyx_v_row2])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
-    __pyx_L4_continue:;
+    __pyx_L3_continue:;
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":209
+  /* "modified_wv/mword2vec_inner.pyx":177
  *         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
  * 
  *     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)             # <<<<<<<<<<<<<<
@@ -2790,7 +2529,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
  */
   __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy((&__pyx_v_size), (&(__pyx_v_word_locks[__pyx_v_word2_index])), __pyx_v_work, (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), (&(__pyx_v_syn0[__pyx_v_row1])), (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
 
-  /* "modified_wv/mword2vec_inner.pyx":211
+  /* "modified_wv/mword2vec_inner.pyx":179
  *     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
  * 
  *     return next_random             # <<<<<<<<<<<<<<
@@ -2800,12 +2539,12 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
   __pyx_r = __pyx_v_next_random;
   goto __pyx_L0;
 
-  /* "modified_wv/mword2vec_inner.pyx":141
- * ##
+  /* "modified_wv/mword2vec_inner.pyx":142
  * 
+ * ## old fast_sentence_sg_net
  * cdef unsigned long long fast_sentence_sg_neg(             # <<<<<<<<<<<<<<
- *     const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
- *     unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
+ *     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
+ *     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
  */
 
   /* function exit code */
@@ -2813,7 +2552,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_15mword2vec_inner_fast_senten
   return __pyx_r;
 }
 
-/* "modified_wv/mword2vec_inner.pyx":215
+/* "modified_wv/mword2vec_inner.pyx":260
  * 
  * 
  * def train_batch_sg(model, sentences, alpha, _work):             # <<<<<<<<<<<<<<
@@ -2854,21 +2593,21 @@ static PyObject *__pyx_pw_11modified_wv_15mword2vec_inner_1train_batch_sg(PyObje
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_sentences)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 1); __PYX_ERR(0, 215, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 1); __PYX_ERR(0, 260, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_alpha)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 2); __PYX_ERR(0, 215, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 2); __PYX_ERR(0, 260, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_work)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 3); __PYX_ERR(0, 215, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, 3); __PYX_ERR(0, 260, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_batch_sg") < 0)) __PYX_ERR(0, 215, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_batch_sg") < 0)) __PYX_ERR(0, 260, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -2885,7 +2624,7 @@ static PyObject *__pyx_pw_11modified_wv_15mword2vec_inner_1train_batch_sg(PyObje
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 215, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("train_batch_sg", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 260, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("modified_wv.mword2vec_inner.train_batch_sg", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2899,12 +2638,12 @@ static PyObject *__pyx_pw_11modified_wv_15mword2vec_inner_1train_batch_sg(PyObje
 }
 
 static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_model, PyObject *__pyx_v_sentences, PyObject *__pyx_v_alpha, PyObject *__pyx_v__work) {
-  int __pyx_v_wPMI;
-  int __pyx_v_vocab_size;
-  int __pyx_v_neg_mean;
+  CYTHON_UNUSED int __pyx_v_wPMI;
+  CYTHON_UNUSED int __pyx_v_vocab_size;
+  CYTHON_UNUSED int __pyx_v_neg_mean;
   int __pyx_v_negative;
   int __pyx_v_sample;
-  unsigned PY_LONG_LONG __pyx_v_total_words;
+  CYTHON_UNUSED unsigned PY_LONG_LONG __pyx_v_total_words;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_syn0;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_word_locks;
   __pyx_t_11modified_wv_15mword2vec_inner_REAL_t *__pyx_v_work;
@@ -2956,149 +2695,149 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   int __pyx_t_21;
   __Pyx_RefNannySetupContext("train_batch_sg", 0);
 
-  /* "modified_wv/mword2vec_inner.pyx":218
+  /* "modified_wv/mword2vec_inner.pyx":263
  *     # cdef int hs = model.hs
  *     # Use wPMI or PMI
  *     cdef int wPMI = model.wPMI             # <<<<<<<<<<<<<<
  *     cdef int vocab_size = len(model.vocab)
  *     # Use mean for negative sampling or sum
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wPMI); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wPMI); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 218, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_wPMI = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":219
+  /* "modified_wv/mword2vec_inner.pyx":264
  *     # Use wPMI or PMI
  *     cdef int wPMI = model.wPMI
  *     cdef int vocab_size = len(model.vocab)             # <<<<<<<<<<<<<<
  *     # Use mean for negative sampling or sum
  *     cdef int neg_mean = model.neg_mean
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 219, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 264, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_3 == -1)) __PYX_ERR(0, 219, __pyx_L1_error)
+  __pyx_t_3 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_3 == -1)) __PYX_ERR(0, 264, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_vocab_size = __pyx_t_3;
 
-  /* "modified_wv/mword2vec_inner.pyx":221
+  /* "modified_wv/mword2vec_inner.pyx":266
  *     cdef int vocab_size = len(model.vocab)
  *     # Use mean for negative sampling or sum
  *     cdef int neg_mean = model.neg_mean             # <<<<<<<<<<<<<<
  *     cdef int negative = model.negative
  *     cdef int sample = (model.sample != 0)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_neg_mean); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_neg_mean); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 221, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 266, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_neg_mean = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":222
+  /* "modified_wv/mword2vec_inner.pyx":267
  *     # Use mean for negative sampling or sum
  *     cdef int neg_mean = model.neg_mean
  *     cdef int negative = model.negative             # <<<<<<<<<<<<<<
  *     cdef int sample = (model.sample != 0)
  *     cdef unsigned long long total_words = model.words_cumnum
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 267, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 222, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_negative = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":223
+  /* "modified_wv/mword2vec_inner.pyx":268
  *     cdef int neg_mean = model.neg_mean
  *     cdef int negative = model.negative
  *     cdef int sample = (model.sample != 0)             # <<<<<<<<<<<<<<
  *     cdef unsigned long long total_words = model.words_cumnum
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sample); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 223, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sample); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 223, __pyx_L1_error)
+  __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 223, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 268, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_sample = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":224
+  /* "modified_wv/mword2vec_inner.pyx":269
  *     cdef int negative = model.negative
  *     cdef int sample = (model.sample != 0)
  *     cdef unsigned long long total_words = model.words_cumnum             # <<<<<<<<<<<<<<
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_words_cumnum); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 224, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_words_cumnum); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_4); if (unlikely((__pyx_t_5 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 224, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_4); if (unlikely((__pyx_t_5 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_total_words = __pyx_t_5;
 
-  /* "modified_wv/mword2vec_inner.pyx":226
+  /* "modified_wv/mword2vec_inner.pyx":271
  *     cdef unsigned long long total_words = model.words_cumnum
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
  *     cdef REAL_t *work
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 271, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 226, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 271, __pyx_L1_error)
   __pyx_v_syn0 = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_4)));
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":227
+  /* "modified_wv/mword2vec_inner.pyx":272
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *work
  *     cdef REAL_t _alpha = alpha
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0_lockf); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 227, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0_lockf); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 227, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 272, __pyx_L1_error)
   __pyx_v_word_locks = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_4)));
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":229
+  /* "modified_wv/mword2vec_inner.pyx":274
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
  *     cdef REAL_t *work
  *     cdef REAL_t _alpha = alpha             # <<<<<<<<<<<<<<
  *     cdef int size = model.layer1_size
  * 
  */
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_v_alpha); if (unlikely((__pyx_t_6 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_v_alpha); if (unlikely((__pyx_t_6 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 274, __pyx_L1_error)
   __pyx_v__alpha = __pyx_t_6;
 
-  /* "modified_wv/mword2vec_inner.pyx":230
+  /* "modified_wv/mword2vec_inner.pyx":275
  *     cdef REAL_t *work
  *     cdef REAL_t _alpha = alpha
  *     cdef int size = model.layer1_size             # <<<<<<<<<<<<<<
  * 
  *     cdef int codelens[MAX_SENTENCE_LEN]
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_layer1_size); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_layer1_size); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_size = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":236
+  /* "modified_wv/mword2vec_inner.pyx":281
  *     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
  *     cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
  *     cdef int window = model.window             # <<<<<<<<<<<<<<
  * 
  *     cdef int i, j, k
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 236, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 281, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 236, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 281, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_window = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":239
+  /* "modified_wv/mword2vec_inner.pyx":284
  * 
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -3108,7 +2847,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   __pyx_v_effective_words = 0;
   __pyx_v_effective_sentences = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":257
+  /* "modified_wv/mword2vec_inner.pyx":302
  *     #     syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -3118,46 +2857,46 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   __pyx_t_7 = (__pyx_v_negative != 0);
   if (__pyx_t_7) {
 
-    /* "modified_wv/mword2vec_inner.pyx":258
+    /* "modified_wv/mword2vec_inner.pyx":303
  * 
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))             # <<<<<<<<<<<<<<
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *         cum_table_len = len(model.cum_table)
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 258, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 258, __pyx_L1_error)
+    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 303, __pyx_L1_error)
     __pyx_v_syn1neg = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_4)));
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "modified_wv/mword2vec_inner.pyx":259
+    /* "modified_wv/mword2vec_inner.pyx":304
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))             # <<<<<<<<<<<<<<
  *         cum_table_len = len(model.cum_table)
  *     if negative or sample:
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 259, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 304, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 259, __pyx_L1_error)
+    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 304, __pyx_L1_error)
     __pyx_v_cum_table = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_4)));
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "modified_wv/mword2vec_inner.pyx":260
+    /* "modified_wv/mword2vec_inner.pyx":305
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *         cum_table_len = len(model.cum_table)             # <<<<<<<<<<<<<<
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 260, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 305, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_Length(__pyx_t_4); if (unlikely(__pyx_t_3 == -1)) __PYX_ERR(0, 260, __pyx_L1_error)
+    __pyx_t_3 = PyObject_Length(__pyx_t_4); if (unlikely(__pyx_t_3 == -1)) __PYX_ERR(0, 305, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_v_cum_table_len = __pyx_t_3;
 
-    /* "modified_wv/mword2vec_inner.pyx":257
+    /* "modified_wv/mword2vec_inner.pyx":302
  *     #     syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -3166,7 +2905,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":261
+  /* "modified_wv/mword2vec_inner.pyx":306
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *         cum_table_len = len(model.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -3184,41 +2923,41 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_7) {
 
-    /* "modified_wv/mword2vec_inner.pyx":262
+    /* "modified_wv/mword2vec_inner.pyx":307
  *         cum_table_len = len(model.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Add(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_5 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_5 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_5 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_v_next_random = __pyx_t_5;
 
-    /* "modified_wv/mword2vec_inner.pyx":261
+    /* "modified_wv/mword2vec_inner.pyx":306
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *         cum_table_len = len(model.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -3227,29 +2966,29 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":265
+  /* "modified_wv/mword2vec_inner.pyx":310
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  *     work = <REAL_t *>np.PyArray_DATA(_work)             # <<<<<<<<<<<<<<
  * 
  *     # prepare C structures so we can go "full C" and release the Python GIL
  */
-  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 265, __pyx_L1_error)
+  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 310, __pyx_L1_error)
   __pyx_v_work = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__work)));
 
-  /* "modified_wv/mword2vec_inner.pyx":268
+  /* "modified_wv/mword2vec_inner.pyx":313
  * 
  *     # prepare C structures so we can go "full C" and release the Python GIL
  *     vlookup = model.vocab             # <<<<<<<<<<<<<<
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  */
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 268, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 313, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __pyx_v_vlookup = __pyx_t_9;
   __pyx_t_9 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":269
+  /* "modified_wv/mword2vec_inner.pyx":314
  *     # prepare C structures so we can go "full C" and release the Python GIL
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0             # <<<<<<<<<<<<<<
@@ -3258,7 +2997,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
   (__pyx_v_sentence_idx[0]) = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":270
+  /* "modified_wv/mword2vec_inner.pyx":315
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -3269,26 +3008,26 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __pyx_t_9 = __pyx_v_sentences; __Pyx_INCREF(__pyx_t_9); __pyx_t_3 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_9 = PyObject_GetIter(__pyx_v_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 270, __pyx_L1_error)
+    __pyx_t_3 = -1; __pyx_t_9 = PyObject_GetIter(__pyx_v_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 315, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
-    __pyx_t_10 = Py_TYPE(__pyx_t_9)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 270, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_9)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 315, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_10)) {
       if (likely(PyList_CheckExact(__pyx_t_9))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_9)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 270, __pyx_L1_error)
+        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 315, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_9, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 270, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_9, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 315, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_9)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_9, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 270, __pyx_L1_error)
+        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_9, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 315, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_9, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 270, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_9, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 315, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       }
@@ -3298,7 +3037,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 270, __pyx_L1_error)
+          else __PYX_ERR(0, 315, __pyx_L1_error)
         }
         break;
       }
@@ -3307,18 +3046,18 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __Pyx_XDECREF_SET(__pyx_v_sent, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "modified_wv/mword2vec_inner.pyx":271
+    /* "modified_wv/mword2vec_inner.pyx":316
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if not sent:             # <<<<<<<<<<<<<<
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:
  */
-    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_v_sent); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 271, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_v_sent); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 316, __pyx_L1_error)
     __pyx_t_8 = ((!__pyx_t_7) != 0);
     if (__pyx_t_8) {
 
-      /* "modified_wv/mword2vec_inner.pyx":272
+      /* "modified_wv/mword2vec_inner.pyx":317
  *     for sent in sentences:
  *         if not sent:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged             # <<<<<<<<<<<<<<
@@ -3327,7 +3066,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       goto __pyx_L7_continue;
 
-      /* "modified_wv/mword2vec_inner.pyx":271
+      /* "modified_wv/mword2vec_inner.pyx":316
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if not sent:             # <<<<<<<<<<<<<<
@@ -3336,7 +3075,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
     }
 
-    /* "modified_wv/mword2vec_inner.pyx":273
+    /* "modified_wv/mword2vec_inner.pyx":318
  *         if not sent:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -3347,26 +3086,26 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __pyx_t_4 = __pyx_v_sent; __Pyx_INCREF(__pyx_t_4); __pyx_t_11 = 0;
       __pyx_t_12 = NULL;
     } else {
-      __pyx_t_11 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_v_sent); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 273, __pyx_L1_error)
+      __pyx_t_11 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_v_sent); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 318, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_12 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 273, __pyx_L1_error)
+      __pyx_t_12 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 318, __pyx_L1_error)
     }
     for (;;) {
       if (likely(!__pyx_t_12)) {
         if (likely(PyList_CheckExact(__pyx_t_4))) {
           if (__pyx_t_11 >= PyList_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_11); __Pyx_INCREF(__pyx_t_1); __pyx_t_11++; if (unlikely(0 < 0)) __PYX_ERR(0, 273, __pyx_L1_error)
+          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_11); __Pyx_INCREF(__pyx_t_1); __pyx_t_11++; if (unlikely(0 < 0)) __PYX_ERR(0, 318, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_11); __pyx_t_11++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 273, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_11); __pyx_t_11++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 318, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         } else {
           if (__pyx_t_11 >= PyTuple_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_11); __Pyx_INCREF(__pyx_t_1); __pyx_t_11++; if (unlikely(0 < 0)) __PYX_ERR(0, 273, __pyx_L1_error)
+          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_11); __Pyx_INCREF(__pyx_t_1); __pyx_t_11++; if (unlikely(0 < 0)) __PYX_ERR(0, 318, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_11); __pyx_t_11++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 273, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_11); __pyx_t_11++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 318, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         }
@@ -3376,7 +3115,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 273, __pyx_L1_error)
+            else __PYX_ERR(0, 318, __pyx_L1_error)
           }
           break;
         }
@@ -3385,16 +3124,16 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __Pyx_XDECREF_SET(__pyx_v_token, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "modified_wv/mword2vec_inner.pyx":274
+      /* "modified_wv/mword2vec_inner.pyx":319
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None             # <<<<<<<<<<<<<<
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  */
-      __pyx_t_8 = (__Pyx_PySequence_ContainsTF(__pyx_v_token, __pyx_v_vlookup, Py_EQ)); if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 274, __pyx_L1_error)
+      __pyx_t_8 = (__Pyx_PySequence_ContainsTF(__pyx_v_token, __pyx_v_vlookup, Py_EQ)); if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 319, __pyx_L1_error)
       if ((__pyx_t_8 != 0)) {
-        __pyx_t_13 = PyObject_GetItem(__pyx_v_vlookup, __pyx_v_token); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 274, __pyx_L1_error)
+        __pyx_t_13 = PyObject_GetItem(__pyx_v_vlookup, __pyx_v_token); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 319, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_13);
         __pyx_t_1 = __pyx_t_13;
         __pyx_t_13 = 0;
@@ -3405,7 +3144,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __Pyx_XDECREF_SET(__pyx_v_word, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "modified_wv/mword2vec_inner.pyx":275
+      /* "modified_wv/mword2vec_inner.pyx":320
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:             # <<<<<<<<<<<<<<
@@ -3416,7 +3155,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __pyx_t_7 = (__pyx_t_8 != 0);
       if (__pyx_t_7) {
 
-        /* "modified_wv/mword2vec_inner.pyx":276
+        /* "modified_wv/mword2vec_inner.pyx":321
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window             # <<<<<<<<<<<<<<
@@ -3425,7 +3164,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
         goto __pyx_L10_continue;
 
-        /* "modified_wv/mword2vec_inner.pyx":275
+        /* "modified_wv/mword2vec_inner.pyx":320
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:             # <<<<<<<<<<<<<<
@@ -3434,7 +3173,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       }
 
-      /* "modified_wv/mword2vec_inner.pyx":277
+      /* "modified_wv/mword2vec_inner.pyx":322
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if sample and word.sample_int < random_int32(&next_random):             # <<<<<<<<<<<<<<
@@ -3447,20 +3186,20 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
         __pyx_t_7 = __pyx_t_8;
         goto __pyx_L14_bool_binop_done;
       }
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_sample_int); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_sample_int); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 322, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_13 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_f_11modified_wv_15mword2vec_inner_random_int32((&__pyx_v_next_random))); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 277, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_f_11modified_wv_15mword2vec_inner_random_int32((&__pyx_v_next_random))); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 322, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_14 = PyObject_RichCompare(__pyx_t_1, __pyx_t_13, Py_LT); __Pyx_XGOTREF(__pyx_t_14); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 277, __pyx_L1_error)
+      __pyx_t_14 = PyObject_RichCompare(__pyx_t_1, __pyx_t_13, Py_LT); __Pyx_XGOTREF(__pyx_t_14); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 322, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-      __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_14); if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 277, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_14); if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 322, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
       __pyx_t_7 = __pyx_t_8;
       __pyx_L14_bool_binop_done:;
       if (__pyx_t_7) {
 
-        /* "modified_wv/mword2vec_inner.pyx":278
+        /* "modified_wv/mword2vec_inner.pyx":323
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if sample and word.sample_int < random_int32(&next_random):
  *                 continue             # <<<<<<<<<<<<<<
@@ -3469,7 +3208,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
         goto __pyx_L10_continue;
 
-        /* "modified_wv/mword2vec_inner.pyx":277
+        /* "modified_wv/mword2vec_inner.pyx":322
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if sample and word.sample_int < random_int32(&next_random):             # <<<<<<<<<<<<<<
@@ -3478,20 +3217,20 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       }
 
-      /* "modified_wv/mword2vec_inner.pyx":279
+      /* "modified_wv/mword2vec_inner.pyx":324
  *             if sample and word.sample_int < random_int32(&next_random):
  *                 continue
  *             indexes[effective_words] = word.index             # <<<<<<<<<<<<<<
  *             # if hs:
  *             #     codelens[effective_words] = <int>len(word.code)
  */
-      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_index); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 279, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_index); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 324, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_t_14); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 279, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_t_14); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 324, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
       (__pyx_v_indexes[__pyx_v_effective_words]) = __pyx_t_15;
 
-      /* "modified_wv/mword2vec_inner.pyx":284
+      /* "modified_wv/mword2vec_inner.pyx":329
  *             #     codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
  *             #     points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
  *             effective_words += 1             # <<<<<<<<<<<<<<
@@ -3500,7 +3239,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       __pyx_v_effective_words = (__pyx_v_effective_words + 1);
 
-      /* "modified_wv/mword2vec_inner.pyx":285
+      /* "modified_wv/mword2vec_inner.pyx":330
  *             #     points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -3510,7 +3249,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __pyx_t_7 = ((__pyx_v_effective_words == 0x2710) != 0);
       if (__pyx_t_7) {
 
-        /* "modified_wv/mword2vec_inner.pyx":286
+        /* "modified_wv/mword2vec_inner.pyx":331
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:
  *                 break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
@@ -3519,7 +3258,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
         goto __pyx_L11_break;
 
-        /* "modified_wv/mword2vec_inner.pyx":285
+        /* "modified_wv/mword2vec_inner.pyx":330
  *             #     points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -3528,7 +3267,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       }
 
-      /* "modified_wv/mword2vec_inner.pyx":273
+      /* "modified_wv/mword2vec_inner.pyx":318
  *         if not sent:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -3540,7 +3279,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __pyx_L11_break:;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "modified_wv/mword2vec_inner.pyx":291
+    /* "modified_wv/mword2vec_inner.pyx":336
  *         # across sentence boundaries.
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences += 1             # <<<<<<<<<<<<<<
@@ -3549,7 +3288,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
     __pyx_v_effective_sentences = (__pyx_v_effective_sentences + 1);
 
-    /* "modified_wv/mword2vec_inner.pyx":292
+    /* "modified_wv/mword2vec_inner.pyx":337
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences += 1
  *         sentence_idx[effective_sentences] = effective_words             # <<<<<<<<<<<<<<
@@ -3558,7 +3297,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
     (__pyx_v_sentence_idx[__pyx_v_effective_sentences]) = __pyx_v_effective_words;
 
-    /* "modified_wv/mword2vec_inner.pyx":294
+    /* "modified_wv/mword2vec_inner.pyx":339
  *         sentence_idx[effective_sentences] = effective_words
  * 
  *         if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -3568,7 +3307,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __pyx_t_7 = ((__pyx_v_effective_words == 0x2710) != 0);
     if (__pyx_t_7) {
 
-      /* "modified_wv/mword2vec_inner.pyx":295
+      /* "modified_wv/mword2vec_inner.pyx":340
  * 
  *         if effective_words == MAX_SENTENCE_LEN:
  *             break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
@@ -3577,7 +3316,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
       goto __pyx_L8_break;
 
-      /* "modified_wv/mword2vec_inner.pyx":294
+      /* "modified_wv/mword2vec_inner.pyx":339
  *         sentence_idx[effective_sentences] = effective_words
  * 
  *         if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -3586,7 +3325,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
     }
 
-    /* "modified_wv/mword2vec_inner.pyx":270
+    /* "modified_wv/mword2vec_inner.pyx":315
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -3598,7 +3337,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   __pyx_L8_break:;
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":298
+  /* "modified_wv/mword2vec_inner.pyx":343
  * 
  *     # precompute "reduced window" offsets in a single randint() call
  *     for i, item in enumerate(model.random.randint(0, window, effective_words)):             # <<<<<<<<<<<<<<
@@ -3606,14 +3345,14 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  * 
  */
   __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_randint); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_14);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_window); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_13 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_13);
   __pyx_t_1 = NULL;
   __pyx_t_3 = 0;
@@ -3627,7 +3366,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       __pyx_t_3 = 1;
     }
   }
-  __pyx_t_16 = PyTuple_New(3+__pyx_t_3); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_16 = PyTuple_New(3+__pyx_t_3); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_16);
   if (__pyx_t_1) {
     __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_16, 0, __pyx_t_1); __pyx_t_1 = NULL;
@@ -3641,7 +3380,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   PyTuple_SET_ITEM(__pyx_t_16, 2+__pyx_t_3, __pyx_t_13);
   __pyx_t_4 = 0;
   __pyx_t_13 = 0;
-  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_14, __pyx_t_16, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_14, __pyx_t_16, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 343, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_16); __pyx_t_16 = 0;
   __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
@@ -3649,9 +3388,9 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __pyx_t_14 = __pyx_t_9; __Pyx_INCREF(__pyx_t_14); __pyx_t_3 = 0;
     __pyx_t_10 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_14 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 298, __pyx_L1_error)
+    __pyx_t_3 = -1; __pyx_t_14 = PyObject_GetIter(__pyx_t_9); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 343, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_14);
-    __pyx_t_10 = Py_TYPE(__pyx_t_14)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 298, __pyx_L1_error)
+    __pyx_t_10 = Py_TYPE(__pyx_t_14)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 343, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   for (;;) {
@@ -3659,17 +3398,17 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       if (likely(PyList_CheckExact(__pyx_t_14))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_14)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_9 = PyList_GET_ITEM(__pyx_t_14, __pyx_t_3); __Pyx_INCREF(__pyx_t_9); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 298, __pyx_L1_error)
+        __pyx_t_9 = PyList_GET_ITEM(__pyx_t_14, __pyx_t_3); __Pyx_INCREF(__pyx_t_9); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 343, __pyx_L1_error)
         #else
-        __pyx_t_9 = PySequence_ITEM(__pyx_t_14, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 298, __pyx_L1_error)
+        __pyx_t_9 = PySequence_ITEM(__pyx_t_14, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 343, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_14)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_14, __pyx_t_3); __Pyx_INCREF(__pyx_t_9); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 298, __pyx_L1_error)
+        __pyx_t_9 = PyTuple_GET_ITEM(__pyx_t_14, __pyx_t_3); __Pyx_INCREF(__pyx_t_9); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 343, __pyx_L1_error)
         #else
-        __pyx_t_9 = PySequence_ITEM(__pyx_t_14, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 298, __pyx_L1_error)
+        __pyx_t_9 = PySequence_ITEM(__pyx_t_14, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 343, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         #endif
       }
@@ -3679,7 +3418,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 298, __pyx_L1_error)
+          else __PYX_ERR(0, 343, __pyx_L1_error)
         }
         break;
       }
@@ -3690,17 +3429,17 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
     __pyx_v_i = __pyx_t_2;
     __pyx_t_2 = (__pyx_t_2 + 1);
 
-    /* "modified_wv/mword2vec_inner.pyx":299
+    /* "modified_wv/mword2vec_inner.pyx":344
  *     # precompute "reduced window" offsets in a single randint() call
  *     for i, item in enumerate(model.random.randint(0, window, effective_words)):
  *         reduced_windows[i] = item             # <<<<<<<<<<<<<<
  * 
  *     # release GIL & train on all sentences
  */
-    __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_v_item); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 299, __pyx_L1_error)
+    __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_v_item); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 344, __pyx_L1_error)
     (__pyx_v_reduced_windows[__pyx_v_i]) = __pyx_t_15;
 
-    /* "modified_wv/mword2vec_inner.pyx":298
+    /* "modified_wv/mword2vec_inner.pyx":343
  * 
  *     # precompute "reduced window" offsets in a single randint() call
  *     for i, item in enumerate(model.random.randint(0, window, effective_words)):             # <<<<<<<<<<<<<<
@@ -3710,7 +3449,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   }
   __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":302
+  /* "modified_wv/mword2vec_inner.pyx":347
  * 
  *     # release GIL & train on all sentences
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3724,7 +3463,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       #endif
       /*try:*/ {
 
-        /* "modified_wv/mword2vec_inner.pyx":303
+        /* "modified_wv/mword2vec_inner.pyx":348
  *     # release GIL & train on all sentences
  *     with nogil:
  *         for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
@@ -3735,7 +3474,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
         for (__pyx_t_17 = 0; __pyx_t_17 < __pyx_t_2; __pyx_t_17+=1) {
           __pyx_v_sent_idx = __pyx_t_17;
 
-          /* "modified_wv/mword2vec_inner.pyx":304
+          /* "modified_wv/mword2vec_inner.pyx":349
  *     with nogil:
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]             # <<<<<<<<<<<<<<
@@ -3744,7 +3483,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
           __pyx_v_idx_start = (__pyx_v_sentence_idx[__pyx_v_sent_idx]);
 
-          /* "modified_wv/mword2vec_inner.pyx":305
+          /* "modified_wv/mword2vec_inner.pyx":350
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]
  *             idx_end = sentence_idx[sent_idx + 1]             # <<<<<<<<<<<<<<
@@ -3753,7 +3492,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
           __pyx_v_idx_end = (__pyx_v_sentence_idx[(__pyx_v_sent_idx + 1)]);
 
-          /* "modified_wv/mword2vec_inner.pyx":306
+          /* "modified_wv/mword2vec_inner.pyx":351
  *             idx_start = sentence_idx[sent_idx]
  *             idx_end = sentence_idx[sent_idx + 1]
  *             for i in range(idx_start, idx_end):             # <<<<<<<<<<<<<<
@@ -3764,7 +3503,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
           for (__pyx_t_19 = __pyx_v_idx_start; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
             __pyx_v_i = __pyx_t_19;
 
-            /* "modified_wv/mword2vec_inner.pyx":307
+            /* "modified_wv/mword2vec_inner.pyx":352
  *             idx_end = sentence_idx[sent_idx + 1]
  *             for i in range(idx_start, idx_end):
  *                 j = i - window + reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -3773,7 +3512,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
             __pyx_v_j = ((__pyx_v_i - __pyx_v_window) + (__pyx_v_reduced_windows[__pyx_v_i]));
 
-            /* "modified_wv/mword2vec_inner.pyx":308
+            /* "modified_wv/mword2vec_inner.pyx":353
  *             for i in range(idx_start, idx_end):
  *                 j = i - window + reduced_windows[i]
  *                 if j < idx_start:             # <<<<<<<<<<<<<<
@@ -3783,7 +3522,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
             __pyx_t_7 = ((__pyx_v_j < __pyx_v_idx_start) != 0);
             if (__pyx_t_7) {
 
-              /* "modified_wv/mword2vec_inner.pyx":309
+              /* "modified_wv/mword2vec_inner.pyx":354
  *                 j = i - window + reduced_windows[i]
  *                 if j < idx_start:
  *                     j = idx_start             # <<<<<<<<<<<<<<
@@ -3792,7 +3531,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
               __pyx_v_j = __pyx_v_idx_start;
 
-              /* "modified_wv/mword2vec_inner.pyx":308
+              /* "modified_wv/mword2vec_inner.pyx":353
  *             for i in range(idx_start, idx_end):
  *                 j = i - window + reduced_windows[i]
  *                 if j < idx_start:             # <<<<<<<<<<<<<<
@@ -3801,7 +3540,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
             }
 
-            /* "modified_wv/mword2vec_inner.pyx":310
+            /* "modified_wv/mword2vec_inner.pyx":355
  *                 if j < idx_start:
  *                     j = idx_start
  *                 k = i + window + 1 - reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -3810,7 +3549,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
             __pyx_v_k = (((__pyx_v_i + __pyx_v_window) + 1) - (__pyx_v_reduced_windows[__pyx_v_i]));
 
-            /* "modified_wv/mword2vec_inner.pyx":311
+            /* "modified_wv/mword2vec_inner.pyx":356
  *                     j = idx_start
  *                 k = i + window + 1 - reduced_windows[i]
  *                 if k > idx_end:             # <<<<<<<<<<<<<<
@@ -3820,7 +3559,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
             __pyx_t_7 = ((__pyx_v_k > __pyx_v_idx_end) != 0);
             if (__pyx_t_7) {
 
-              /* "modified_wv/mword2vec_inner.pyx":312
+              /* "modified_wv/mword2vec_inner.pyx":357
  *                 k = i + window + 1 - reduced_windows[i]
  *                 if k > idx_end:
  *                     k = idx_end             # <<<<<<<<<<<<<<
@@ -3829,7 +3568,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
               __pyx_v_k = __pyx_v_idx_end;
 
-              /* "modified_wv/mword2vec_inner.pyx":311
+              /* "modified_wv/mword2vec_inner.pyx":356
  *                     j = idx_start
  *                 k = i + window + 1 - reduced_windows[i]
  *                 if k > idx_end:             # <<<<<<<<<<<<<<
@@ -3838,7 +3577,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
             }
 
-            /* "modified_wv/mword2vec_inner.pyx":313
+            /* "modified_wv/mword2vec_inner.pyx":358
  *                 if k > idx_end:
  *                     k = idx_end
  *                 for j in range(j, k):             # <<<<<<<<<<<<<<
@@ -3849,7 +3588,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
             for (__pyx_t_21 = __pyx_v_j; __pyx_t_21 < __pyx_t_20; __pyx_t_21+=1) {
               __pyx_v_j = __pyx_t_21;
 
-              /* "modified_wv/mword2vec_inner.pyx":314
+              /* "modified_wv/mword2vec_inner.pyx":359
  *                     k = idx_end
  *                 for j in range(j, k):
  *                     if j == i:             # <<<<<<<<<<<<<<
@@ -3859,7 +3598,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
               __pyx_t_7 = ((__pyx_v_j == __pyx_v_i) != 0);
               if (__pyx_t_7) {
 
-                /* "modified_wv/mword2vec_inner.pyx":315
+                /* "modified_wv/mword2vec_inner.pyx":360
  *                 for j in range(j, k):
  *                     if j == i:
  *                         continue             # <<<<<<<<<<<<<<
@@ -3868,7 +3607,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
                 goto __pyx_L29_continue;
 
-                /* "modified_wv/mword2vec_inner.pyx":314
+                /* "modified_wv/mword2vec_inner.pyx":359
  *                     k = idx_end
  *                 for j in range(j, k):
  *                     if j == i:             # <<<<<<<<<<<<<<
@@ -3877,31 +3616,31 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
  */
               }
 
-              /* "modified_wv/mword2vec_inner.pyx":318
+              /* "modified_wv/mword2vec_inner.pyx":363
  *                     # if hs:
  *                     #     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
  *                     if negative:             # <<<<<<<<<<<<<<
- *                         next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size,
- *                             total_words, cum_table, cum_table_len, syn0, syn1neg,
+ *                         ## olde
+ *                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
  */
               __pyx_t_7 = (__pyx_v_negative != 0);
               if (__pyx_t_7) {
 
-                /* "modified_wv/mword2vec_inner.pyx":319
- *                     #     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
+                /* "modified_wv/mword2vec_inner.pyx":365
  *                     if negative:
- *                         next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size,             # <<<<<<<<<<<<<<
- *                             total_words, cum_table, cum_table_len, syn0, syn1neg,
- *                             size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+ *                         ## olde
+ *                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)             # <<<<<<<<<<<<<<
+ *                         ## modified
+ *                         # next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size,
  */
-                __pyx_v_next_random = __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(__pyx_v_negative, __pyx_v_neg_mean, __pyx_v_wPMI, __pyx_v_vocab_size, __pyx_v_total_words, __pyx_v_cum_table, __pyx_v_cum_table_len, __pyx_v_syn0, __pyx_v_syn1neg, __pyx_v_size, (__pyx_v_indexes[__pyx_v_i]), (__pyx_v_indexes[__pyx_v_j]), __pyx_v__alpha, __pyx_v_work, __pyx_v_next_random, __pyx_v_word_locks);
+                __pyx_v_next_random = __pyx_f_11modified_wv_15mword2vec_inner_fast_sentence_sg_neg(__pyx_v_negative, __pyx_v_cum_table, __pyx_v_cum_table_len, __pyx_v_syn0, __pyx_v_syn1neg, __pyx_v_size, (__pyx_v_indexes[__pyx_v_i]), (__pyx_v_indexes[__pyx_v_j]), __pyx_v__alpha, __pyx_v_work, __pyx_v_next_random, __pyx_v_word_locks);
 
-                /* "modified_wv/mword2vec_inner.pyx":318
+                /* "modified_wv/mword2vec_inner.pyx":363
  *                     # if hs:
  *                     #     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
  *                     if negative:             # <<<<<<<<<<<<<<
- *                         next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size,
- *                             total_words, cum_table, cum_table_len, syn0, syn1neg,
+ *                         ## olde
+ *                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
  */
               }
               __pyx_L29_continue:;
@@ -3910,7 +3649,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
         }
       }
 
-      /* "modified_wv/mword2vec_inner.pyx":302
+      /* "modified_wv/mword2vec_inner.pyx":347
  * 
  *     # release GIL & train on all sentences
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3928,21 +3667,21 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
       }
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":323
- *                             size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+  /* "modified_wv/mword2vec_inner.pyx":371
+ *                         #     size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
  * 
  *     return effective_words             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 371, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_14);
   __pyx_r = __pyx_t_14;
   __pyx_t_14 = 0;
   goto __pyx_L0;
 
-  /* "modified_wv/mword2vec_inner.pyx":215
+  /* "modified_wv/mword2vec_inner.pyx":260
  * 
  * 
  * def train_batch_sg(model, sentences, alpha, _work):             # <<<<<<<<<<<<<<
@@ -3971,7 +3710,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_train_batch_sg(CYTHON_
   return __pyx_r;
 }
 
-/* "modified_wv/mword2vec_inner.pyx":407
+/* "modified_wv/mword2vec_inner.pyx":455
  * 
  * 
  * def init():             # <<<<<<<<<<<<<<
@@ -4010,7 +3749,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   int __pyx_t_4;
   __Pyx_RefNannySetupContext("init", 0);
 
-  /* "modified_wv/mword2vec_inner.pyx":417
+  /* "modified_wv/mword2vec_inner.pyx":465
  * 
  *     cdef int i
  *     cdef float *x = [<float>10.0]             # <<<<<<<<<<<<<<
@@ -4020,7 +3759,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   __pyx_t_1[0] = ((float)10.0);
   __pyx_v_x = __pyx_t_1;
 
-  /* "modified_wv/mword2vec_inner.pyx":418
+  /* "modified_wv/mword2vec_inner.pyx":466
  *     cdef int i
  *     cdef float *x = [<float>10.0]
  *     cdef float *y = [<float>0.01]             # <<<<<<<<<<<<<<
@@ -4030,7 +3769,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   __pyx_t_2[0] = ((float)0.01);
   __pyx_v_y = __pyx_t_2;
 
-  /* "modified_wv/mword2vec_inner.pyx":419
+  /* "modified_wv/mword2vec_inner.pyx":467
  *     cdef float *x = [<float>10.0]
  *     cdef float *y = [<float>0.01]
  *     cdef float expected = <float>0.1             # <<<<<<<<<<<<<<
@@ -4039,7 +3778,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   __pyx_v_expected = ((float)0.1);
 
-  /* "modified_wv/mword2vec_inner.pyx":420
+  /* "modified_wv/mword2vec_inner.pyx":468
  *     cdef float *y = [<float>0.01]
  *     cdef float expected = <float>0.1
  *     cdef int size = 1             # <<<<<<<<<<<<<<
@@ -4048,7 +3787,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   __pyx_v_size = 1;
 
-  /* "modified_wv/mword2vec_inner.pyx":425
+  /* "modified_wv/mword2vec_inner.pyx":473
  * 
  *     # build the sigmoid table
  *     for i in range(EXP_TABLE_SIZE):             # <<<<<<<<<<<<<<
@@ -4058,7 +3797,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   for (__pyx_t_3 = 0; __pyx_t_3 < 0x3E8; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "modified_wv/mword2vec_inner.pyx":426
+    /* "modified_wv/mword2vec_inner.pyx":474
  *     # build the sigmoid table
  *     for i in range(EXP_TABLE_SIZE):
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)             # <<<<<<<<<<<<<<
@@ -4067,7 +3806,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)exp(((((__pyx_v_i / ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)0x3E8)) * 2.0) - 1.0) * 6.0)));
 
-    /* "modified_wv/mword2vec_inner.pyx":427
+    /* "modified_wv/mword2vec_inner.pyx":475
  *     for i in range(EXP_TABLE_SIZE):
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
  *         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))             # <<<<<<<<<<<<<<
@@ -4076,7 +3815,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     (__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)((__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[__pyx_v_i]) / ((__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[__pyx_v_i]) + 1.0)));
 
-    /* "modified_wv/mword2vec_inner.pyx":428
+    /* "modified_wv/mword2vec_inner.pyx":476
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
  *         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
  *         LOG_TABLE[i] = <REAL_t>log( EXP_TABLE[i] )             # <<<<<<<<<<<<<<
@@ -4086,7 +3825,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
     (__pyx_v_11modified_wv_15mword2vec_inner_LOG_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)log((__pyx_v_11modified_wv_15mword2vec_inner_EXP_TABLE[__pyx_v_i])));
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":431
+  /* "modified_wv/mword2vec_inner.pyx":479
  * 
  *     # check whether sdot returns double or float
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)             # <<<<<<<<<<<<<<
@@ -4095,7 +3834,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   __pyx_v_d_res = __pyx_v_11modified_wv_15mword2vec_inner_dsdot((&__pyx_v_size), __pyx_v_x, (&__pyx_v_11modified_wv_15mword2vec_inner_ONE), __pyx_v_y, (&__pyx_v_11modified_wv_15mword2vec_inner_ONE));
 
-  /* "modified_wv/mword2vec_inner.pyx":432
+  /* "modified_wv/mword2vec_inner.pyx":480
  *     # check whether sdot returns double or float
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res             # <<<<<<<<<<<<<<
@@ -4104,7 +3843,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   __pyx_v_p_res = ((float *)(&__pyx_v_d_res));
 
-  /* "modified_wv/mword2vec_inner.pyx":433
+  /* "modified_wv/mword2vec_inner.pyx":481
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4114,7 +3853,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   __pyx_t_4 = ((fabs((__pyx_v_d_res - __pyx_v_expected)) < 0.0001) != 0);
   if (__pyx_t_4) {
 
-    /* "modified_wv/mword2vec_inner.pyx":434
+    /* "modified_wv/mword2vec_inner.pyx":482
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):
  *         our_dot = our_dot_double             # <<<<<<<<<<<<<<
@@ -4123,7 +3862,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_dot = __pyx_f_11modified_wv_15mword2vec_inner_our_dot_double;
 
-    /* "modified_wv/mword2vec_inner.pyx":435
+    /* "modified_wv/mword2vec_inner.pyx":483
  *     if (abs(d_res - expected) < 0.0001):
  *         our_dot = our_dot_double
  *         our_saxpy = saxpy             # <<<<<<<<<<<<<<
@@ -4132,7 +3871,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy = __pyx_v_11modified_wv_15mword2vec_inner_saxpy;
 
-    /* "modified_wv/mword2vec_inner.pyx":436
+    /* "modified_wv/mword2vec_inner.pyx":484
  *         our_dot = our_dot_double
  *         our_saxpy = saxpy
  *         return 0  # double             # <<<<<<<<<<<<<<
@@ -4144,7 +3883,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
     __pyx_r = __pyx_int_0;
     goto __pyx_L0;
 
-    /* "modified_wv/mword2vec_inner.pyx":433
+    /* "modified_wv/mword2vec_inner.pyx":481
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4153,7 +3892,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":437
+  /* "modified_wv/mword2vec_inner.pyx":485
  *         our_saxpy = saxpy
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4163,7 +3902,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   __pyx_t_4 = ((fabsf(((__pyx_v_p_res[0]) - __pyx_v_expected)) < 0.0001) != 0);
   if (__pyx_t_4) {
 
-    /* "modified_wv/mword2vec_inner.pyx":438
+    /* "modified_wv/mword2vec_inner.pyx":486
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):
  *         our_dot = our_dot_float             # <<<<<<<<<<<<<<
@@ -4172,7 +3911,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_dot = __pyx_f_11modified_wv_15mword2vec_inner_our_dot_float;
 
-    /* "modified_wv/mword2vec_inner.pyx":439
+    /* "modified_wv/mword2vec_inner.pyx":487
  *     elif (abs(p_res[0] - expected) < 0.0001):
  *         our_dot = our_dot_float
  *         our_saxpy = saxpy             # <<<<<<<<<<<<<<
@@ -4181,7 +3920,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy = __pyx_v_11modified_wv_15mword2vec_inner_saxpy;
 
-    /* "modified_wv/mword2vec_inner.pyx":440
+    /* "modified_wv/mword2vec_inner.pyx":488
  *         our_dot = our_dot_float
  *         our_saxpy = saxpy
  *         return 1  # float             # <<<<<<<<<<<<<<
@@ -4193,7 +3932,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
     __pyx_r = __pyx_int_1;
     goto __pyx_L0;
 
-    /* "modified_wv/mword2vec_inner.pyx":437
+    /* "modified_wv/mword2vec_inner.pyx":485
  *         our_saxpy = saxpy
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4202,7 +3941,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":444
+  /* "modified_wv/mword2vec_inner.pyx":492
  *         # neither => use cython loops, no BLAS
  *         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
  *         our_dot = our_dot_noblas             # <<<<<<<<<<<<<<
@@ -4212,7 +3951,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
   /*else*/ {
     __pyx_v_11modified_wv_15mword2vec_inner_our_dot = __pyx_f_11modified_wv_15mword2vec_inner_our_dot_noblas;
 
-    /* "modified_wv/mword2vec_inner.pyx":445
+    /* "modified_wv/mword2vec_inner.pyx":493
  *         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
  *         our_dot = our_dot_noblas
  *         our_saxpy = our_saxpy_noblas             # <<<<<<<<<<<<<<
@@ -4221,7 +3960,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
  */
     __pyx_v_11modified_wv_15mword2vec_inner_our_saxpy = __pyx_f_11modified_wv_15mword2vec_inner_our_saxpy_noblas;
 
-    /* "modified_wv/mword2vec_inner.pyx":446
+    /* "modified_wv/mword2vec_inner.pyx":494
  *         our_dot = our_dot_noblas
  *         our_saxpy = our_saxpy_noblas
  *         return 2             # <<<<<<<<<<<<<<
@@ -4234,7 +3973,7 @@ static PyObject *__pyx_pf_11modified_wv_15mword2vec_inner_2init(CYTHON_UNUSED Py
     goto __pyx_L0;
   }
 
-  /* "modified_wv/mword2vec_inner.pyx":407
+  /* "modified_wv/mword2vec_inner.pyx":455
  * 
  * 
  * def init():             # <<<<<<<<<<<<<<
@@ -6490,7 +6229,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
 static int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(0, 22, __pyx_L1_error)
   __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 136, __pyx_L1_error)
-  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 298, __pyx_L1_error)
+  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 343, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 218, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 799, __pyx_L1_error)
   return 0;
@@ -6502,17 +6241,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "modified_wv/mword2vec_inner.pyx":262
+  /* "modified_wv/mword2vec_inner.pyx":307
  *         cum_table_len = len(model.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 262, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 307, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 262, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 307, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
@@ -6582,29 +6321,29 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "modified_wv/mword2vec_inner.pyx":215
+  /* "modified_wv/mword2vec_inner.pyx":260
  * 
  * 
  * def train_batch_sg(model, sentences, alpha, _work):             # <<<<<<<<<<<<<<
  *     # cdef int hs = model.hs
  *     # Use wPMI or PMI
  */
-  __pyx_tuple__10 = PyTuple_Pack(40, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_alpha, __pyx_n_s_work, __pyx_n_s_wPMI, __pyx_n_s_vocab_size, __pyx_n_s_neg_mean, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_total_words, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_alpha_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_vlookup, __pyx_n_s_sent, __pyx_n_s_token, __pyx_n_s_word, __pyx_n_s_item); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(40, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_alpha, __pyx_n_s_work, __pyx_n_s_wPMI, __pyx_n_s_vocab_size, __pyx_n_s_neg_mean, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_total_words, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_alpha_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_vlookup, __pyx_n_s_sent, __pyx_n_s_token, __pyx_n_s_word, __pyx_n_s_item); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 260, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 40, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_train_batch_sg, 215, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 40, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_train_batch_sg, 260, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 260, __pyx_L1_error)
 
-  /* "modified_wv/mword2vec_inner.pyx":407
+  /* "modified_wv/mword2vec_inner.pyx":455
  * 
  * 
  * def init():             # <<<<<<<<<<<<<<
  *     """
  *     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
  */
-  __pyx_tuple__12 = PyTuple_Pack(7, __pyx_n_s_i, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_expected, __pyx_n_s_size, __pyx_n_s_d_res, __pyx_n_s_p_res); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(7, __pyx_n_s_i, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_expected, __pyx_n_s_size, __pyx_n_s_d_res, __pyx_n_s_p_res); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 455, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__12);
   __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(0, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_init, 407, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(0, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_init, 455, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 455, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -7020,37 +6759,37 @@ PyMODINIT_FUNC PyInit_mword2vec_inner(void)
  */
   __pyx_v_11modified_wv_15mword2vec_inner_ONEF = ((__pyx_t_11modified_wv_15mword2vec_inner_REAL_t)1.0);
 
-  /* "modified_wv/mword2vec_inner.pyx":215
+  /* "modified_wv/mword2vec_inner.pyx":260
  * 
  * 
  * def train_batch_sg(model, sentences, alpha, _work):             # <<<<<<<<<<<<<<
  *     # cdef int hs = model.hs
  *     # Use wPMI or PMI
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_15mword2vec_inner_1train_batch_sg, NULL, __pyx_n_s_modified_wv_mword2vec_inner); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_15mword2vec_inner_1train_batch_sg, NULL, __pyx_n_s_modified_wv_mword2vec_inner); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 260, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_batch_sg, __pyx_t_1) < 0) __PYX_ERR(0, 215, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_batch_sg, __pyx_t_1) < 0) __PYX_ERR(0, 260, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":407
+  /* "modified_wv/mword2vec_inner.pyx":455
  * 
  * 
  * def init():             # <<<<<<<<<<<<<<
  *     """
  *     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_15mword2vec_inner_3init, NULL, __pyx_n_s_modified_wv_mword2vec_inner); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_15mword2vec_inner_3init, NULL, __pyx_n_s_modified_wv_mword2vec_inner); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 455, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_init, __pyx_t_1) < 0) __PYX_ERR(0, 407, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_init, __pyx_t_1) < 0) __PYX_ERR(0, 455, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":448
+  /* "modified_wv/mword2vec_inner.pyx":496
  *         return 2
  * 
  * FAST_VERSION = init()  # initialize the module             # <<<<<<<<<<<<<<
  * MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
  */
-  __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_init); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 448, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_init); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 496, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_t_5 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_7))) {
@@ -7063,22 +6802,22 @@ PyMODINIT_FUNC PyInit_mword2vec_inner(void)
     }
   }
   if (__pyx_t_5) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 448, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 496, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   } else {
-    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 448, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 496, __pyx_L1_error)
   }
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_FAST_VERSION, __pyx_t_1) < 0) __PYX_ERR(0, 448, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_FAST_VERSION, __pyx_t_1) < 0) __PYX_ERR(0, 496, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "modified_wv/mword2vec_inner.pyx":449
+  /* "modified_wv/mword2vec_inner.pyx":497
  * 
  * FAST_VERSION = init()  # initialize the module
  * MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN             # <<<<<<<<<<<<<<
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MAX_WORDS_IN_BATCH, __pyx_int_10000) < 0) __PYX_ERR(0, 449, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MAX_WORDS_IN_BATCH, __pyx_int_10000) < 0) __PYX_ERR(0, 497, __pyx_L1_error)
 
   /* "modified_wv/mword2vec_inner.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<

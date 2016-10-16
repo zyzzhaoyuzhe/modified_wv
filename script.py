@@ -7,11 +7,14 @@ from helpers import smartfile
 from helpers import inner2prob
 from wikicorpus import WikiCorpus
 
-# text = pickle.load(open('ap.p', 'rb'))
-text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920')
+text = pickle.load(open('ap.p', 'rb'))
+# text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920')
 
 
 model = mword2vec.mWord2Vec(text, size=300, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=4)
+model.build_vocab(text)
+model.train(text)
+
 # model2 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=0, workers=1)
 #
 # model3 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=0, smooth_power=1, negative=5, neg_mean=1, workers=1)
@@ -23,4 +26,6 @@ model = mword2vec.mWord2Vec(text, size=300, min_count=1, sample=0, wPMI=1, smoot
 #
 #
 #
-# model = gensim.models.Word2Vec(data, min_count=1, sample=0, sg=1, negative=5, workers=1)
+model = gensim.models.Word2Vec(text, min_count=1, sample=0, sg=1, negative=5, workers=4)
+
+model.similar_by_word('soviet')

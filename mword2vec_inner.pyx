@@ -136,11 +136,11 @@ cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long lo
         for i in range(niter):
             foo = jcount_newton(foo, count1, count2, D, C, inner)
         return foo
-##
 
+
+## old fast_sentence_sg_net
 cdef unsigned long long fast_sentence_sg_neg(
-    const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
-    unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks) nogil:
@@ -148,67 +148,112 @@ cdef unsigned long long fast_sentence_sg_neg(
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t inner, f, g, label
+    cdef REAL_t f, g, label
     cdef np.uint32_t target_index
     cdef int d
-    # variables for wPMI mode
-    cdef unsigned long long count1, count2, jcounts
-    cdef REAL_t weight, neg_mean_weight
-    cdef unsigned long long domain = 2 ** 31 - 1
-    cdef REAL_t count_adjust = <REAL_t>total_words/domain
-    cdef unsigned long long C, D
-    cdef REAL_t foo
 
-    if wPMI:
-        # D = cum_table[cum_table_len-1]
-        # C = vocab_size * vocab_size
-        D = total_words
-        C = 344622
     memset(work, 0, size * cython.sizeof(REAL_t))
 
     for d in range(negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
-            neg_mean_weight = ONEF
         else:
             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-            neg_mean_weight = 1 / <REAL_t>negative
 
         row2 = target_index * size
-        inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-        if wPMI:
-            count1 = word_count(word2_index, cum_table, count_adjust)
-            count2 = word_count(target_index, cum_table, count_adjust)
-            jcounts = inner2jcount(count1, count2, D, C, inner, 3)
-            # # for debug
-            # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
-            weight = <REAL_t>  C / D * jcounts
-            foo = ONEF / weight * inner
-            if foo <= -MAX_EXP:
-                f = EXP_TABLE[0]
-            elif foo >= MAX_EXP:
-                f = EXP_TABLE[EXP_TABLE_SIZE-1]
-            else:
-                f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha / weight
-            if neg_mean:
-                g = g * neg_mean_weight
-        else:
-            if inner <= -MAX_EXP or inner >= MAX_EXP:
-                continue
-            f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            g = (label - f) * alpha
+        f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * alpha
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
     return next_random
+
+
+
+
+
+## modified fast_sentence_sg_net
+# cdef unsigned long long fast_sentence_sg_neg(
+#     const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
+#     unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
+#     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
+#     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+#     unsigned long long next_random, REAL_t *word_locks) nogil:
+
+#     cdef long long a
+#     cdef long long row1 = word2_index * size, row2
+#     cdef unsigned long long modulo = 281474976710655ULL
+#     cdef REAL_t inner, f, g, label
+#     cdef np.uint32_t target_index
+#     cdef int d
+#     # variables for wPMI mode
+#     cdef unsigned long long count1, count2, jcounts
+#     cdef REAL_t weight, neg_mean_weight
+#     cdef unsigned long long domain = 2 ** 31 - 1
+#     cdef REAL_t count_adjust = <REAL_t>total_words/domain
+#     cdef unsigned long long C, D
+#     cdef REAL_t foo
+
+#     if wPMI:
+#         # D = cum_table[cum_table_len-1]
+#         # C = vocab_size * vocab_size
+#         D = total_words
+#         C = 344622
+#     memset(work, 0, size * cython.sizeof(REAL_t))
+
+#     for d in range(negative+1):
+#         if d == 0:
+#             target_index = word_index
+#             label = ONEF
+#             neg_mean_weight = ONEF
+#         else:
+#             target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
+#             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+#             if target_index == word_index:
+#                 continue
+#             label = <REAL_t>0.0
+#             neg_mean_weight = 1 / <REAL_t>negative
+
+#         row2 = target_index * size
+#         inner = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+#         if wPMI:
+#             count1 = word_count(word2_index, cum_table, count_adjust)
+#             count2 = word_count(target_index, cum_table, count_adjust)
+#             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
+#             # # for debug
+#             # printf("%d, %d, jcount %d, D %d, C %d\n", count1, count2, jcounts, D, C)
+#             weight = <REAL_t>  C / D * jcounts
+#             foo = ONEF / weight * inner
+#             if foo <= -MAX_EXP:
+#                 f = EXP_TABLE[0]
+#             elif foo >= MAX_EXP:
+#                 f = EXP_TABLE[EXP_TABLE_SIZE-1]
+#             else:
+#                 f = EXP_TABLE[<int>((ONEF / weight * inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+#             g = (label - f) * alpha / weight
+#             if neg_mean:
+#                 g = g * neg_mean_weight
+#         else:
+#             if inner <= -MAX_EXP or inner >= MAX_EXP:
+#                 continue
+#             f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+#             g = (label - f) * alpha
+#         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
+#         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+
+#     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
+
+#     return next_random
 
 
 
@@ -316,9 +361,12 @@ def train_batch_sg(model, sentences, alpha, _work):
                     # if hs:
                     #     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size, 
-                            total_words, cum_table, cum_table_len, syn0, syn1neg, 
-                            size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                        ## olde
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                        ## modified 
+                        # next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size, 
+                        #     total_words, cum_table, cum_table_len, syn0, syn1neg, 
+                        #     size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
     return effective_words
 

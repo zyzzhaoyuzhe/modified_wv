@@ -3,6 +3,7 @@ import re, sys
 import nltk
 from nltk.corpus import wordnet, stopwords
 import numpy as np
+import cPickle as pickle
 
 
 def get_wordnet_pos(treebank_tag):
@@ -73,9 +74,12 @@ def get_cooccurrance(data, vocab, window=5, dynamic_window=False):
                 if i != j:
                     idxb = vocab.index(sent[j])
                     if dynamic_window:
-                        output[idxa, idxb] += (window - abs(j - i) + 1) / float(window)
+                        output[idxa, idxb] += 0.1
+                        # output[idxa, idxb] += (window - abs(j - i) + 1) / float(window)
+                        pass
                     else:
-                        output[idxa, idxb] += 1
+                        # output[idxa, idxb] += 1
+                        pass
     return output
 
 
@@ -144,8 +148,9 @@ def show_context(matrix, vocab, freq, word, topn=10):
 
 
 # vocab, idx2vocab = readvocab('/Users/vzhao/Documents/Weighted MI/DATA/ap/vocab.txt')
-file = '/home/vincent/Documents/Research/modified_wv/ap.txt'
-data = pre_process(file)
+# file = 'ap.txt'
+# data = pre_process(file)
+data = pickle.load(open('ap.p','r'))
 vocab_all, freq_all = getvocab(data)
 vocab, freq = getvocab(data)
 cofreq = get_cooccurrance(data, vocab_all, window=5, dynamic_window=True)

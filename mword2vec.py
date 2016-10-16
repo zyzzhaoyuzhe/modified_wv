@@ -295,8 +295,8 @@ class mWord2Vec(utils.SaveLoad):
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
-            self.train(sentences)
+            # self.build_vocab(sentences, trim_rule=trim_rule)
+            # self.train(sentences)
 
     def make_cum_table(self, power=0.75, domain=2 ** 31 - 1):
         """

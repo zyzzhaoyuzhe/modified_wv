@@ -5,6 +5,7 @@ import nltk, re, os, time
 from nltk.corpus import wordnet, stopwords
 from six import string_types
 import nltk
+from gensim import utils
 
 
 def sigma(x):
@@ -128,15 +129,32 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 
     """
     lowercase = lowercase or to_lower or lower
-    text = to_unicode(text, errors=errors)
+    text = utils.to_unicode(text, errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
-        text = deaccent(text)
+        text = utils.deaccent(text)
     sents = nltk.sent_tokenize(text)
     for sent in sents:
         tokens = nltk.word_tokenize(sent)
         yield tokens
+
+
+def treebankPOS2appendPOS(input, switch=False):
+    if switch:
+        if 'NN' in input:
+            if 'S' in input:
+                output = 'NNS'
+            else:
+                output = 'NN'
+        elif 'VB' in input:
+            pass
+    else:
+        output = ''
+    return '/' + output
+
+
+
 
 
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'),
@@ -185,7 +203,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'),
             if min_length <= len(lemma) <= max_length and not lemma.startswith(('_', '-', "'", '='))\
                     and not lemma.endswith(('_', '=')) and lemma not in stopwords:
                 if allowed_tags.match(treebank_tag):
-                    lemma += "/" + treebank_tag
+                    lemma += treebankPOS2appendPOS(treebank_tag, switch=False)
                     foo.append(lemma.encode('utf8'))
         result.append(foo)
     return result

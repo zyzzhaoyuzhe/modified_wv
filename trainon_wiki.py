@@ -7,6 +7,7 @@ import sys
 import multiprocessing
 import argparse
 import time
+import gensim
 
 parser = argparse.ArgumentParser(description="Train word vec on wiki data")
 
@@ -32,5 +33,6 @@ for i in range(5):
     print "Start in {0} seconds".format(5-i)
     time.sleep(1)
 
-model = mword2vec.mWord2Vec(text, size=args.size, min_count=args.min_count, sample=args.sample, wPMI=args.wPMI,
-                            smooth_power=args.smooth_power, negative=args.negative, neg_mean=args.neg_mean, workers=args.workers)
+# model = mword2vec.mWord2Vec(text, size=args.size, min_count=args.min_count, sample=args.sample, wPMI=args.wPMI,
+#                             smooth_power=args.smooth_power, negative=args.negative, neg_mean=args.neg_mean, workers=args.workers)
+model = gensim.models.Word2Vec(text, min_count=1, sample=0, sg=1, negative=5, workers=1)
