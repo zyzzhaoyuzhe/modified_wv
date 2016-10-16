@@ -143,15 +143,18 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 def treebankPOS2appendPOS(input, switch=False):
     if switch:
         if 'NN' in input:
-            if 'S' in input:
-                output = 'NNS'
-            else:
-                output = 'NN'
+            output = '/' + input
+        elif 'JJ' in input:
+            output = '/' + input
         elif 'VB' in input:
-            pass
+            output = '/' + input
+        elif 'RB' in input:
+            output = '/' + input
+        else:
+            output = ''
     else:
         output = ''
-    return '/' + output
+    return output
 
 
 
