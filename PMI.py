@@ -150,32 +150,32 @@ def show_context(matrix, vocab, freq, word, topn=10):
 # vocab, idx2vocab = readvocab('/Users/vzhao/Documents/Weighted MI/DATA/ap/vocab.txt')
 # file = 'ap.txt'
 # data = pre_process(file)
-data = pickle.load(open('ap.p','r'))
-vocab_all, freq_all = getvocab(data)
-vocab, freq = getvocab(data)
-cofreq = get_cooccurrance(data, vocab_all, window=5, dynamic_window=True)
-
-pmi = get_pmi(cofreq)
-wpmi = get_wpmi(cofreq, pmi, type='wpmi')
-
-# 'wpmi' 'ppwpmi' 'minwpmi'
-
-
-
-data_stop = clear_wordset(data, set(stopwords.words('english')))
-vocab, freq = getvocab(data_stop)
-cofreq = get_cooccurrance(data_stop, vocab, window=5, dynamic_window=True)
-
-data_lowfreq_stop = clear_wordset(data, set(vocab_all[-17000:] + stopwords.words('english')))
-vocab, freq = getvocab(data_lowfreq_stop)
-cofreq = get_cooccurrance(data_lowfreq_stop, vocab, window=5, dynamic_window=True)
-
-data_lowfreq = clear_wordset(data, set(vocab_all[-17000:]))
-vocab, freq = getvocab(data_lowfreq)
-cofreq = get_cooccurrance(data_lowfreq, vocab, window=5, dynamic_window=True)
-
-n_largest(np.tril(wpmi, -1), vocab, 20)
-n_largest(np.tril(pmi2, -1), vocab, 20)
-
-show_context(wpmi, vocab, 'vote', 10)
-show_context(pmi2, vocab, 'prime', 10)
+# data = pickle.load(open('ap.p','r'))
+# vocab_all, freq_all = getvocab(data)
+# vocab, freq = getvocab(data)
+# cofreq = get_cooccurrance(data, vocab_all, window=5, dynamic_window=True)
+#
+# pmi = get_pmi(cofreq)
+# wpmi = get_wpmi(cofreq, pmi, type='wpmi')
+#
+# # 'wpmi' 'ppwpmi' 'minwpmi'
+#
+#
+#
+# data_stop = clear_wordset(data, set(stopwords.words('english')))
+# vocab, freq = getvocab(data_stop)
+# cofreq = get_cooccurrance(data_stop, vocab, window=5, dynamic_window=True)
+#
+# data_lowfreq_stop = clear_wordset(data, set(vocab_all[-17000:] + stopwords.words('english')))
+# vocab, freq = getvocab(data_lowfreq_stop)
+# cofreq = get_cooccurrance(data_lowfreq_stop, vocab, window=5, dynamic_window=True)
+#
+# data_lowfreq = clear_wordset(data, set(vocab_all[-17000:]))
+# vocab, freq = getvocab(data_lowfreq)
+# cofreq = get_cooccurrance(data_lowfreq, vocab, window=5, dynamic_window=True)
+#
+# n_largest(np.tril(wpmi, -1), vocab, 20)
+# n_largest(np.tril(pmi2, -1), vocab, 20)
+#
+# show_context(wpmi, vocab, 'vote', 10)
+# show_context(pmi2, vocab, 'prime', 10)

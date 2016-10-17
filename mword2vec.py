@@ -355,7 +355,7 @@ class mWord2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += helpers.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
