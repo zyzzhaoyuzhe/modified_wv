@@ -679,9 +679,9 @@ class mWord2Vec(utils.SaveLoad):
                 if total_examples:
                     # examples-based progress %
                     logger.info(
-                        "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
+                        "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i, vec_norm %.2f",
                         100.0 * example_count / total_examples, trained_word_count / elapsed,
-                        utils.qsize(job_queue), utils.qsize(progress_queue))
+                        utils.qsize(job_queue), utils.qsize(progress_queue), np.linalg.norm(self.syn0[1]))
                 else:
                     # words-based progress %
                     logger.info(
