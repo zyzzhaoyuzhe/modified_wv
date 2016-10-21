@@ -8,13 +8,13 @@ from helpers import inner2prob
 from wikicorpus import WikiCorpus
 import gensim
 
-# text = pickle.load(open('ap.p', 'rb'))
+text = pickle.load(open('ap.p', 'rb'))
 text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic')
 
 
 model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=100, min_count=1, sample=0,
                             wPMI=1, smooth_power=1, negative=5, neg_mean=0, workers=4,
-                            alpha=0.0025, min_alpha=0.00001, epoch=5)
+                            alpha=0.025, min_alpha=0.0001, epoch=5, init='gaussian')
 model.build_vocab(text)
 model.train(text)
 

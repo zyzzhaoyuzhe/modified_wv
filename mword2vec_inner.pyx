@@ -193,7 +193,7 @@ cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long lo
 ## modified fast_sentence_sg_net
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, const int neg_mean, const int wPMI, const long long vocab_size,
-    unsigned long long total_words, np.uint32_t *cum_table, unsigned long long cum_table_len,
+    unsigned long long total_words, np.uint32_t *cum_table,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks) nogil:
@@ -217,11 +217,10 @@ cdef unsigned long long fast_sentence_sg_neg(
     cdef REAL_t for_debug = 0
 
     if wPMI:
-        # D = cum_table[cum_table_len-1]
-        # C = vocab_size * vocab_size
-        # 344622
+        # C = 344622
         D = total_words
-        C = 344622.0
+        C = cum_table[vocab_size/2] * count_adjust
+
     memset(work, 0, size * cython.sizeof(REAL_t))
 
     for d in range(negative+1):
@@ -230,7 +229,7 @@ cdef unsigned long long fast_sentence_sg_neg(
             label = ONEF
             neg_mean_weight = ONEF
         else:
-            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
@@ -330,7 +329,6 @@ def train_batch_sg(model, sentences, alpha, _work):
     # For negative sampling
     cdef REAL_t *syn1neg
     cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
     # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
 
@@ -340,7 +338,6 @@ def train_batch_sg(model, sentences, alpha, _work):
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -403,7 +400,7 @@ def train_batch_sg(model, sentences, alpha, _work):
                         # next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
                         ## modified 
                         next_random = fast_sentence_sg_neg(negative, neg_mean, wPMI, vocab_size, 
-                            total_words, cum_table, cum_table_len, syn0, syn1neg, 
+                            total_words, cum_table, syn0, syn1neg, 
                             size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
     return effective_words
