@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from numpy import float32 as REAL
 import threading
-from Queue import Queue, Empty
+from Queue import Queue, Empty, PriorityQueue
 from types import GeneratorType
 from collections import defaultdict
 from copy import deepcopy
@@ -354,9 +354,21 @@ class mWord2Vec(utils.SaveLoad):
             for word in sentence:
                 vocab[word] += 1
 
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+            if self.max_vocab_size and len(vocab) > 2*self.max_vocab_size:
                 total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
+                min_reduce += 0.5
+        # reduce vocabsize to max_vocab_size
+        Q = PriorityQueue(maxsize=self.max_vocab_size)
+        for val in vocab.itervalues():
+            if Q.full():
+                foo = Q.get()
+                if val > foo:
+                    Q.put_nowait(val)
+                else:
+                    Q.put_nowait(foo)
+            else:
+                Q.put_nowait(val)
+        utils.prune_vocab(vocab, Q.get_nowait()+1, trim_rule=trim_rule)
 
         total_words += sum(itervalues(vocab))
         logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
