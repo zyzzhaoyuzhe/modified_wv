@@ -140,8 +140,8 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield tokens
 
 
-def treebankPOS2appendPOS(input, switch=False):
-    if switch:
+def treebankPOS2appendPOS(input, append_tag=False):
+    if append_tag:
         if 'NN' in input:
             output = '/' + input
         elif 'JJ' in input:
@@ -160,7 +160,7 @@ def treebankPOS2appendPOS(input, switch=False):
 
 
 
-def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'),
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=False,
               light=False, stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
@@ -206,7 +206,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'),
             if min_length <= len(lemma) <= max_length and not lemma.startswith(('_', '-', "'", '='))\
                     and not lemma.endswith(('_', '=')) and lemma not in stopwords:
                 if allowed_tags.match(treebank_tag):
-                    lemma += treebankPOS2appendPOS(treebank_tag, switch=False)
+                    lemma += treebankPOS2appendPOS(treebank_tag, append_tag=append_tag)
                     foo.append(lemma.encode('utf8'))
         result.append(foo)
     return result

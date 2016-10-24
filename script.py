@@ -9,7 +9,7 @@ from wikicorpus import WikiCorpus
 import gensim
 
 # text = pickle.load(open('ap.p', 'rb'))
-text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic')
+text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag')
 
 
 model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,

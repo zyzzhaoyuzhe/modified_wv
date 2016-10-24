@@ -8,7 +8,7 @@ nprocess = None
 # if len(sys.argv) > 2:
 #     nprocess = int(sys.argv[2])
 nprocess = 4
-fpre = folder + "enwiki-20160920-pages-articles-multistream.xml"
+fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz2"
 fout = folder + "enwiki-20160920_basic"
 
 wiki = WikiCorpus(fpre, lemmatize=True, dictionary=False, processes=4)
