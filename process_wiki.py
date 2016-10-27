@@ -9,10 +9,12 @@ nprocess = None
 #     nprocess = int(sys.argv[2])
 nprocess = 4
 fpre = folder + "enwiki-20160920-pages-articles-multistream.xml.bz2"
-fout = folder + "enwiki-20160920_basic"
+fout = folder + "enwiki-20160920_basic-complete"
 
 wiki = WikiCorpus(fpre, lemmatize=True, dictionary=False, processes=4)
 gen = wiki.get_texts()
+# for debug
+foo = gen.next()
 
 count = 1
 with open(fout, 'w') as h:

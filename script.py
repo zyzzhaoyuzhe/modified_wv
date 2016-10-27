@@ -9,11 +9,11 @@ from wikicorpus import WikiCorpus
 import gensim
 
 # text = pickle.load(open('ap.p', 'rb'))
-text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag')
+text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag-complete')
 
 
 model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
-                            wPMI=1, smooth_power=1, negative=5, neg_mean=0, workers=4,
+                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=4,
                             alpha=0.025, min_alpha=0.0001, epoch=5, init='gaussian')
 model.build_vocab(text)
 model.train(text)
@@ -31,6 +31,7 @@ model.train(text)
 #
 model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, min_count=1,
                                sample=0, sg=1, negative=5, workers=4, iter=5)
+model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, workers=4)
 #
 # model.similar_by_word('soviet')
 #

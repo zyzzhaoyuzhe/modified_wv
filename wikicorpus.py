@@ -263,7 +263,8 @@ def process_article(args):
     text, lemmatize, title, pageid = args
     text = filter_wiki(text)
     if lemmatize:
-        result = helpers.lemmatize(text, allowed_tags=re.compile('(NN|VB|JJ|RB|IN|CC|DT|MD|PDT|W.+)'), min_length=0, max_length=15, stopwords=frozenset(), append_tag=True)
+        result = helpers.lemmatize(text, allowed_tags=re.compile('(NN|VB|JJ|RB|IN|CC|DT|MD|PDT|W.+)'), min_length=0,
+                                   max_length=15, stopwords=frozenset(), append_tag=True, raw=True)
     else:
         result = tokenize(text)
     return result, title, pageid
@@ -327,8 +328,9 @@ class WikiCorpus(TextCorpus):
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(texts, chunksize=15 * self.processes, maxsize=1):
-            # # for debug
+            # # # for debug
             # sents, title, pageid = process_article(group[1])
+            # sents, title, pageid = process_article(group[2])
             for sents, title, pageid in pool.imap(process_article, group):  # chunksize=10):
                 articles_all += 1
 

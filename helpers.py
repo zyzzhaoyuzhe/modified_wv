@@ -158,11 +158,8 @@ def treebankPOS2appendPOS(input, append_tag=False):
     return output
 
 
-
-
-
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=False,
-              light=False, stopwords=frozenset(), min_length=2, max_length=15):
+              raw=False, stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
 
@@ -203,12 +200,15 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=Fals
         foo = []
         tags = nltk.pos_tag(sent)
         for token, treebank_tag in tags:
-            lemma = lmtz.lemmatize(token, get_wordnet_pos(treebank_tag).encode('utf8'))
-            if min_length <= len(lemma) <= max_length and not lemma.startswith(('_', '-', "'", '='))\
-                    and not lemma.endswith(('_', '=')) and lemma not in stopwords:
-                if allowed_tags.match(treebank_tag):
-                    lemma += treebankPOS2appendPOS(treebank_tag, append_tag=append_tag)
-                    foo.append(lemma.encode('utf8'))
+            if allowed_tags.match(treebank_tag):
+                if raw:
+                    foo.append(token.encode('utf-8', 'ignore'))
+                else:
+                    lemma = lmtz.lemmatize(token, get_wordnet_pos(treebank_tag).encode('utf-8'))
+                    if min_length <= len(lemma) <= max_length and not lemma.startswith(('_', '-', "'", '='))\
+                            and not lemma.endswith(('_', '=')) and lemma not in stopwords:
+                        lemma += treebankPOS2appendPOS(treebank_tag, append_tag=append_tag)
+                        foo.append(lemma.encode('utf-8', 'ignore'))
         result.append(foo)
     return result
 
