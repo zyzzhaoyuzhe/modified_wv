@@ -10,13 +10,13 @@ import gensim, nltk
 
 
 
-# text = pickle.load(open('ap.p', 'rb'))
-text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag-complete')
+text = pickle.load(open('ap.p', 'rb'))
+# text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag-complete')
 
 
 model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
                             wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=4,
-                            alpha=0.0025, min_alpha=0.0001, epoch=5, init='gaussian')
+                            alpha=0.0025, min_alpha=0.00001, epoch=5, init='gaussian')
 model.build_vocab(text)
 model.train(text)
 
@@ -100,10 +100,10 @@ model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, wor
 from gensim.matutils import unitvec
 import numpy as np
 
-word1 = 'high/JJ'
-word2 = 'high/JJS'
-word3 = 'bad/JJ'
-ans = 'bad/JJS'
+word1 = 'great/JJ'
+word2 = 'great/JJS'
+word3 = 'good/JJ'
+ans = 'good/JJS'
 
 dvec1 = model.syn0[model.vocab[word1].index] - model.syn0[model.vocab[word2].index]
 dvec2 = model.syn0[model.vocab[word3].index] - model.syn0[model.vocab['consider/VBG'].index]
@@ -111,15 +111,15 @@ np.dot(unitvec(dvec1), unitvec(dvec2))
 print np.linalg.norm(dvec1), np.linalg.norm(dvec2)
 
 
-model.most_similar(positive=[word3, word2], negative=[word1], restrict_vocab=400000)
-model.most_similar_cosmul(positive=[word3, word2], negative=[word1], restrict_vocab=400000)
+model.most_similar(positive=[word3, word2], negative=[word1])
+model.most_similar_cosmul(positive=[word3, word2], negative=[word1])
 model.most_similar_cosmul_not(positive=[word3, word2], negative=[word1])
 
 
 ####
 foo = np.concatenate(([model.cum_table[0]], model.cum_table[1:] - model.cum_table[:-1]))
 foo = foo.astype(float)
-model.syn0norm = model.syn0 / np.sqrt(foo[:, np.newaxis]) * np.sqrt(foo[foo.size/2])
+model.syn0norm = model.syn0 / foo[:, np.newaxis] * foo[foo.size/2]
 
 
 ### similarity for mword2vec
@@ -136,7 +136,7 @@ print np.linalg.norm(vec1), np.linalg.norm(vec3)
 
 ftest = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.pos'
 file_model = 'model/' + 'model_wiki_tag-complete_300_default'
-file_model = 'model/' + 'model_wiki_tag-complete_300_1_5_0'
+file_model = 'model/' + 'model_wiki_tag-complete_300_1_5_1'
 
 model = mword2vec.mWord2Vec.load(file_model)
 count = 0

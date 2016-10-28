@@ -105,21 +105,21 @@ cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cu
 
 cdef REAL_t jcount2inner(unsigned long long jcounts, unsigned long long count1, unsigned long long count2,
     unsigned long long D, REAL_t C) nogil:
-    return <REAL_t>jcounts / D * C * log(<REAL_t>jcounts / count1 * D / count2)
+    return <REAL_t>jcounts / C * log(<REAL_t>jcounts / count1 * D / count2)
 
 
 cdef void inner_minmax(unsigned long long count1, unsigned long long count2, unsigned long long D, REAL_t C,
     unsigned long long *jcount_min, REAL_t *inner_min, REAL_t *inner_max) nogil:
     cdef REAL_t foo
-    jcount_min[0] = <unsigned long long>((count1 * count2) / <double> D * exp(-ONEF) + 1)
+    jcount_min[0] = <unsigned long long>(count1 / <REAL_t> D * count2 * exp(-ONEF) + 1)
     inner_min[0] = jcount2inner(jcount_min[0], count1, count2, D, C)
     inner_max[0] = jcount2inner(min_ull(count1, count2), count1, count2, D, C)
 
 
 cdef REAL_t jcount_newton(REAL_t x, unsigned long long count1, unsigned long long count2,
     unsigned long long D, REAL_t C, REAL_t inner) nogil:
-    cdef REAL_t foo = log(<REAL_t>x * D / count1 / count2)
-    return x - (x * foo - inner * D / C) / (foo + 1)
+    cdef REAL_t foo = log(<REAL_t>x / count1 * D / count2)
+    return x - (x * foo - inner * C) / (foo + ONEF)
 
 
 cdef unsigned long long inner2jcount(unsigned long long count1, unsigned long long count2, 
@@ -219,7 +219,8 @@ cdef unsigned long long fast_sentence_sg_neg(
     if wPMI:
         # C = 344622
         D = total_words
-        C = cum_table[vocab_size/2] * count_adjust
+        C = (cum_table[vocab_size/2]-cum_table[vocab_size/2-1]) * count_adjust * 0.5
+        # printf("C %f\n",C)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
@@ -242,9 +243,10 @@ cdef unsigned long long fast_sentence_sg_neg(
             count1 = word_count(word2_index, cum_table, count_adjust)
             count2 = word_count(target_index, cum_table, count_adjust)
             jcounts = inner2jcount(count1, count2, D, C, inner, 3)
-            weight = C / D * jcounts
+            weight = jcounts / C
 
             ## for debug
+            # printf("c1 %d, c2 %d, inner %f, jc %d, C %f, D %d\n", count1, count2, inner, jcounts, C, D)
             # weight = 0.1
 
             foo = ONEF / weight * inner
@@ -274,7 +276,7 @@ cdef unsigned long long fast_sentence_sg_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
-        ## debug
+        # # debug
         # for_debug = 0
         # for i_debug in range(size):
         #     for_debug += syn1neg[row2+i_debug] * syn1neg[row2+i_debug]
