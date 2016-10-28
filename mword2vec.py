@@ -883,6 +883,38 @@ class mWord2Vec(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / np.sqrt((self.syn0 ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
 
+    def __getitem__(self, words):
+
+        """
+        Accept a single word or a list of words as input.
+
+        If a single word: returns the word's representations in vector space, as
+        a 1D numpy array.
+
+        Multiple words: return the words' representations in vector space, as a
+        2d numpy array: #words x #vector_size. Matrix rows are in the same order
+        as in input.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+          >>> trained_model[['office', 'products']]
+          array([ -1.40128313e-02, ...]
+                [ -1.70425311e-03, ...]
+                 ...)
+
+        """
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.syn0[self.vocab[words].index]
+
+        return np.vstack([self.syn0[self.vocab[word].index] for word in words])
+
+    def __contains__(self, word):
+        return word in self.vocab
+
     def similarity(self, w1, w2, unit=True):
         """
         Compute cosine similarity between two words.
@@ -1125,6 +1157,63 @@ class mWord2Vec(utils.SaveLoad):
         # with distances shifted to [0,1] per footnote (7)
         pos_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in positive]
         neg_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in negative]
+        dists = np.prod(pos_dists, axis=0) / (np.prod(neg_dists, axis=0) + 0.000001)
+
+        if not topn:
+            return dists
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
+        # ignore (don't return) words from the input
+        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        return result[:topn]
+
+    def most_similar_cosmul_not(self, positive=[], negative=[], topn=10):
+        """
+        Find the top-N most similar words, using the multiplicative combination objective
+        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
+        positively towards the similarity, negative words negatively, but with less
+        susceptibility to one large distance dominating the calculation.
+
+        In the common analogy-solving case, of two positive and one negative examples,
+        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+
+        Additional positive or negative examples contribute to the numerator or denominator,
+        respectively - a potentially sensible but untested extension of the method. (With
+        a single positive example, rankings will be the same as in the default most_similar.)
+
+        Example::
+
+          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
+          [(u'iraq', 0.8488819003105164), ...]
+
+        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+
+        """
+        # self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+            positive = [positive]
+
+        all_words = set()
+
+        def word_vec(word):
+            if isinstance(word, np.ndarray):
+                return word
+            elif word in self.vocab:
+                all_words.add(self.vocab[word].index)
+                return self.syn0[self.vocab[word].index]
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+
+        positive = [word_vec(word) for word in positive]
+        negative = [word_vec(word) for word in negative]
+        if not positive:
+            raise ValueError("cannot compute similarity with no input")
+
+        # equation (4) of Levy & Goldberg "Linguistic Regularities...",
+        # with distances shifted to [0,1] per footnote (7)
+        pos_dists = [((1 + np.dot(self.syn0, term)) / 2) for term in positive]
+        neg_dists = [((1 + np.dot(self.syn0, term)) / 2) for term in negative]
         dists = np.prod(pos_dists, axis=0) / (np.prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
