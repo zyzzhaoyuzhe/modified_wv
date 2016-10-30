@@ -15,8 +15,9 @@ text = pickle.load(open('ap.p', 'rb'))
 
 
 model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
-                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, workers=4,
-                            alpha=0.0025, min_alpha=0.00001, epoch=5, init='gaussian')
+                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=0.2,
+                            workers=4,
+                            alpha=0.025, min_alpha=0.0001, epoch=5, init='gaussian')
 model.build_vocab(text)
 model.train(text)
 
@@ -170,4 +171,12 @@ with open(ftest, 'r') as h:
     htmp.close()
 
 
+
+#####
+model.syn1norm = (model.syn1neg / np.sqrt((model.syn1neg**2).sum(-1))[..., np.newaxis]).astype(float)
+
+words = ['cold/JJS', 'season/NN','ear/NN','polar/JJ','temperate/JJ','climate/NNS','autumn/NN','spring/NN']
+vec = unitvec(np.array([model.syn1norm[model.vocab[w].index] for w in words]).mean(axis=0))
+# vec = model.syn1norm[model.vocab['altruism']]
+print [model.index2word[idx] for idx in np.argsort(np.dot(model.syn0norm, vec[:,np.newaxis]).squeeze())[::-1][:20] if model.index2word[idx] not in words]
 

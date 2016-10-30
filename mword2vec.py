@@ -184,9 +184,12 @@ class mWord2Vec(utils.SaveLoad):
     """
 
     def __init__(
-            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-            negative=5, smooth_power=0.75, neg_mean=0, hashfxn=hash, epoch=5, null_word=0, wPMI=0,
+            self, sentences=None, size=100,
+            negative=5, wPMI=0, neg_mean=0, weight_power = 0.2,
+            alpha=0.025, min_alpha=0.0001, workers=3,
+            window=5, max_vocab_size=None, min_count=5,
+            sample=1e-3, smooth_power=0.75, seed=1,
+            hashfxn=hash, epoch=5, null_word=0,
             trim_rule=None, sorted_vocab=1, init="uniform", batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -288,6 +291,7 @@ class mWord2Vec(utils.SaveLoad):
 
         self.negative = negative
         self.neg_mean = neg_mean
+        self.weight_power = weight_power
         self.cum_table = None  # for negative sampling
         self.wPMI = wPMI
         self.smooth_power = smooth_power
