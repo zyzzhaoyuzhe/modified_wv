@@ -7,72 +7,49 @@ from helpers import smartfile, get_wordnet_pos
 from helpers import inner2prob
 from wikicorpus import WikiCorpus
 import gensim, nltk
+from collections import defaultdict
 
 
 
-text = pickle.load(open('ap.p', 'rb'))
-# text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_tag-complete')
+# text = pickle.load(open('ap.p', 'rb'))
+text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic-complete')
+
+# load from file
+model = mword2vec.mWord2Vec.load('model_wiki_basic-complete_raw')
+model.raw_vocab = defaultdict(int)
+for key in model.vocab.iterkeys(): model.raw_vocab[key] = model.vocab[key].count
+
+del model.syn0, model.syn0norm, model.syn1neg
+
+model.scale_vocab()
+model.finalize_vocab()
+cum_table = model.cum_table
+
+model = mword2vec.mWord2Vec.load('model_wiki_basic-complete_300_1_5_1')
+model.cum_table = cum_table
+model.clear_sims()
+model.init_sims()
 
 
-model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
-                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=0.2,
-                            workers=4,
-                            alpha=0.025, min_alpha=0.0001, epoch=5, init='gaussian')
-model.build_vocab(text)
+
+
+# model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
+#                             wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=1,
+#                             workers=4,
+#                             alpha=0.0025, min_alpha=0.00001, epoch=5, init='gaussian')
+
+# model.build_vocab(text)
+model.scale_vocab()
+model.finalize_vocab()
 model.train(text)
 
-# model2 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=1, smooth_power=1, negative=5, neg_mean=0, workers=1)
-#
-# model3 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=0, smooth_power=1, negative=5, neg_mean=1, workers=1)
-# model4 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=0, smooth_power=1, negative=5, neg_mean=0, workers=1)
-#
-# model5 = mword2vec.mWord2Vec(data, min_count=1, sample=0, wPMI=0, smooth_power=0.75, negative=5, neg_mean=1, workers=1)
-#
-# for e in model1.similar_by_word('soviet', 10):  print e, model1.vocab[e[0]].count
-#
-#
-#
+####
 model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, min_count=1,
-                               sample=0, sg=1, negative=5, workers=4, iter=5)
+                               sample=0, sg=1, smooth_power=1, negative=1, workers=4, iter=5)
 model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, workers=4)
 #
 # model.similar_by_word('soviet')
-#
-#
-#
-# ## PMI analysis
-# import PMI
-# import cPickle as pickle
-#
-# data = pickle.load(open('ap.p','r'))
-# vocab_all, freq_all = PMI.getvocab(data)
-# vocab, freq = PMI.getvocab(data)
-# cofreq = PMI.get_cooccurrance(data, vocab_all, window=5, dynamic_window=True)
-#
-# pmi = PMI.get_pmi(cofreq)
-# wpmi = PMI.get_wpmi(cofreq, pmi, type='wpmi')
-#
-# # 'wpmi' 'ppwpmi' 'minwpmi'
-#
-#
-#
-# data_stop = clear_wordset(data, set(stopwords.words('english')))
-# vocab, freq = getvocab(data_stop)
-# cofreq = get_cooccurrance(data_stop, vocab, window=5, dynamic_window=True)
-#
-# data_lowfreq_stop = clear_wordset(data, set(vocab_all[-17000:] + stopwords.words('english')))
-# vocab, freq = getvocab(data_lowfreq_stop)
-# cofreq = get_cooccurrance(data_lowfreq_stop, vocab, window=5, dynamic_window=True)
-#
-# data_lowfreq = clear_wordset(data, set(vocab_all[-17000:]))
-# vocab, freq = getvocab(data_lowfreq)
-# cofreq = get_cooccurrance(data_lowfreq, vocab, window=5, dynamic_window=True)
-#
-# n_largest(np.tril(wpmi, -1), vocab, 20)
-# n_largest(np.tril(pmi2, -1), vocab, 20)
-#
-# show_context(wpmi, vocab, 'vote', 10)
-# show_context(pmi2, vocab, 'prime', 10)
+
 
 ##### Syntatic test
 # ans = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.answers'
@@ -100,16 +77,29 @@ model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, wor
 # fq.close()
 from gensim.matutils import unitvec
 import numpy as np
+import matplotlib.pyplot as plt
 
-word1 = 'great/JJ'
-word2 = 'great/JJS'
-word3 = 'good/JJ'
-ans = 'good/JJS'
+word1 = 'good'
+word2 = 'better'
+word3 = 'big'
+ans = 'bigger'
 
-dvec1 = model.syn0[model.vocab[word1].index] - model.syn0[model.vocab[word2].index]
-dvec2 = model.syn0[model.vocab[word3].index] - model.syn0[model.vocab['consider/VBG'].index]
+vec1 = model.wPMI2PMI(model.vocab[word1].index)
+
+dvec1 = model.syn0norm[model.vocab[word1].index] - model.syn0norm[model.vocab[word2].index]
+dvec2 = model.syn0norm[model.vocab[word3].index] - model.syn0norm[model.vocab[ans].index]
 np.dot(unitvec(dvec1), unitvec(dvec2))
 print np.linalg.norm(dvec1), np.linalg.norm(dvec2)
+
+
+table
+
+vec1 = np.dot(model.syn0[model.vocab[word1].index], model.syn1neg[:50000, :].T)
+vec1 =
+vec2 = np.dot(model.syn0[model.vocab[word2].index], model.syn1neg[:50000, :].T)
+vec3 = np.dot(model.syn0[model.vocab[word3].index], model.syn1neg[:50000, :].T)
+vec4 = np.dot(model.syn0[model.vocab[ans].index], model.syn1neg[:50000, :].T)
+
 
 
 model.most_similar(positive=[word3, word2], negative=[word1])
@@ -138,7 +128,7 @@ print np.linalg.norm(vec1), np.linalg.norm(vec3)
 ftest = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.pos'
 file_model = 'model/' + 'model_wiki_tag-complete_300_default'
 file_model = 'model/' + 'model_wiki_tag-complete_300_1_5_1'
-
+#
 model = mword2vec.mWord2Vec.load(file_model)
 count = 0
 hit = 0
@@ -156,18 +146,11 @@ with open(ftest, 'r') as h:
         # score = np.dot(unitvec(vec1), unitvec(vec2))
         # htmp.write(' '.join([word1, word2, word3, ans]) + ' ' + str(score) + '\n')
         #####
-        foo, target_tag = nltk.tag.util.str2tuple(word2)
-        foo = model.most_similar(positive=[word3, word2], negative=[word1], topn=30)
-        pred = None
-        for e, score in foo:
-            if target_tag in e:
-                pred = e
-                break
-        ## for analysis
-        htmp.write(' '.join([word1, word2, word3, ans, pred or 'None']) + '\n')
-        count += 1
-        if pred == ans:
-            hit += 1
+        foo = model.most_similar(positive=[word3, word2], negative=[word1], topn=30)[0][0]
+        htmp.write(' '.join([word1, word2, word3, ans, foo]) + '\n')
+        if foo == ans:
+            hit+=1
+        count+=1
     htmp.close()
 
 

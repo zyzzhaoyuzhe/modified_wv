@@ -886,6 +886,7 @@ class mWord2Vec(utils.SaveLoad):
                     del self.syn1
             else:
                 self.syn0norm = (self.syn0 / np.sqrt((self.syn0 ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
+                self.syn1norm = (self.syn1neg / np.sqrt((self.syn1neg ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
 
     def __getitem__(self, words):
 
@@ -937,6 +938,50 @@ class mWord2Vec(utils.SaveLoad):
         else:
             return np.dot(self[w1], self[w2])
 
+    def similarity_wpmi(self, w1, w2, unit=True, restrict_vocab=None, topN=500, iter=iter):
+        D = self.words_cumnum
+        C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
+            2.0 ** 31 - 1) * D
+        widx1 = self.vocab[w1].index
+        widx2 = self.vocab[w2].index
+        inner1 = np.dot(self.syn1norm, self.syn0norm[widx1, :])
+        inner2 = np.dot(self.syn1norm, self.syn0norm[widx2, :])
+        inner1[inner1<0] = 0
+        inner2[inner2<0] = 0
+        # idx1 = np.argsort(inner1)[::-1][:topN]
+        # idx2 = np.argsort(inner2)[::-1][:topN]
+        # inner1 = inner1[idx1]
+        # inner2 = inner2[idx2]
+        freq = np.concatenate((self.cum_table[0:1], (self.cum_table[1:] - self.cum_table[:-1])))
+        freq = freq / (2.0 ** 31 - 1) * D
+        pmi1 = self.wPMI2PMI(inner1, C, D, freq, widx1, iter=iter)
+        pmi2 = self.wPMI2PMI(inner2, C, D, freq, widx2, iter=iter)
+        return np.dot(matutils.unitvec(pmi1), matutils.unitvec(pmi2))
+
+    def wPMI2PMI(self, widx, iter=4):
+        """
+
+        :param inner:
+        :param C:
+        :param D:
+        :param freq:
+        :param widx:
+        :param iter:
+        :return:
+        """
+        D = self.words_cumnum
+        C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
+        2.0 ** 31 - 1) * D
+        inner = np.dot(self.syn1neg, self.syn0[widx, :])
+        inner[inner<0] = 0
+        freq = np.concatenate((self.cum_table[0:1], (self.cum_table[1:] - self.cum_table[:-1])))
+        freq = freq / (2.0 ** 31 - 1) * D
+        output = np.log(D / np.maximum(freq[widx], freq))
+        tmp = inner * C / freq[widx] * D / freq
+        for _ in xrange(iter):
+            output -= (output * np.log(output) - tmp) / (1 + np.log(output))
+        return np.log(output)
+
     def n_similarity(self, ws1, ws2, unit=True):
         """
         Compute cosine similarity between two sets of words.
@@ -959,7 +1004,6 @@ class mWord2Vec(utils.SaveLoad):
             return np.dot(matutils.unitvec(np.array(v1).mean(axis=0)), matutils.unitvec(np.array(v2).mean(axis=0)))
         else:
             return np.dot(np.array(v1).mean(axis=0), np.array(v2).mean(axis=0))
-
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
@@ -1025,6 +1069,62 @@ class mWord2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def most_similar_wc(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+        """
+
+        :param positive:
+        :param negative:
+        :param topn:
+        :param restrict_vocab:
+        :param indexer:
+        :return:
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
+        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
+        positive = [
+            (word, 1.0) if isinstance(word, string_types + (np.ndarray,)) else word
+            for word in positive
+            ]
+        negative = [
+            (word, -1.0) if isinstance(word, string_types + (np.ndarray,)) else word
+            for word in negative
+            ]
+
+        # compute the weighted average of all words
+        all_words, mean = set(), []
+        for word, weight in positive + negative:
+            if isinstance(word, np.ndarray):
+                mean.append(weight * word)
+            elif word in self.vocab:
+                mean.append(weight * self.syn0norm[self.vocab[word].index])
+                all_words.add(self.vocab[word].index)
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
+        mean = matutils.unitvec(np.array(mean).mean(axis=0)).astype(REAL)
+
+        if indexer is not None:
+            return indexer.most_similar(mean, topn)
+        # use syn1norm (context vector)
+        limited = self.syn1norm if restrict_vocab is None else self.syn1norm[:restrict_vocab]
+        dists = np.dot(limited, mean)
+        if not topn:
+            return dists
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
+        # ignore (don't return) words from the input
+        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        return result[:topn]
+
+    # def most_similar_wpmi(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    #     pass
+
 
     # def wmdistance(self, document1, document2):
     #     """

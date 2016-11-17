@@ -74,12 +74,12 @@ def get_cooccurrance(data, vocab, window=5, dynamic_window=False):
                 if i != j:
                     idxb = vocab.index(sent[j])
                     if dynamic_window:
-                        output[idxa, idxb] += 0.1
-                        # output[idxa, idxb] += (window - abs(j - i) + 1) / float(window)
-                        pass
+                        # output[idxa, idxb] += 0.1
+                        output[idxa, idxb] += (window - abs(j - i) + 1) / float(window)
+                        # pass
                     else:
-                        # output[idxa, idxb] += 1
-                        pass
+                        output[idxa, idxb] += 1
+                        # pass
     return output
 
 
@@ -146,6 +146,13 @@ def show_context(matrix, vocab, freq, word, topn=10):
     for idx in idxs:
         print (word, vocab[idx], freq[vocab[idx]], matrix[word_idx, idx])
 
+def wPMI2PMI(inner, C, D, freq, widx,iter=3):
+    output = np.log(D/np.maximum(freq[widx], freq))
+    tmp = inner * C / freq[widx] * D / freq
+    for _ in xrange(iter):
+        output -= (output * np.log(output) - tmp)/(1 + np.log(output))
+    return np.log(output)
+
 
 vocab, idx2vocab = readvocab('/Users/vzhao/Documents/Weighted MI/DATA/ap/vocab.txt')
 file = 'ap.txt'
@@ -154,9 +161,10 @@ data = pre_process(file)
 vocab_all, freq_all = getvocab(data)
 vocab, freq = getvocab(data)
 
-freq = [freq[word] for word in vocab]
+freq = np.array([freq[word] for word in vocab])
 
 cofreq = get_cooccurrance(data, vocab_all, window=5, dynamic_window=True)
+freq = cofreq.sum(axis=1)
 
 pmi = get_pmi(cofreq)
 del pmi
@@ -164,6 +172,8 @@ pmi = get_wpmi(cofreq, pmi_old, type='wpmi', power=0.1)
 
 import numpy as np
 import matplotlib.pyplot as plt
+from gensim.matutils import unitvec
+import copy
 
 word1 = 'prime'
 word2 = 'minister'
@@ -177,14 +187,67 @@ print [vocab[idx] for idx in np.argsort(np.dot((pmi[vocab.index(word1)]/vecnorm[
 print [vocab[idx] for idx in np.argsort(pmi[vocab.index(word1), :])[::-1]]
 
 plt.figure()
-plt.subplot(4,1,1)
-plt.plot(pmi[vocab.index(word1),:500]/vecnorm[vocab.index(word1)])
-plt.subplot(4,1,2)
-plt.plot(pmi[vocab.index(word2),:500]/vecnorm[vocab.index(word2)])
-plt.subplot(4,1,3)
+plt.subplot(2,1,1)
+vec1 = pmi[vocab.index(word1), :]
+vec2 = pmi[vocab.index(word2), :]
+print np.dot(unitvec(vec1), unitvec(vec2))
+plt.plot(unitvec(vec1[:500]))
+plt.plot(unitvec(vec2[:500]))
+plt.subplot(2,1,2)
 plt.plot(cofreq[vocab.index(word1), :500]/freq[vocab.index(word1)])
-plt.subplot(4,1,4)
 plt.plot(cofreq[vocab.index(word2), :500]/freq[vocab.index(word2)])
+
+##
+vec1 = pmi[vocab.index(word1), :] * cofreq[vocab.index(word1), :] / cofreq.sum()
+idx = np.argsort(vec1)[::-1][50:]
+vec1 = copy.copy(pmi[vocab.index(word1), :])
+vec1[idx] = 0
+vec2 = pmi[vocab.index(word2), :] * cofreq[vocab.index(word2), :] / cofreq.sum()
+idx = np.argsort(vec2)[::-1][50:]
+vec2 = copy.copy(pmi[vocab.index(word2), :])
+vec2[idx] = 0
+print np.dot(unitvec(vec1), unitvec(vec2))
+
+plt.figure()
+plt.plot(unitvec(vec1[:500]))
+plt.plot(unitvec(vec2[:500]))
+##
+
+##
+D = cofreq.sum()
+freq = cofreq.sum(axis=1)
+C = freq[int(0.5*len(freq))]
+
+widx = vocab.index('prime')
+
+def wPMI2PMI(inner, C, D, freq, widx,iter=3):
+    output = np.log(D/np.maximum(freq[widx], freq))
+    tmp = inner * C / freq[widx] * D / freq
+    for _ in xrange(iter):
+        output -= (output * np.log(output) - tmp)/(1 + np.log(output))
+    return np.log(output)
+
+widx = vocab.index('prime')
+inner = pmi[widx, :] * cofreq[widx, :] / C
+foo = wPMI2PMI(inner, C, D, freq, widx, iter=4)
+plt.plot(foo[:500])
+
+plt.figure()
+plt.plot(pmi[widx,:500])
+
+
+
+##
+
+
+plt.figure()
+foo = []
+for i in np.arange(1,20,0.5):
+    vec1 = pmi[vocab.index(word1), :] * 1.0/(1+np.exp(cofreq[vocab.index(word1)] * -i))
+    vec2 = pmi[vocab.index(word2), :] * 1.0/(1+np.exp(cofreq[vocab.index(word2)] * -i))
+    foo.append(np.dot(unitvec(vec1), unitvec(vec2)))
+plt.plot(foo)
+
 
 
 plt.figure()

@@ -96,3 +96,5 @@ ENV/
 # data file
 *.p
 model_*
+tmp
+models/

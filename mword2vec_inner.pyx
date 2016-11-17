@@ -101,6 +101,11 @@ cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:
     else:
         return b
 
+cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:
+    if a < b:
+        return a
+    else:
+        return b
 
 cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table, REAL_t count_adjust) nogil:
     if word_index == 0:
@@ -179,6 +184,9 @@ cdef REAL_t inner2jcount(
     cdef REAL_t foo
     cdef REAL_t inner_min, inner_max, inner_C
     inner_minmax(count1, count2, D, C, weight_power, &jcount_min, &inner_min, &inner_max)
+    # for debug
+    # printf("jcount_min %f, inner_min %f, inner_max %f\n", jcount_min, inner_min, inner_max)
+    # printf("inner %f\n", inner)
     if inner < inner_min:
         if jcount_min < 1:
             return ONEF
@@ -198,13 +206,22 @@ cdef REAL_t inner2jcount(
         else:
             # starts from gradient transition point; alpha should between (0,0.5)
             foo = (exp(ONEF / (ONE-weight_power) - ONEF/ weight_power ) * jcount_inde)
+            if foo > max_real(jcount_inde, C):
+                foo = max_real(jcount_inde, C)
+        # # for debug
+        # printf("inner %f, inner_C %f, jcount_inde %f, C %f \n", inner, inner_C, jcount_inde, C)
+        # printf("count1 %d, count2, %d, D %d\n", count1, count2, D)
         # Newton iterations
         for i in range(niter):
+            # # for debug
+            # printf("foo %f\n", foo)
+            
             foo = jcount_newton(foo, count1, count2, D, C, weight_power, inner)
         return foo
 
 
-# modified fast_sentence_sg_neg v2
+
+# modified fast_sentence_sg_neg
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, const int neg_mean, const int wPMI, REAL_t weight_power,
     const long long vocab_size, unsigned long long total_words, np.uint32_t *cum_table,
@@ -596,9 +613,9 @@ def train_batch_sg(model, sentences, alpha, _work):
                             syn0, syn1neg, 
                             size, indexes[i], indexes[j], 
                             _alpha, work, next_random, word_locks)
-                        # for debug
+                        # # for debug
                         # ddd += 1
-                        # if ddd > 100:
+                        # if ddd > 2:
                         #     exit(0)
 
     return effective_words
