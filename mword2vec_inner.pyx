@@ -224,7 +224,7 @@ cdef REAL_t inner2jcount(
 # modified fast_sentence_sg_neg
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, const int neg_mean, const int wPMI, REAL_t weight_power,
-    const long long vocab_size, unsigned long long total_words, np.uint32_t *cum_table,
+    const long long vocab_size, unsigned long long total_words, REAL_t C, np.uint32_t *cum_table,
     REAL_t *syn0, REAL_t *syn1neg, const int size, 
     const np.uint32_t word_index, const np.uint32_t word2_index, 
     const REAL_t alpha, REAL_t *work,
@@ -243,8 +243,8 @@ cdef unsigned long long fast_sentence_sg_neg(
     cdef REAL_t weight, neg_mean_weight
     cdef unsigned long long domain = 2 ** 31 - 1
     cdef REAL_t count_adjust = <REAL_t>total_words/domain
-    cdef unsigned long long D
-    cdef REAL_t C
+    # cdef unsigned long long D = total_words
+    # cdef REAL_t C
     cdef REAL_t foo
     
     # for debug
@@ -252,10 +252,10 @@ cdef unsigned long long fast_sentence_sg_neg(
     cdef REAL_t for_debug = 0
     cdef int ddd = 0
 
-    if wPMI:
+    # if wPMI:
         # C = 344622
-        D = total_words
-        C = (cum_table[<int>(vocab_size*0.5)]-cum_table[<int>(vocab_size*0.5)-1]) * count_adjust
+        # D = total_words
+        # C = (cum_table[<int>(vocab_size*0.5)]-cum_table[<int>(vocab_size*0.5)-1]) * count_adjust
         # printf("C %f, D %d\n",C, D)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
@@ -283,13 +283,13 @@ cdef unsigned long long fast_sentence_sg_neg(
             # weight = jcounts / C
             # v3
             jcounts = inner2jcount(count1, count2, 
-                D, C, weight_power, 
+                total_words, C, weight_power, 
                 inner, 3)
             weight = (jcounts / C) ** weight_power
 
 
             # for debug
-            # printf("c1 %d, c2 %d, inner %f, jc %f, C %f, D %d, weight %f\n", count1, count2, inner, jcounts, C, D, weight)
+            # printf("c1 %d, c2 %d, inner %f, jc %f, C %f, D %d, weight %f\n", count1, count2, inner, jcounts, C, total_words, weight)
             # exit(0)
             # weight = 0.1
 
@@ -511,6 +511,7 @@ def train_batch_sg(model, sentences, alpha, _work):
 
     cdef int vocab_size = len(model.vocab)
     cdef unsigned long long total_words = model.words_cumnum
+    cdef REAL_t C = model.C
     cdef np.uint32_t *cum_table
 
     cdef int size = model.layer1_size
@@ -609,7 +610,7 @@ def train_batch_sg(model, sentences, alpha, _work):
                         ## modified 
                         next_random = fast_sentence_sg_neg(
                             negative, neg_mean, wPMI, weight_power,
-                            vocab_size, total_words, cum_table, 
+                            vocab_size, total_words, C, cum_table, 
                             syn0, syn1neg, 
                             size, indexes[i], indexes[j], 
                             _alpha, work, next_random, word_locks)

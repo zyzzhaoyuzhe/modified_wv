@@ -175,8 +175,8 @@ import matplotlib.pyplot as plt
 from gensim.matutils import unitvec
 import copy
 
-word1 = 'prime'
-word2 = 'minister'
+word1 = 'new'
+word2 = 'york'
 pmi[pmi<0] = 0
 
 vecnorm = np.sqrt(np.sum(pmi*pmi, axis=1))
@@ -199,11 +199,11 @@ plt.plot(cofreq[vocab.index(word2), :500]/freq[vocab.index(word2)])
 
 ##
 vec1 = pmi[vocab.index(word1), :] * cofreq[vocab.index(word1), :] / cofreq.sum()
-idx = np.argsort(vec1)[::-1][50:]
+idx = vec1 < 1e-7
 vec1 = copy.copy(pmi[vocab.index(word1), :])
 vec1[idx] = 0
 vec2 = pmi[vocab.index(word2), :] * cofreq[vocab.index(word2), :] / cofreq.sum()
-idx = np.argsort(vec2)[::-1][50:]
+idx = vec2 < 1e-7
 vec2 = copy.copy(pmi[vocab.index(word2), :])
 vec2[idx] = 0
 print np.dot(unitvec(vec1), unitvec(vec2))

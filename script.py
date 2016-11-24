@@ -1,13 +1,14 @@
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
 import mword2vec
 import cPickle as pickle
 from helpers import smartfile, get_wordnet_pos
 from helpers import inner2prob
 from wikicorpus import WikiCorpus
-import gensim, nltk
+import gensim, nltk, copy
 from collections import defaultdict
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -15,7 +16,7 @@ from collections import defaultdict
 text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic-complete')
 
 # load from file
-model = mword2vec.mWord2Vec.load('model_wiki_basic-complete_raw')
+model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_vocab')
 model.raw_vocab = defaultdict(int)
 for key in model.vocab.iterkeys(): model.raw_vocab[key] = model.vocab[key].count
 
@@ -23,29 +24,39 @@ del model.syn0, model.syn0norm, model.syn1neg
 
 model.scale_vocab()
 model.finalize_vocab()
+
 cum_table = model.cum_table
 
-model = mword2vec.mWord2Vec.load('model_wiki_basic-complete_300_1_5_1')
-model.cum_table = cum_table
+foo = mword2vec.mWord2Vec.load('models/model_basic-complete_benchmark')
+model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_vocab')
+model.syn0 = copy.deepcopy(foo.syn0)
+model.syn1neg = copy.deepcopy(foo.syn1neg)
+model.vocab = copy.deepcopy(foo.vocab)
+model.index2word = copy.deepcopy(foo.index2word)
+model.cum_table = copy.deepcopy(foo.cum_table)
+
 model.clear_sims()
 model.init_sims()
 
+###
+alpha = 0.0025
+min_alpha = 0.0001
+###
 
 
+model = mword2vec.mWord2Vec(text, max_vocab_size=500000, size=300, min_count=1, sample=0,
+                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=1,
+                            workers=4,
+                            alpha=0.0025, min_alpha=0.0001, epoch=5, init='gaussian')
 
-# model = mword2vec.mWord2Vec(text, max_vocab_size=1000000, size=300, min_count=1, sample=0,
-#                             wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=1,
-#                             workers=4,
-#                             alpha=0.0025, min_alpha=0.00001, epoch=5, init='gaussian')
-
-# model.build_vocab(text)
+model.build_vocab(text)
 model.scale_vocab()
 model.finalize_vocab()
 model.train(text)
 
 ####
 model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, min_count=1,
-                               sample=0, sg=1, smooth_power=1, negative=1, workers=4, iter=5)
+                               sample=0, sg=1, smooth_power=1, negative=5, workers=4, iter=5)
 model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, workers=4)
 #
 # model.similar_by_word('soviet')
@@ -125,11 +136,9 @@ print model.similar_by_vector(unitvec(vecans), restrict_vocab=400000)
 print np.dot(unitvec(vecans), model.syn0norm[model.vocab[ans].index])
 print np.linalg.norm(vec1), np.linalg.norm(vec3)
 
-ftest = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.pos'
-file_model = 'model/' + 'model_wiki_tag-complete_300_default'
-file_model = 'model/' + 'model_wiki_tag-complete_300_1_5_1'
-#
-model = mword2vec.mWord2Vec.load(file_model)
+
+ftest = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.all'
+
 count = 0
 hit = 0
 with open(ftest, 'r') as h:
@@ -146,9 +155,9 @@ with open(ftest, 'r') as h:
         # score = np.dot(unitvec(vec1), unitvec(vec2))
         # htmp.write(' '.join([word1, word2, word3, ans]) + ' ' + str(score) + '\n')
         #####
-        foo = model.most_similar(positive=[word3, word2], negative=[word1], topn=30)[0][0]
-        htmp.write(' '.join([word1, word2, word3, ans, foo]) + '\n')
-        if foo == ans:
+        foo = model.most_similar(positive=[word3, word2], negative=[word1], topn=30, kernel=True)[0]
+        htmp.write(' '.join([word1, word2, word3, ans, foo[0], str(foo[1])]) + '\n')
+        if foo[0] == ans:
             hit+=1
         count+=1
     htmp.close()
@@ -163,3 +172,44 @@ vec = unitvec(np.array([model.syn1norm[model.vocab[w].index] for w in words]).me
 # vec = model.syn1norm[model.vocab['altruism']]
 print [model.index2word[idx] for idx in np.argsort(np.dot(model.syn0norm, vec[:,np.newaxis]).squeeze())[::-1][:20] if model.index2word[idx] not in words]
 
+
+#### similarity test
+result = []
+truth = []
+
+
+with open('/media/vincent/Data/Dataset/wordsim353/set1.csv', 'r') as h:
+    h.readline()
+    for line in h:
+        foo = line.split(',')
+        w1 = foo[0]
+        w2 = foo[1]
+        val = float(foo[2])
+        if w1 in model.vocab and w2 in model.vocab:
+            result.append(model.similarity(w1,w2))
+            truth.append(val)
+
+wh = open('tmp2', 'w')
+
+with open('/media/vincent/Data/Dataset/wordsim353/set1.csv', 'r') as h:
+    h.readline()
+    count = -1
+    for line in h:
+        foo = line.split(',')
+        w1 = foo[0]
+        w2 = foo[1]
+        val = foo[2]
+        if w1 in model.vocab and w2 in model.vocab:
+            count += 1
+            wh.write('\t'.join([w1, w2, str(truth[count]), str(result1[count]), str(result2[count])]) + '\n')
+
+wh.close()
+
+result = np.array(result)
+truth = np.array(truth)
+result -= result.mean()
+result /= np.linalg.norm(result)
+truth -= truth.mean()
+truth /= np.linalg.norm(truth)
+
+print np.dot(result, truth)/np.linalg.norm(result)/np.linalg.norm(truth)

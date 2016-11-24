@@ -568,6 +568,12 @@ class mWord2Vec(utils.SaveLoad):
 
         job_tally = 0
 
+        # Constants for training
+        vocab_size = len(self.vocab)
+        self.C = (self.cum_table[int(0.8 * vocab_size)] - self.cum_table[int(0.8 * vocab_size) - 1]) / (
+            2.0 ** 31 - 1) * self.words_cumnum
+        logger.info("Constant for modified word2vec: C = %.2f, D = %d", self.C, self.words_cumnum)
+
         if self.iter > 1:
             # Create an iterator that repeats sentences self.iter times
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
@@ -938,7 +944,7 @@ class mWord2Vec(utils.SaveLoad):
         else:
             return np.dot(self[w1], self[w2])
 
-    def similarity_wpmi(self, w1, w2, unit=True, restrict_vocab=None, topN=500, iter=iter):
+    def similarity_wpmi(self, w1, w2, unit=True, restrict_vocab=None, topN=500, niter=4):
         D = self.words_cumnum
         C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
             2.0 ** 31 - 1) * D
@@ -954,11 +960,11 @@ class mWord2Vec(utils.SaveLoad):
         # inner2 = inner2[idx2]
         freq = np.concatenate((self.cum_table[0:1], (self.cum_table[1:] - self.cum_table[:-1])))
         freq = freq / (2.0 ** 31 - 1) * D
-        pmi1 = self.wPMI2PMI(inner1, C, D, freq, widx1, iter=iter)
-        pmi2 = self.wPMI2PMI(inner2, C, D, freq, widx2, iter=iter)
-        return np.dot(matutils.unitvec(pmi1), matutils.unitvec(pmi2))
+        pmi1 = self.wPMI2PMI(widx1, niter=niter)
+        pmi2 = self.wPMI2PMI(widx2, niter=niter)
+        return np.dot(matutils.unitvec(pmi1[:100000]), matutils.unitvec(pmi2[:100000]))
 
-    def wPMI2PMI(self, widx, iter=4):
+    def wPMI2PMI(self, widx, niter=4):
         """
 
         :param inner:
@@ -966,7 +972,7 @@ class mWord2Vec(utils.SaveLoad):
         :param D:
         :param freq:
         :param widx:
-        :param iter:
+        :param niter:
         :return:
         """
         D = self.words_cumnum
@@ -978,7 +984,7 @@ class mWord2Vec(utils.SaveLoad):
         freq = freq / (2.0 ** 31 - 1) * D
         output = np.log(D / np.maximum(freq[widx], freq))
         tmp = inner * C / freq[widx] * D / freq
-        for _ in xrange(iter):
+        for _ in xrange(niter):
             output -= (output * np.log(output) - tmp) / (1 + np.log(output))
         return np.log(output)
 
@@ -1005,7 +1011,7 @@ class mWord2Vec(utils.SaveLoad):
         else:
             return np.dot(np.array(v1).mean(axis=0), np.array(v2).mean(axis=0))
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None, kernel=False):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1062,7 +1068,16 @@ class mWord2Vec(utils.SaveLoad):
             return indexer.most_similar(mean, topn)
 
         limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
-        dists = np.dot(limited, mean)
+        ######
+        if kernel:
+            if getattr(self, 'kernel', None) is None:
+                syn1norm = self.syn1neg / np.sqrt(np.sum(self.syn1neg ** 2, axis=0))[np.newaxis, ...]
+                self.kernel = np.dot(syn1norm.T, syn1norm)
+            dists = np.dot(limited, np.dot(self.kernel, mean))
+        else:
+            dists = np.dot(limited, mean)
+        ######
+        # dists = np.dot(limited, mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
@@ -1261,63 +1276,6 @@ class mWord2Vec(utils.SaveLoad):
         # with distances shifted to [0,1] per footnote (7)
         pos_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in positive]
         neg_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in negative]
-        dists = np.prod(pos_dists, axis=0) / (np.prod(neg_dists, axis=0) + 0.000001)
-
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
-        # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
-        return result[:topn]
-
-    def most_similar_cosmul_not(self, positive=[], negative=[], topn=10):
-        """
-        Find the top-N most similar words, using the multiplicative combination objective
-        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
-        positively towards the similarity, negative words negatively, but with less
-        susceptibility to one large distance dominating the calculation.
-
-        In the common analogy-solving case, of two positive and one negative examples,
-        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
-
-        Additional positive or negative examples contribute to the numerator or denominator,
-        respectively - a potentially sensible but untested extension of the method. (With
-        a single positive example, rankings will be the same as in the default most_similar.)
-
-        Example::
-
-          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
-          [(u'iraq', 0.8488819003105164), ...]
-
-        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
-
-        """
-        # self.init_sims()
-
-        if isinstance(positive, string_types) and not negative:
-            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
-            positive = [positive]
-
-        all_words = set()
-
-        def word_vec(word):
-            if isinstance(word, np.ndarray):
-                return word
-            elif word in self.vocab:
-                all_words.add(self.vocab[word].index)
-                return self.syn0[self.vocab[word].index]
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-
-        positive = [word_vec(word) for word in positive]
-        negative = [word_vec(word) for word in negative]
-        if not positive:
-            raise ValueError("cannot compute similarity with no input")
-
-        # equation (4) of Levy & Goldberg "Linguistic Regularities...",
-        # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + np.dot(self.syn0, term)) / 2) for term in positive]
-        neg_dists = [((1 + np.dot(self.syn0, term)) / 2) for term in negative]
         dists = np.prod(pos_dists, axis=0) / (np.prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
