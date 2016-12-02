@@ -16,17 +16,17 @@ import matplotlib.pyplot as plt
 text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic-complete')
 
 # load from file
-model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_vocab')
+model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_1')
+
+
 model.raw_vocab = defaultdict(int)
 for key in model.vocab.iterkeys(): model.raw_vocab[key] = model.vocab[key].count
-
 del model.syn0, model.syn0norm, model.syn1neg
-
 model.scale_vocab()
 model.finalize_vocab()
-
 cum_table = model.cum_table
 
+## load benchmark
 foo = mword2vec.mWord2Vec.load('models/model_basic-complete_benchmark')
 model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_vocab')
 model.syn0 = copy.deepcopy(foo.syn0)
@@ -34,182 +34,22 @@ model.syn1neg = copy.deepcopy(foo.syn1neg)
 model.vocab = copy.deepcopy(foo.vocab)
 model.index2word = copy.deepcopy(foo.index2word)
 model.cum_table = copy.deepcopy(foo.cum_table)
-
 model.clear_sims()
 model.init_sims()
 
-###
-alpha = 0.0025
-min_alpha = 0.0001
-###
+### load model for training
+model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_1')
+model.size = 300
+model.min_count = 1
+model.sample = 0
+model.wPMI = 1
+model.smooth_power = 1
+model.negative = 5
+model.neg_mean = 1
+model.weight_power = 1
+model.workers = 4
+model.alpha = 0.0025
+model.min_alpha = 0.0001
 
-
-model = mword2vec.mWord2Vec(text, max_vocab_size=500000, size=300, min_count=1, sample=0,
-                            wPMI=1, smooth_power=1, negative=5, neg_mean=1, weight_power=1,
-                            workers=4,
-                            alpha=0.0025, min_alpha=0.0001, epoch=5, init='gaussian')
-
-model.build_vocab(text)
-model.scale_vocab()
-model.finalize_vocab()
+model.reset_weight()
 model.train(text)
-
-####
-model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, min_count=1,
-                               sample=0, sg=1, smooth_power=1, negative=5, workers=4, iter=5)
-model = gensim.models.Word2Vec(text, max_vocab_size=1000000, size=300, sg=1, workers=4)
-#
-# model.similar_by_word('soviet')
-
-
-##### Syntatic test
-# ans = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.answers'
-# que = "/media/vincent/Data/Dataset/Syntactic Test/word_relationship.questions"
-# fsave = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.pos'
-# fa = open(ans, 'r')
-# fq = open(que, 'r')
-#
-# fs = open(fsave,'w')
-#
-# lmtz = nltk.stem.WordNetLemmatizer()
-# for line in fa:
-#     tags, foo = tuple(line.split())
-#     tag1, tag2 = tuple(tags.split('_'))
-#     foo = fq.readline()
-#     word1, word2, word3 = tuple(foo.split())
-#     word1 = lmtz.lemmatize(word1, get_wordnet_pos(tag1)).encode('utf-8') + '/' + tag1
-#     word2 = lmtz.lemmatize(word2, get_wordnet_pos(tag2)).encode('utf-8') + '/' + tag2
-#     word4 = lmtz.lemmatize(word3, get_wordnet_pos(tag1)).encode('utf-8') + '/' + tag2
-#     word3 = lmtz.lemmatize(word3, get_wordnet_pos(tag1)).encode('utf-8') + '/' + tag1
-#
-#     fs.write(' '.join([word1, word2, word3, word4]) + '\n')
-# fs.close()
-# fa.close()
-# fq.close()
-from gensim.matutils import unitvec
-import numpy as np
-import matplotlib.pyplot as plt
-
-word1 = 'good'
-word2 = 'better'
-word3 = 'big'
-ans = 'bigger'
-
-vec1 = model.wPMI2PMI(model.vocab[word1].index)
-
-dvec1 = model.syn0norm[model.vocab[word1].index] - model.syn0norm[model.vocab[word2].index]
-dvec2 = model.syn0norm[model.vocab[word3].index] - model.syn0norm[model.vocab[ans].index]
-np.dot(unitvec(dvec1), unitvec(dvec2))
-print np.linalg.norm(dvec1), np.linalg.norm(dvec2)
-
-
-table
-
-vec1 = np.dot(model.syn0[model.vocab[word1].index], model.syn1neg[:50000, :].T)
-vec1 =
-vec2 = np.dot(model.syn0[model.vocab[word2].index], model.syn1neg[:50000, :].T)
-vec3 = np.dot(model.syn0[model.vocab[word3].index], model.syn1neg[:50000, :].T)
-vec4 = np.dot(model.syn0[model.vocab[ans].index], model.syn1neg[:50000, :].T)
-
-
-
-model.most_similar(positive=[word3, word2], negative=[word1])
-model.most_similar_cosmul(positive=[word3, word2], negative=[word1])
-model.most_similar_cosmul_not(positive=[word3, word2], negative=[word1])
-
-
-####
-foo = np.concatenate(([model.cum_table[0]], model.cum_table[1:] - model.cum_table[:-1]))
-foo = foo.astype(float)
-model.syn0norm = model.syn0 / foo[:, np.newaxis] * foo[foo.size/2]
-
-
-### similarity for mword2vec
-vec1 = model.syn0[model.vocab[word1].index]
-vec2 = model.syn0[model.vocab[word2].index]
-vec3 = model.syn0[model.vocab[word3].index]
-vecans = vec3 + (vec2-vec1) * np.linalg.norm(vec3) / np.linalg.norm(vec1)
-foo = np.dot(model.syn0, vecans)
-best = np.argsort(foo)[::-1][:13]
-result = [(model.index2word[idx], foo[idx]) for idx in best if model.index2word[idx] not in [word1, word2, word3]]
-print model.similar_by_vector(unitvec(vecans), restrict_vocab=400000)
-print np.dot(unitvec(vecans), model.syn0norm[model.vocab[ans].index])
-print np.linalg.norm(vec1), np.linalg.norm(vec3)
-
-
-ftest = '/media/vincent/Data/Dataset/Syntactic Test/word_relationship.all'
-
-count = 0
-hit = 0
-with open(ftest, 'r') as h:
-    htmp = open('tmp', 'w')
-    for line in h:
-        word1, word2, word3, ans = tuple(line.split())
-        if word1 in model.vocab and word2 in model.vocab and word3 in model.vocab and ans in model.vocab:
-            pass
-        else:
-            continue
-        ####
-        # vec1 = model.syn0norm[model.vocab[word2].index] - model.syn0norm[model.vocab[word1].index]
-        # vec2 = model.syn0norm[model.vocab[ans].index] - model.syn0norm[model.vocab[word3].index]
-        # score = np.dot(unitvec(vec1), unitvec(vec2))
-        # htmp.write(' '.join([word1, word2, word3, ans]) + ' ' + str(score) + '\n')
-        #####
-        foo = model.most_similar(positive=[word3, word2], negative=[word1], topn=30, kernel=True)[0]
-        htmp.write(' '.join([word1, word2, word3, ans, foo[0], str(foo[1])]) + '\n')
-        if foo[0] == ans:
-            hit+=1
-        count+=1
-    htmp.close()
-
-
-
-#####
-model.syn1norm = (model.syn1neg / np.sqrt((model.syn1neg**2).sum(-1))[..., np.newaxis]).astype(float)
-
-words = ['cold/JJS', 'season/NN','ear/NN','polar/JJ','temperate/JJ','climate/NNS','autumn/NN','spring/NN']
-vec = unitvec(np.array([model.syn1norm[model.vocab[w].index] for w in words]).mean(axis=0))
-# vec = model.syn1norm[model.vocab['altruism']]
-print [model.index2word[idx] for idx in np.argsort(np.dot(model.syn0norm, vec[:,np.newaxis]).squeeze())[::-1][:20] if model.index2word[idx] not in words]
-
-
-#### similarity test
-result = []
-truth = []
-
-
-with open('/media/vincent/Data/Dataset/wordsim353/set1.csv', 'r') as h:
-    h.readline()
-    for line in h:
-        foo = line.split(',')
-        w1 = foo[0]
-        w2 = foo[1]
-        val = float(foo[2])
-        if w1 in model.vocab and w2 in model.vocab:
-            result.append(model.similarity(w1,w2))
-            truth.append(val)
-
-wh = open('tmp2', 'w')
-
-with open('/media/vincent/Data/Dataset/wordsim353/set1.csv', 'r') as h:
-    h.readline()
-    count = -1
-    for line in h:
-        foo = line.split(',')
-        w1 = foo[0]
-        w2 = foo[1]
-        val = foo[2]
-        if w1 in model.vocab and w2 in model.vocab:
-            count += 1
-            wh.write('\t'.join([w1, w2, str(truth[count]), str(result1[count]), str(result2[count])]) + '\n')
-
-wh.close()
-
-result = np.array(result)
-truth = np.array(truth)
-result -= result.mean()
-result /= np.linalg.norm(result)
-truth -= truth.mean()
-truth /= np.linalg.norm(truth)
-
-print np.dot(result, truth)/np.linalg.norm(result)/np.linalg.norm(truth)

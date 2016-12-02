@@ -944,6 +944,12 @@ class mWord2Vec(utils.SaveLoad):
         else:
             return np.dot(self[w1], self[w2])
 
+    def similarity_wc(self, w1, w2, unit=True):
+        if unit:
+            return np.dot(matutils.unitvec(self.syn0[self.vocab[w1].index]), matutils.unitvec(self.syn1neg[self.vocab[w2].index]))
+        else:
+            return np.dot(self.syn0[self.vocab[w1].index], self.syn1neg[self.vocab[w2].index])
+
     def similarity_wpmi(self, w1, w2, unit=True, restrict_vocab=None, topN=500, niter=4):
         D = self.words_cumnum
         C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
