@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 text = smartfile('/media/vincent/Data/Dataset/wiki_en/enwiki-20160920_basic-complete')
 
 # load from file
-model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_1')
+model = mword2vec.mWord2Vec.load('models/model_basic-complete_1')
 
 
 model.raw_vocab = defaultdict(int)
@@ -28,7 +28,7 @@ cum_table = model.cum_table
 
 ## load benchmark
 foo = mword2vec.mWord2Vec.load('models/model_basic-complete_benchmark')
-model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_vocab')
+model = mword2vec.mWord2Vec.load('models/model_basic-complete_vocab')
 model.syn0 = copy.deepcopy(foo.syn0)
 model.syn1neg = copy.deepcopy(foo.syn1neg)
 model.vocab = copy.deepcopy(foo.vocab)
@@ -38,7 +38,7 @@ model.clear_sims()
 model.init_sims()
 
 ### load model for training
-model = mword2vec.mWord2Vec.load('models/model_wiki_basic-complete_1')
+model = mword2vec.mWord2Vec.load('models/model_basic-complete_1')
 model.size = 300
 model.min_count = 1
 model.sample = 0
