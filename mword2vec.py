@@ -338,7 +338,27 @@ class mWord2Vec(utils.SaveLoad):
                          trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
+    def add_to_vocab(self, ngrams):
+        for ngram in ngrams:
+            if ngram in self.vocab: continue
+            foo = ngram.split('|')
+            word1 = '|'.join(foo[:-1])
+            word2 = foo[-1]
+            if word1 not in self.vocab or word2 not in self.vocab: continue
+            foo = (self.syn0[self.vocab[word1].index] + self.syn0[self.vocab[word2].index]) / 2
+            self.syn0 = np.append(self.syn0, [foo], axis=0)
+            foo = (self.syn1neg[self.vocab[word1].index] + self.syn1neg[self.vocab[word2].index]) / 2
+            self.syn1neg = np.append(self.syn1neg, [foo], axis=0)
+            self.vocab[ngram] = Vocab(count=0, index=len(self.index2word))
+            self.index2word.append(ngram)
+        self.max_vocab_size = len(self.vocab) + 1
+
+    def renew_vocab(self, sentences, progress_per=10000):
+        self.scan_vocab(sentences, progress_per=progress_per, keep_vocab=True)
+        self.scale_vocab_keep()
+        self.finalize_vocab(keep_vocab=True)
+
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, keep_vocab=False):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -355,8 +375,15 @@ class mWord2Vec(utils.SaveLoad):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                             sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
-            for word in sentence:
-                vocab[word] += 1
+            # Keep current vocab list and redo scan
+            if keep_vocab:
+                self.max_vocab_size = len(self.vocab)
+                self._sent2sent_ng(sentence)
+                for word in sentence:
+                    if word in self.vocab: vocab[word] += 1
+            else:
+                for word in sentence:
+                    vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > 2*self.max_vocab_size:
                 total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
@@ -379,6 +406,42 @@ class mWord2Vec(utils.SaveLoad):
                     len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
+
+    def scale_vocab_keep(self, sample=None):
+        """Keep current vocab, reassign count, and sampling_int"""
+        sample = sample or self.sample
+        retain_total = 0
+        for word, v in self.raw_vocab.iteritems():
+            self.vocab[word].count = v
+            retain_total += v
+        # Precalculate each vocabulary item's threshold for sampling
+        if not sample:
+            # no words downsampled
+            threshold_count = retain_total
+        elif sample < 1.0:
+            # traditional meaning: set parameter as proportion of total
+            threshold_count = sample * retain_total
+        else:
+            # new shorthand: sample >= 1 means downsample all words with higher count than sample
+            threshold_count = int(sample * (3 + np.sqrt(5)) / 2)
+        # calculate sample_int
+        downsample_total, downsample_unique = 0, 0
+        for w in self.vocab.iterkeys():
+            v = self.raw_vocab[w]
+            word_probability = (np.sqrt(v / threshold_count) + 1) * (threshold_count / v)
+            if word_probability < 1.0:
+                downsample_unique += 1
+                downsample_total += word_probability * v
+            else:
+                word_probability = 1.0
+                downsample_total += v
+            self.vocab[w].sample_int = int(round(word_probability * 2 ** 32))
+
+        self.raw_vocab = defaultdict(int)
+
+        logger.info("sample=%g downsamples %i most-common words", sample, downsample_unique)
+        logger.info("downsampling leaves estimated %i word corpus (%.1f%% of prior %i)",
+                    downsample_total, downsample_total * 100.0 / max(retain_total, 1), retain_total)
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None):
         """
@@ -464,12 +527,16 @@ class mWord2Vec(utils.SaveLoad):
 
         return report_values
 
-    def finalize_vocab(self):
+    def finalize_vocab(self, keep_vocab=False):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
             self.scale_vocab()
         if self.sorted_vocab:
-            self.sort_vocab()
+            idx = self.sort_vocab()
+        if keep_vocab:
+            self.syn0 = self.syn0[idx]
+            self.syn1neg = self.syn1neg[idx]
+            self.clear_sims()
         # if self.hs:
         #     # add info about each word's Huffman encoding
         #     self.create_binary_tree()
@@ -484,15 +551,18 @@ class mWord2Vec(utils.SaveLoad):
             self.index2word.append(word)
             self.vocab[word] = v
         # set initial input/projection and hidden weights
-        self.reset_weights()
+        if not keep_vocab:
+            self.reset_weights()
 
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if hasattr(self, 'syn0'):
             raise RuntimeError("must sort before initializing vectors/weights")
+        idx = sorted(range(len(self.index2word)), key=lambda idx: self.vocab[self.index2word[idx]], reverse=True)
         self.index2word.sort(key=lambda word: self.vocab[word].count, reverse=True)
         for i, word in enumerate(self.index2word):
             self.vocab[word].index = i
+        return idx
 
     def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
@@ -523,12 +593,12 @@ class mWord2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
-
-    def _sent2sent_ng(self, sent):
+    def _sent2sent_ng(self, sent, vocab=None):
         """Transform a sentence to sentence contains n-gram. (in-place)"""
+        if not vocab: vocab = self.vocab
         idx = 0
         while idx < len(sent):
-            if idx + 1 < len(sent) and sent[idx] + '|' + sent[idx + 1] in self.vocab:
+            if idx + 1 < len(sent) and sent[idx] + '|' + sent[idx + 1] in vocab:
                 sent[idx] = sent[idx] + '|' + sent.pop(idx + 1)
             else:
                 idx += 1
@@ -871,7 +941,9 @@ class mWord2Vec(utils.SaveLoad):
         #     self.syn1 = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
             self.syn1neg = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+
         self.syn0norm = None
+        self.syn1norm = None
 
         self.syn0_lockf = np.ones(len(self.vocab), dtype=REAL)  # np.zeros suppress learning
 
