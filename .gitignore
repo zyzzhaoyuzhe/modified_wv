@@ -98,3 +98,4 @@ ENV/
 model_*
 tmp
 models/
+results/
