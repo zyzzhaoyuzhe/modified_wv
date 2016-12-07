@@ -523,6 +523,16 @@ class mWord2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
+
+    def _sent2sent_ng(self, sent):
+        """Transform a sentence to sentence contains n-gram. (in-place)"""
+        idx = 0
+        while idx < len(sent):
+            if idx + 1 < len(sent) and sent[idx] + '|' + sent[idx + 1] in self.vocab:
+                sent[idx] = sent[idx] + '|' + sent.pop(idx + 1)
+            else:
+                idx += 1
+
     def train(self, sentences, total_words=None, word_count=0,
               total_examples=None, queue_factor=2, report_delay=1.0):
         """
@@ -607,6 +617,9 @@ class mWord2Vec(utils.SaveLoad):
             job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
+                # embedding n-gram features.
+                self._sent2sent_ng(sentence)
+                ##
                 sentence_length = self._raw_word_count([sentence])
 
                 # can we fit this sentence into the existing job batch?
