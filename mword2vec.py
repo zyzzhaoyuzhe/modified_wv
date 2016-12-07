@@ -339,24 +339,36 @@ class mWord2Vec(utils.SaveLoad):
         self.finalize_vocab()  # build tables & arrays
 
     def add_to_vocab(self, ngrams):
+        to_add = 0
+        for ngram in ngrams:
+            if ngram not in self.vocab:
+                foo = ngram.split('|')
+                word1 = '|'.join(foo[:-1])
+                word2 = foo[-1]
+                if word1 in self.vocab and word2 in self.vocab:
+                    to_add += 1
+        # allocation memory for syn0 and syn1neg
+        idx = self.syn0.shape[0]
+        self.syn0 = np.append(self.syn0, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
+        self.syn1neg = np.append(self.syn1neg, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
         for ngram in ngrams:
             if ngram in self.vocab: continue
             foo = ngram.split('|')
             word1 = '|'.join(foo[:-1])
             word2 = foo[-1]
             if word1 not in self.vocab or word2 not in self.vocab: continue
-            foo = (self.syn0[self.vocab[word1].index] + self.syn0[self.vocab[word2].index]) / 2
-            self.syn0 = np.append(self.syn0, [foo], axis=0)
-            foo = (self.syn1neg[self.vocab[word1].index] + self.syn1neg[self.vocab[word2].index]) / 2
-            self.syn1neg = np.append(self.syn1neg, [foo], axis=0)
-            self.vocab[ngram] = Vocab(count=0, index=len(self.index2word))
+            # initialize syn0
+            foo = self.seeded_vector(ngram + str(self.seed))
+            self.syn0[idx] = foo
+            self.vocab[ngram] = Vocab(count=0, index=idx)
             self.index2word.append(ngram)
+            idx += 1
         self.max_vocab_size = len(self.vocab) + 1
 
     def renew_vocab(self, sentences, progress_per=10000):
         self.scan_vocab(sentences, progress_per=progress_per, keep_vocab=True)
         self.scale_vocab_keep()
-        self.finalize_vocab(keep_vocab=True)
+        self.finalize_vocab(keep_vocab=True, suppress=True)
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, keep_vocab=False):
         """Do an initial scan of all words appearing in sentences."""
@@ -377,7 +389,7 @@ class mWord2Vec(utils.SaveLoad):
                             sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
             # Keep current vocab list and redo scan
             if keep_vocab:
-                self.max_vocab_size = len(self.vocab)
+                self.max_vocab_size = len(self.vocab) + 1
                 self._sent2sent_ng(sentence)
                 for word in sentence:
                     if word in self.vocab: vocab[word] += 1
@@ -428,7 +440,7 @@ class mWord2Vec(utils.SaveLoad):
         downsample_total, downsample_unique = 0, 0
         for w in self.vocab.iterkeys():
             v = self.raw_vocab[w]
-            word_probability = (np.sqrt(v / threshold_count) + 1) * (threshold_count / v)
+            word_probability = (np.sqrt(v / threshold_count) + 1) * (threshold_count / v) if v else 1
             if word_probability < 1.0:
                 downsample_unique += 1
                 downsample_total += word_probability * v
@@ -527,12 +539,12 @@ class mWord2Vec(utils.SaveLoad):
 
         return report_values
 
-    def finalize_vocab(self, keep_vocab=False):
+    def finalize_vocab(self, keep_vocab=False, suppress=False):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
             self.scale_vocab()
         if self.sorted_vocab:
-            idx = self.sort_vocab()
+            idx = self.sort_vocab(suppress=suppress)
         if keep_vocab:
             self.syn0 = self.syn0[idx]
             self.syn1neg = self.syn1neg[idx]
@@ -554,9 +566,9 @@ class mWord2Vec(utils.SaveLoad):
         if not keep_vocab:
             self.reset_weights()
 
-    def sort_vocab(self):
+    def sort_vocab(self, suppress=False):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
-        if hasattr(self, 'syn0'):
+        if not suppress and hasattr(self, 'syn0'):
             raise RuntimeError("must sort before initializing vectors/weights")
         idx = sorted(range(len(self.index2word)), key=lambda idx: self.vocab[self.index2word[idx]], reverse=True)
         self.index2word.sort(key=lambda word: self.vocab[word].count, reverse=True)
