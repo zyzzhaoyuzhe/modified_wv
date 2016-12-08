@@ -662,8 +662,9 @@ class mWord2Vec(utils.SaveLoad):
 
         # Constants for training
         vocab_size = len(self.vocab)
-        self.C = (self.cum_table[int(0.8 * vocab_size)] - self.cum_table[int(0.8 * vocab_size) - 1]) / (
-            2.0 ** 31 - 1) * self.words_cumnum
+        # self.C = (self.cum_table[int(0.8 * vocab_size)] - self.cum_table[int(0.8 * vocab_size) - 1]) / (
+        #     2.0 ** 31 - 1) * self.words_cumnum
+        self.C = 20
         logger.info("Constant for modified word2vec: C = %.2f, D = %d", self.C, self.words_cumnum)
 
         if self.iter > 1:
