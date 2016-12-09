@@ -363,7 +363,11 @@ class mWord2Vec(utils.SaveLoad):
             self.vocab[ngram] = Vocab(count=0, index=idx)
             self.index2word.append(ngram)
             idx += 1
+        # update syn0_lockf
+        self.syn0_lockf = np.ones(len(self.vocab), dtype=REAL)
+        # expand max_vocab_size
         self.max_vocab_size = len(self.vocab) + 1
+
 
     def renew_vocab(self, sentences, progress_per=10000):
         self.scan_vocab(sentences, progress_per=progress_per, keep_vocab=True)
