@@ -228,30 +228,31 @@ def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
     dic = {}
     bigrams = []
     nline = 95638957
-    for idx, line in enumerate(text):
+    for idx, sent in enumerate(text):
         if idx % 100000 == 0:
             logger.info('%.2f%% is completed' % (float(idx)/nline * 100))
         if idx > 0.2*nline: break
-        for i in range(len(line)-1):
-            if line[i] not in model.vocab or line[i+1] not in model.vocab: continue
-            if line[i]+ line[i+1] in dic or line[i+1] + line[i] in dic: continue
-            if line[i] == line[i+1]: continue
-            if len(line[i]) < 3 or len(line[i+1]) < 3: continue
+        model.sent2sent_ng(sent)
+        for i in range(len(sent)-1):
+            if sent[i] not in model.vocab or sent[i+1] not in model.vocab: continue
+            if sent[i]+ sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
+            if sent[i] == sent[i+1]: continue
+            if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
             if iswc:
-                sim = model.similarity_wc(line[i], line[i+1], unit=isnormalize) + model.similarity_wc(line[i+1], line[i], unit=isnormalize)
+                sim = model.similarity_wc(sent[i], sent[i+1], unit=isnormalize) + model.similarity_wc(sent[i+1], sent[i], unit=isnormalize)
             else:
-                sim = model.similarity(line[i], line[i+1], unit=isnormalize) + model.similarity(line[i+1], line[i], unit=isnormalize)
+                sim = model.similarity(sent[i], sent[i+1], unit=isnormalize) + model.similarity(sent[i+1], sent[i], unit=isnormalize)
             sim /= 2
             if len(bigrams) < topN:
-                heapq.heappush(bigrams, (sim, (line[i], line[i+1])))
-                dic[line[i] + line[i+1]] = 0
+                heapq.heappush(bigrams, (sim, (sent[i], sent[i+1])))
+                dic[sent[i] + sent[i+1]] = 0
             else:
                 foo = heapq.heappop(bigrams)
                 dic.pop(foo[1][0] + foo[1][1], None)
                 dic.pop(foo[1][1] + foo[1][0], None)
                 if foo[0] < sim:
-                    heapq.heappush(bigrams, (sim,(line[i], line[i+1])))
-                    dic[line[i] + line[i+1]] = 0
+                    heapq.heappush(bigrams, (sim,(sent[i], sent[i+1])))
+                    dic[sent[i] + sent[i+1]] = 0
                 else:
                     heapq.heappush(bigrams, foo)
                     dic[''.join(foo[1])] = 0

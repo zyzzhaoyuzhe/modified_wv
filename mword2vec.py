@@ -394,7 +394,7 @@ class mWord2Vec(utils.SaveLoad):
             # Keep current vocab list and redo scan
             if keep_vocab:
                 self.max_vocab_size = len(self.vocab) + 1
-                self._sent2sent_ng(sentence)
+                self.sent2sent_ng(sentence)
                 for word in sentence:
                     if word in self.vocab: vocab[word] += 1
             else:
@@ -609,7 +609,7 @@ class mWord2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
-    def _sent2sent_ng(self, sent, vocab=None):
+    def sent2sent_ng(self, sent, vocab=None):
         """Transform a sentence to sentence contains n-gram. (in-place)"""
         if not vocab: vocab = self.vocab
         idx = 0
@@ -705,7 +705,7 @@ class mWord2Vec(utils.SaveLoad):
 
             for sent_idx, sentence in enumerate(sentences):
                 # embedding n-gram features.
-                self._sent2sent_ng(sentence)
+                self.sent2sent_ng(sentence)
                 ##
                 sentence_length = self._raw_word_count([sentence])
 
