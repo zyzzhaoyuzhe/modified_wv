@@ -142,21 +142,8 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield tokens
 
 
-def treebankPOS2appendPOS(input, append_tag=False):
-    if append_tag:
-        # if 'NN' in input:
-        #     output = '/' + input
-        # elif 'JJ' in input:
-        #     output = '/' + input
-        # elif 'VB' in input:
-        #     output = '/' + input
-        # elif 'RB' in input:
-        #     output = '/' + input
-        # else:
-        #     output = ''
-        output = '/' + input
-    else:
-        output = ''
+def treebankPOS2appendPOS(input):
+    output = '/' + input
     return output
 
 
@@ -180,6 +167,8 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=Fals
     >>> lemmatize('The ranks study hard.')
     ['rank/NN', 'study/VB', 'hard/RB']
 
+    raw: Boolean. True is you don't want to take lemma
+    append_tag: True is you want to append POS
     """
 
     # if not has_pattern():
@@ -209,7 +198,8 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=Fals
                     lemma = lmtz.lemmatize(token, get_wordnet_pos(treebank_tag).encode('utf-8'))
                     if min_length <= len(lemma) <= max_length and not lemma.startswith(('_', '-', "'", '='))\
                             and not lemma.endswith(('_', '=')) and lemma not in stopwords:
-                        lemma += treebankPOS2appendPOS(treebank_tag, append_tag=append_tag)
+                        if append_tag:
+                            lemma += treebankPOS2appendPOS(treebank_tag)
                         foo.append(lemma.encode('utf-8', 'ignore'))
         result.append(foo)
     return result
@@ -239,6 +229,7 @@ def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
             if sent[i] == sent[i+1]: continue
             ## we select english bigrams
             if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
+            if any(l.isdigit() for l in sent[i]) or any(l.isdigit() for l in sent[i+1]): continue
 
             if iswc:
                 sim = model.similarity_wc(sent[i], sent[i+1], unit=isnormalize) + model.similarity_wc(sent[i+1], sent[i], unit=isnormalize)
