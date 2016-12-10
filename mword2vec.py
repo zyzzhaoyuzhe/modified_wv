@@ -341,32 +341,37 @@ class mWord2Vec(utils.SaveLoad):
     def add_to_vocab(self, ngrams):
         to_add = 0
         for ngram in ngrams:
-            if ngram not in self.vocab:
-                foo = ngram.split('|')
-                word1 = '|'.join(foo[:-1])
-                word2 = foo[-1]
-                if word1 in self.vocab and word2 in self.vocab:
-                    to_add += 1
+            word1 = ngram[0]
+            word2 = ngram[1]
+            if '|'.join(ngram) in self.vocab: continue
+            if word1 not in self.vocab or word2 not in self.vocab: continue
+            to_add += 1
         # allocation memory for syn0 and syn1neg
         idx = self.syn0.shape[0]
         self.syn0 = np.append(self.syn0, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
         self.syn1neg = np.append(self.syn1neg, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
+        # update syn0_lockf
+        self.syn0_lockf = np.append(self.syn0_lockf, np.ones(to_add, dtype=REAL), axis=0)
         for ngram in ngrams:
-            if ngram in self.vocab: continue
-            foo = ngram.split('|')
-            word1 = '|'.join(foo[:-1])
-            word2 = foo[-1]
+            word1 = ngram[0]
+            word2 = ngram[1]
+            joint = '|'.join(ngram)
+            if joint in self.vocab: continue
             if word1 not in self.vocab or word2 not in self.vocab: continue
             # initialize syn0
-            foo = self.seeded_vector(ngram + str(self.seed))
+            foo = self.seeded_vector(joint + str(self.seed))
             self.syn0[idx] = foo
-            self.vocab[ngram] = Vocab(count=0, index=idx)
-            self.index2word.append(ngram)
+            self.vocab[joint] = Vocab(count=0, index=idx)
+            self.index2word.append(joint)
             idx += 1
-        # update syn0_lockf
-        self.syn0_lockf = np.ones(len(self.vocab), dtype=REAL)
         # expand max_vocab_size
         self.max_vocab_size = len(self.vocab) + 1
+        if len(self.vocab) != self.syn0.shape[0] \
+                or self.syn0.shape[0]!=self.syn1neg.shape[0] \
+                or self.syn1neg.shape[0]!=len(self.index2word)\
+                or len(self.index2word)!=self.syn0_lockf.shape[0]:
+            print(len(self.vocab), self.syn0.shape[0], self.syn1neg.shape[0], len(self.index2word), self.syn0_lockf.shape[0])
+            logger.error('vocab sizes are not matched.')
 
 
     def renew_vocab(self, sentences, progress_per=10000):
@@ -1456,7 +1461,7 @@ class mWord2Vec(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn1norm', 'table'])
         super(mWord2Vec, self).save(*args, **kwargs)
 
     save.__doc__ = utils.SaveLoad.save.__doc__

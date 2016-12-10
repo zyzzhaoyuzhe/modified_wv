@@ -235,9 +235,11 @@ def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
         model.sent2sent_ng(sent)
         for i in range(len(sent)-1):
             if sent[i] not in model.vocab or sent[i+1] not in model.vocab: continue
-            if sent[i]+ sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
+            if sent[i] + sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
             if sent[i] == sent[i+1]: continue
+            ## we select english bigrams
             if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
+
             if iswc:
                 sim = model.similarity_wc(sent[i], sent[i+1], unit=isnormalize) + model.similarity_wc(sent[i+1], sent[i], unit=isnormalize)
             else:
