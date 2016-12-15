@@ -339,6 +339,7 @@ class mWord2Vec(utils.SaveLoad):
         self.finalize_vocab()  # build tables & arrays
 
     def add_to_vocab(self, ngrams):
+        # to count valid ngrams
         to_add = 0
         for ngram in ngrams:
             word1 = ngram[0]
@@ -346,7 +347,7 @@ class mWord2Vec(utils.SaveLoad):
             if '|'.join(ngram) in self.vocab: continue
             if word1 not in self.vocab or word2 not in self.vocab: continue
             to_add += 1
-        # allocation memory for syn0 and syn1neg
+        # allocation memory for syn0, syn1neg, syn0_lockf
         idx = self.syn0.shape[0]
         self.syn0 = np.append(self.syn0, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
         self.syn1neg = np.append(self.syn1neg, np.zeros((to_add, self.layer1_size), dtype=REAL), axis=0)
@@ -366,6 +367,7 @@ class mWord2Vec(utils.SaveLoad):
             idx += 1
         # expand max_vocab_size
         self.max_vocab_size = len(self.vocab) + 1
+        # assert the size of variables
         if len(self.vocab) != self.syn0.shape[0] \
                 or self.syn0.shape[0]!=self.syn1neg.shape[0] \
                 or self.syn1neg.shape[0]!=len(self.index2word)\

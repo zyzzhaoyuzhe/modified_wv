@@ -221,13 +221,13 @@ def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
     for idx, sent in enumerate(text):
         if idx % 100000 == 0:
             logger.info('%.2f%% is completed' % (float(idx)/nline * 100))
-        if idx > 0.2*nline: break
+        if idx > 0.4*nline: break
         model.sent2sent_ng(sent)
         for i in range(len(sent)-1):
             if sent[i] not in model.vocab or sent[i+1] not in model.vocab: continue
             if sent[i] + sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
             if sent[i] == sent[i+1]: continue
-            ## we select english bigrams
+            # we select english bigrams
             if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
             if any(l.isdigit() for l in sent[i]) or any(l.isdigit() for l in sent[i+1]): continue
 
@@ -236,6 +236,8 @@ def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
             else:
                 sim = model.similarity(sent[i], sent[i+1], unit=isnormalize) + model.similarity(sent[i+1], sent[i], unit=isnormalize)
             sim /= 2
+            # prevent a sim to be too low.
+            if sim < 0.4: continue
             if len(bigrams) < topN:
                 heapq.heappush(bigrams, (sim, (sent[i], sent[i+1])))
                 dic[sent[i] + sent[i+1]] = 0
