@@ -55,7 +55,7 @@ class mWord2Vec(utils.SaveLoad):
             sample=1e-3, smooth_power=0.75, seed=1,
             hashfxn=hash, epoch=5, null_word=0,
             sorted_vocab=1, init="uniform",
-            .batch_words=MAX_WORDS_IN_BATCH):
+            batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -781,14 +781,8 @@ class mWord2Vec(utils.SaveLoad):
         for i in xrange(len(self.vocab)):
             # construct deterministic seed from word AND seed argument
             self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
-        # if self.hs:
-        #     self.syn1 = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        if self.negative:
-            self.syn1neg = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
 
         self.syn0norm = None
-        self.syn1norm = None
-
         self.syn0_lockf = np.ones(len(self.vocab), dtype=REAL)  # np.zeros suppress learning
 
     def seeded_vector(self, seed_string):
@@ -821,7 +815,6 @@ class mWord2Vec(utils.SaveLoad):
                     del self.syn1
             else:
                 self.syn0norm = (self.syn0 / np.sqrt((self.syn0 ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
-                self.syn1norm = (self.syn1neg / np.sqrt((self.syn1neg ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
 
     def __getitem__(self, words):
 
