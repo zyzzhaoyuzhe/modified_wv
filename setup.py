@@ -4,6 +4,6 @@ import numpy
 
 setup(
     name = "My word2vec_inner",
-    ext_modules = cythonize('mword2vec_inner.pyx', 'fm_ngram_inner.pyx'),
+    ext_modules = cythonize('fm_ngram_inner.pyx'),
     include_dirs=[numpy.get_include()]
 )

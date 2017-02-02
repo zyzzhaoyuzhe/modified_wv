@@ -15,6 +15,8 @@ from six.moves import xrange
 from timeit import default_timer
 from gensim import utils, matutils
 import helpers
+from fm_ngram_inner import train_batch
+from fm_ngram_inner import FAST_VERSION
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s : %(levelname)s : %(message)s')
@@ -42,7 +44,7 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-class mWord2Vec(utils.SaveLoad):
+class fm_ngram(utils.SaveLoad):
     """
     A modified skip gram model with negative sampling for word embedding.
     """
@@ -377,7 +379,6 @@ class mWord2Vec(utils.SaveLoad):
             idx = self.sort_vocab(suppress=suppress)
         if keep_vocab:
             self.syn0 = self.syn0[idx]
-            self.syn1neg = self.syn1neg[idx]
             self.clear_sims()
         # if self.hs:
         #     # add info about each word's Huffman encoding
@@ -413,8 +414,6 @@ class mWord2Vec(utils.SaveLoad):
         # report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['vocab'] = vocab_size * 500
         report['syn0'] = vocab_size * self.vector_size * np.dtype(REAL).itemsize
-        if self.negative:
-            report['syn1neg'] = vocab_size * self.layer1_size * np.dtype(REAL).itemsize
         report['total'] = sum(report.values())
         logger.info("estimated required memory for %i words and %i dimensions: %i bytes",
                     vocab_size, self.vector_size, report['total'])
@@ -428,7 +427,7 @@ class mWord2Vec(utils.SaveLoad):
         # work, neu1 = inits
         work = inits
         tally = 0
-        tally += train_batch_sg(self, sentences, alpha, work)
+        tally += train_batch(self, sentences, alpha, work)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
@@ -489,14 +488,10 @@ class mWord2Vec(utils.SaveLoad):
                     "you must provide either total_words or total_examples, to enable alpha and progress calculations")
 
         job_tally = 0
-
         # Constants for training
-        vocab_size = len(self.vocab)
-        # self.C = (self.cum_table[int(0.8 * vocab_size)] - self.cum_table[int(0.8 * vocab_size) - 1]) / (
-        #     2.0 ** 31 - 1) * self.words_cumnum
         if not self.C:
             self.C = 20
-        logger.info("Constant for modified word2vec: C = %.2f, D = %d", self.C, self.words_cumnum)
+        logger.info("Constant for modified word2vec: C = %.2f, D = %d\n--------------------------", self.C, self.words_cumnum)
 
         if self.iter > 1:
             # Create an iterator that repeats sentences self.iter times
@@ -658,118 +653,6 @@ class mWord2Vec(utils.SaveLoad):
         self.clear_sims()
         return trained_word_count
 
-    # basics copied from the train() function
-    def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
-        """
-        Score the log probability for a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that).
-
-        We have currently only implemented score for the hierarchical softmax scheme,
-        so you need to have run word2vec with hs=1 and negative=0 for this to work.
-
-        Note that you should specify total_sentences; we'll run into problems if you ask to
-        score more than this number of sentences but it is inefficient to set the value too high.
-
-        See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
-
-        .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
-
-        """
-        if FAST_VERSION < 0:
-            import warnings
-            warnings.warn("C extension compilation failed, scoring will be slow. "
-                          "Install a C compiler and reinstall gensim for fastness.")
-
-        logger.info(
-            "scoring sentences with %i workers on %i vocabulary and %i features, "
-            "using wPMI=%s neg_mean=%s sample=%s and negative=%s",
-            self.workers, len(self.vocab), self.layer1_size, self.wPMI, self.neg_mean, self.sample, self.negative)
-
-        if not self.vocab:
-            raise RuntimeError("you must first build vocabulary before scoring new data")
-
-        # if not self.hs:
-        #     raise RuntimeError("we have only implemented score for hs")
-
-        def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
-            work = np.zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
-            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-            while True:
-                job = job_queue.get()
-                if job is None:  # signal to finish
-                    break
-                ns = 0
-                for sentence_id, sentence in job:
-                    if sentence_id >= total_sentences:
-                        break
-                    score = score_sentence_sg(self, sentence, work)
-                    sentence_scores[sentence_id] = score
-                    ns += 1
-                progress_queue.put(ns)  # report progress
-
-        start, next_report = default_timer(), 1.0
-        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        job_queue = Queue(maxsize=queue_factor * self.workers)
-        progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
-
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
-        for thread in workers:
-            thread.daemon = True  # make interrupting the process with ctrl+c easier
-            thread.start()
-
-        sentence_count = 0
-        sentence_scores = utils.zeros_aligned(total_sentences, dtype=REAL)
-
-        push_done = False
-        done_jobs = 0
-        jobs_source = enumerate(helpers.grouper(enumerate(sentences), chunksize))
-
-        # fill jobs queue with (id, sentence) job items
-        while True:
-            try:
-                job_no, items = next(jobs_source)
-                if (job_no - 1) * chunksize > total_sentences:
-                    logger.warning(
-                        "terminating after %i sentences (set higher total_sentences if you want more).",
-                        total_sentences)
-                    job_no -= 1
-                    raise StopIteration()
-                logger.debug("putting job #%i in the queue", job_no)
-                job_queue.put(items)
-            except StopIteration:
-                logger.info(
-                    "reached end of input; waiting to finish %i outstanding jobs",
-                    job_no - done_jobs + 1)
-                for _ in xrange(self.workers):
-                    job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
-                push_done = True
-            try:
-                while done_jobs < (job_no + 1) or not push_done:
-                    ns = progress_queue.get(push_done)  # only block after all jobs pushed
-                    sentence_count += ns
-                    done_jobs += 1
-                    elapsed = default_timer() - start
-                    if elapsed >= next_report:
-                        logger.info(
-                            "PROGRESS: at %.2f%% sentences, %.0f sentences/s",
-                            100.0 * sentence_count, sentence_count / elapsed)
-                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
-                else:
-                    # loop ended by job count; really done
-                    break
-            except Empty:
-                pass  # already out of loop; continue to next push
-
-        elapsed = default_timer() - start
-        self.clear_sims()
-        logger.info(
-            "scoring %i sentences took %.1fs, %.0f sentences/s",
-            sentence_count, elapsed, sentence_count / elapsed)
-        return sentence_scores[:sentence_count]
-
     def clear_sims(self):
         self.syn0norm = None
 
@@ -847,433 +730,6 @@ class mWord2Vec(utils.SaveLoad):
 
     def __contains__(self, word):
         return word in self.vocab
-
-    def similarity(self, w1, w2, unit=True):
-        """
-        Compute cosine similarity between two words.
-
-        Example::
-
-          >>> trained_model.similarity('woman', 'man')
-          0.73723527
-
-          >>> trained_model.similarity('woman', 'woman')
-          1.0
-
-        """
-        if unit:
-            return np.dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
-        else:
-            return np.dot(self[w1], self[w2])
-
-    def similarity_wc(self, w1, w2, unit=True):
-        if unit:
-            return np.dot(matutils.unitvec(self.syn0[self.vocab[w1].index]),
-                          matutils.unitvec(self.syn1neg[self.vocab[w2].index]))
-        else:
-            return np.dot(self.syn0[self.vocab[w1].index], self.syn1neg[self.vocab[w2].index])
-
-    def similarity_wpmi(self, w1, w2, unit=True, restrict_vocab=None, topN=500, niter=4):
-        D = self.words_cumnum
-        C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
-            2.0 ** 31 - 1) * D
-        widx1 = self.vocab[w1].index
-        widx2 = self.vocab[w2].index
-        inner1 = np.dot(self.syn1norm, self.syn0norm[widx1, :])
-        inner2 = np.dot(self.syn1norm, self.syn0norm[widx2, :])
-        inner1[inner1 < 0] = 0
-        inner2[inner2 < 0] = 0
-        # idx1 = np.argsort(inner1)[::-1][:topN]
-        # idx2 = np.argsort(inner2)[::-1][:topN]
-        # inner1 = inner1[idx1]
-        # inner2 = inner2[idx2]
-        freq = np.concatenate((self.cum_table[0:1], (self.cum_table[1:] - self.cum_table[:-1])))
-        freq = freq / (2.0 ** 31 - 1) * D
-        pmi1 = self.wPMI2PMI(widx1, niter=niter)
-        pmi2 = self.wPMI2PMI(widx2, niter=niter)
-        return np.dot(matutils.unitvec(pmi1[:100000]), matutils.unitvec(pmi2[:100000]))
-
-    def wPMI2PMI(self, widx, niter=4):
-        """
-
-        :param inner:
-        :param C:
-        :param D:
-        :param freq:
-        :param widx:
-        :param niter:
-        :return:
-        """
-        D = self.words_cumnum
-        C = (self.cum_table[int(0.5 * len(self.vocab))] - self.cum_table[int(0.5 * len(self.vocab)) - 1]) / (
-            2.0 ** 31 - 1) * D
-        inner = np.dot(self.syn1neg, self.syn0[widx, :])
-        inner[inner < 0] = 0
-        freq = np.concatenate((self.cum_table[0:1], (self.cum_table[1:] - self.cum_table[:-1])))
-        freq = freq / (2.0 ** 31 - 1) * D
-        output = np.log(D / np.maximum(freq[widx], freq))
-        tmp = inner * C / freq[widx] * D / freq
-        for _ in xrange(niter):
-            output -= (output * np.log(output) - tmp) / (1 + np.log(output))
-        return np.log(output)
-
-    def n_similarity(self, ws1, ws2, unit=True):
-        """
-        Compute cosine similarity between two sets of words.
-
-        Example::
-
-          >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
-          0.61540466561049689
-
-          >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
-          1.0000000000000004
-
-          >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
-          True
-
-        """
-        v1 = [self[word] for word in ws1]
-        v2 = [self[word] for word in ws2]
-        if unit:
-            return np.dot(matutils.unitvec(np.array(v1).mean(axis=0)), matutils.unitvec(np.array(v2).mean(axis=0)))
-        else:
-            return np.dot(np.array(v1).mean(axis=0), np.array(v2).mean(axis=0))
-
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None, kernel=False):
-        """
-        Find the top-N most similar words. Positive words contribute positively towards the
-        similarity, negative words negatively.
-
-        This method computes cosine similarity between a simple mean of the projection
-        weight vectors of the given words and the vectors for each word in the model.
-        The method corresponds to the `word-analogy` and `distance` scripts in the original
-        word2vec implementation.
-
-        If topn is False, most_similar returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
-          [('queen', 0.50882536), ...]
-
-        """
-        self.init_sims()
-
-        if isinstance(positive, string_types) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
-            positive = [positive]
-
-        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [
-            (word, 1.0) if isinstance(word, string_types + (np.ndarray,)) else word
-            for word in positive
-            ]
-        negative = [
-            (word, -1.0) if isinstance(word, string_types + (np.ndarray,)) else word
-            for word in negative
-            ]
-
-        # compute the weighted average of all words
-        all_words, mean = set(), []
-        for word, weight in positive + negative:
-            if isinstance(word, np.ndarray):
-                mean.append(weight * word)
-            elif word in self.vocab:
-                mean.append(weight * self.syn0norm[self.vocab[word].index])
-                all_words.add(self.vocab[word].index)
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(np.array(mean).mean(axis=0)).astype(REAL)
-
-        if indexer is not None:
-            return indexer.most_similar(mean, topn)
-
-        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
-        ######
-        if kernel:
-            if getattr(self, 'kernel', None) is None:
-                syn1norm = self.syn1neg / np.sqrt(np.sum(self.syn1neg ** 2, axis=0))[np.newaxis, ...]
-                self.kernel = np.dot(syn1norm.T, syn1norm)
-            dists = np.dot(limited, np.dot(self.kernel, mean))
-        else:
-            dists = np.dot(limited, mean)
-        ######
-        # dists = np.dot(limited, mean)
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
-        # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
-        return result[:topn]
-
-    def most_similar_wc(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
-        """
-
-        :param positive:
-        :param negative:
-        :param topn:
-        :param restrict_vocab:
-        :param indexer:
-        :return:
-        """
-        self.init_sims()
-
-        if isinstance(positive, string_types) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
-            positive = [positive]
-
-        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [
-            (word, 1.0) if isinstance(word, string_types + (np.ndarray,)) else word
-            for word in positive
-            ]
-        negative = [
-            (word, -1.0) if isinstance(word, string_types + (np.ndarray,)) else word
-            for word in negative
-            ]
-
-        # compute the weighted average of all words
-        all_words, mean = set(), []
-        for word, weight in positive + negative:
-            if isinstance(word, np.ndarray):
-                mean.append(weight * word)
-            elif word in self.vocab:
-                mean.append(weight * self.syn0norm[self.vocab[word].index])
-                all_words.add(self.vocab[word].index)
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(np.array(mean).mean(axis=0)).astype(REAL)
-
-        if indexer is not None:
-            return indexer.most_similar(mean, topn)
-        # use syn1norm (context vector)
-        limited = self.syn1norm if restrict_vocab is None else self.syn1norm[:restrict_vocab]
-        dists = np.dot(limited, mean)
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
-        # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
-        return result[:topn]
-
-    # def most_similar_wpmi(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
-    #     pass
-
-
-    # def wmdistance(self, document1, document2):
-    #     """
-    #     Compute the Word Mover's Distance between two documents. When using this
-    #     code, please consider citing the following papers:
-    #
-    #     .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-    #     .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-    #     .. Matt Kusner et al. "From Word Embeddings To Document Distances".
-    #
-    #     Note that if one of the documents have no words that exist in the
-    #     Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
-    #
-    #     This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
-    #
-    #     Example:
-    #         >>> # Train word2vec model.
-    #         >>> model = Word2Vec(sentences)
-    #
-    #         >>> # Some sentences to test.
-    #         >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
-    #         >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
-    #
-    #         >>> # Remove their stopwords.
-    #         >>> from nltk.corpus import stopwords
-    #         >>> stopwords = nltk.corpus.stopwords.words('english')
-    #         >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
-    #         >>> sentence_president = [w for w in sentence_president if w not in stopwords]
-    #
-    #         >>> # Compute WMD.
-    #         >>> distance = model.wmdistance(sentence_obama, sentence_president)
-    #     """
-    #
-    #     if not PYEMD_EXT:
-    #         raise ImportError("Please install pyemd Python package to compute WMD.")
-    #
-    #     # Remove out-of-vocabulary words.
-    #     len_pre_oov1 = len(document1)
-    #     len_pre_oov2 = len(document2)
-    #     document1 = [token for token in document1 if token in self]
-    #     document2 = [token for token in document2 if token in self]
-    #     diff1 = len_pre_oov1 - len(document1)
-    #     diff2 = len_pre_oov2 - len(document2)
-    #     if diff1 > 0 or diff2 > 0:
-    #         logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-    #                     diff1, diff2)
-    #
-    #     if len(document1) == 0 or len(document2) == 0:
-    #         logger.info('At least one of the documents had no words that were'
-    #                     'in the vocabulary. Aborting (returning inf).')
-    #         return float('inf')
-    #
-    #     dictionary = Dictionary(documents=[document1, document2])
-    #     vocab_len = len(dictionary)
-    #
-    #     # Sets for faster look-up.
-    #     docset1 = set(document1)
-    #     docset2 = set(document2)
-    #
-    #     # Compute distance matrix.
-    #     distance_matrix = np.zeros((vocab_len, vocab_len), dtype=np.double)
-    #     for i, t1 in dictionary.items():
-    #         for j, t2 in dictionary.items():
-    #             if not t1 in docset1 or not t2 in docset2:
-    #                 continue
-    #             # Compute Euclidean distance between word vectors.
-    #             distance_matrix[i, j] = np.sqrt(np.sum((self[t1] - self[t2]) ** 2))
-    #
-    #     if np.sum(distance_matrix) == 0.0:
-    #         # `emd` gets stuck if the distance matrix contains only np.zeros.
-    #         logger.info('The distance matrix is all np.zeros. Aborting (returning inf).')
-    #         return float('inf')
-    #
-    #     def nbow(document):
-    #         d = np.zeros(vocab_len, dtype=np.double)
-    #         nbow = dictionary.doc2bow(document)  # Word frequencies.
-    #         doc_len = len(document)
-    #         for idx, freq in nbow:
-    #             d[idx] = freq / float(doc_len)  # Normalized word frequencies.
-    #         return d
-    #
-    #     # Compute nBOW representation of documents.
-    #     d1 = nbow(document1)
-    #     d2 = nbow(document2)
-    #
-    #     # Compute WMD.
-    #     return emd(d1, d2, distance_matrix)
-
-    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
-        """
-        Find the top-N most similar words, using the multiplicative combination objective
-        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
-        positively towards the similarity, negative words negatively, but with less
-        susceptibility to one large distance dominating the calculation.
-
-        In the common analogy-solving case, of two positive and one negative examples,
-        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
-
-        Additional positive or negative examples contribute to the numerator or denominator,
-        respectively - a potentially sensible but untested extension of the method. (With
-        a single positive example, rankings will be the same as in the default most_similar.)
-
-        Example::
-
-          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
-          [(u'iraq', 0.8488819003105164), ...]
-
-        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
-
-        """
-        self.init_sims()
-
-        if isinstance(positive, string_types) and not negative:
-            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
-            positive = [positive]
-
-        all_words = set()
-
-        def word_vec(word):
-            if isinstance(word, np.ndarray):
-                return word
-            elif word in self.vocab:
-                all_words.add(self.vocab[word].index)
-                return self.syn0norm[self.vocab[word].index]
-            else:
-                raise KeyError("word '%s' not in vocabulary" % word)
-
-        positive = [word_vec(word) for word in positive]
-        negative = [word_vec(word) for word in negative]
-        if not positive:
-            raise ValueError("cannot compute similarity with no input")
-
-        # equation (4) of Levy & Goldberg "Linguistic Regularities...",
-        # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + np.dot(self.syn0norm, term)) / 2) for term in negative]
-        dists = np.prod(pos_dists, axis=0) / (np.prod(neg_dists, axis=0) + 0.000001)
-
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
-        # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
-        return result[:topn]
-
-    def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words.
-
-        If topn is False, similar_by_word returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_word('graph')
-          [('user', 0.9999163150787354), ...]
-
-        """
-
-        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
-
-    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words by vector.
-
-        If topn is False, similar_by_vector returns the vector of similarity scores.
-
-        `restrict_vocab` is an optional integer which limits the range of vectors which
-        are searched for most-similar values. For example, restrict_vocab=10000 would
-        only check the first 10000 word vectors in the vocabulary order. (This may be
-        meaningful if you've sorted the vocabulary by descending frequency.)
-
-        Example::
-
-          >>> trained_model.similar_by_vector([1,2])
-          [('survey', 0.9942699074745178), ...]
-
-        """
-
-        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
-
-    def doesnt_match(self, words):
-        """
-        Which word from the given list doesn't go with the others?
-
-        Example::
-
-          >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
-          'cereal'
-
-        """
-        self.init_sims()
-
-        words = [word for word in words if word in self.vocab]  # filter out OOV words
-        logger.debug("using words %s" % words)
-        if not words:
-            raise ValueError("cannot select a word from an empty list")
-        vectors = np.vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
-        dists = np.dot(vectors, mean)
-        return sorted(zip(dists, words))[0][1]
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
