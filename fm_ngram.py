@@ -4,6 +4,7 @@ A python implementation of modified word2vec (skip gram with negative sampling b
 from __future__ import division
 import logging
 import numpy as np
+import math
 from numpy import float32 as REAL
 import threading
 from Queue import Queue, Empty, PriorityQueue
@@ -14,9 +15,13 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from timeit import default_timer
 from gensim import utils, matutils
+from heapq import *
 import helpers
-from fm_ngram_inner import train_batch
-from fm_ngram_inner import FAST_VERSION
+try:
+    from fm_ngram_inner import train_batch
+    from fm_ngram_inner import FAST_VERSION
+except:
+    FAST_VERSION = -1
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s : %(levelname)s : %(message)s')
@@ -51,13 +56,14 @@ class fm_ngram(utils.SaveLoad):
 
     def __init__(
             self, sentences=None, size=100,
-            negative=5, ngram=2,
-            alpha=0.025, min_alpha=0.0001, workers=3,
+            negative=5, ngram=2, neg_mean=1, C=20,
+            alpha=0.025, min_alpha=0.0001, workers=4,
             max_vocab_size=None, min_count=5,
             sample=1e-3, smooth_power=0.75, seed=1,
             hashfxn=hash, epoch=5, null_word=0,
             sorted_vocab=1, init="uniform",
-            batch_words=MAX_WORDS_IN_BATCH):
+            optimizer='sgd', gamma=0.9, epsilon=0.0001,
+            batch_words=MAX_WORDS_IN_BATCH,weight_power=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -132,9 +138,13 @@ class fm_ngram(utils.SaveLoad):
         self.vector_size = int(size)
         self.layer1_size = int(size)
         self.weight_init = init
+        self.optimizer = optimizer
+        self.gamma = gamma  # exponential decay constant
+        self.epsilon = epsilon # smoothing constant for rmsprop
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
 
+        self.C = C
         self.alpha = float(alpha)
         self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.min_alpha = float(min_alpha)
@@ -157,8 +167,11 @@ class fm_ngram(utils.SaveLoad):
         self.batch_words = batch_words
 
         self.negative = negative
+        self.neg_mean = neg_mean
         self.cum_table = None  # for negative sampling
         self.smooth_power = smooth_power
+        self.weight_power = weight_power
+        self.fail = False
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -191,18 +204,19 @@ class fm_ngram(utils.SaveLoad):
         # calculate total number of words
         self.words_cumnum = train_words_pow
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=100000):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
+        logger.debug('DEBUG mode is on.')
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab,
                          trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, keep_vocab=False):
+    def scan_vocab(self, sentences, progress_per=100000, trim_rule=None, keep_vocab=False):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -222,16 +236,17 @@ class fm_ngram(utils.SaveLoad):
             # Keep current vocab list and redo scan
             if keep_vocab:
                 self.max_vocab_size = len(self.vocab) + 1
-                self.sent2sent_ng(sentence)
                 for word in sentence:
                     if word in self.vocab: vocab[word] += 1
             else:
                 for word in sentence:
                     vocab[word] += 1
-
             if self.max_vocab_size and len(vocab) > 2 * self.max_vocab_size:
+                logger.debug('DEBUG: prune vocab')
                 total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 0.5
+
+        logger.debug('Pre-Scan DONE')
         # reduce vocabsize to max_vocab_size
         Q = PriorityQueue(maxsize=self.max_vocab_size)
         for val in vocab.itervalues():
@@ -244,7 +259,6 @@ class fm_ngram(utils.SaveLoad):
             else:
                 Q.put_nowait(val)
         utils.prune_vocab(vocab, Q.get_nowait() + 1, trim_rule=trim_rule)
-
         total_words += sum(itervalues(vocab))
         logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
                     len(vocab), total_words, sentence_no + 1)
@@ -299,7 +313,6 @@ class fm_ngram(utils.SaveLoad):
 
         Delete the raw vocabulary after the scaling is done to free up RAM,
         unless `keep_raw_vocab` is set.
-
         """
         min_count = min_count or self.min_count
         sample = sample or self.sample
@@ -368,7 +381,6 @@ class fm_ngram(utils.SaveLoad):
 
         # print extra memory estimates
         report_values['memory'] = self.estimate_memory(vocab_size=len(retain_words))
-
         return report_values
 
     def finalize_vocab(self, keep_vocab=False, suppress=False):
@@ -425,24 +437,14 @@ class fm_ngram(utils.SaveLoad):
         ignoring unknown words and sentence length trimming, total word count)`.
         """
         # work, neu1 = inits
-        work = inits
+        sgd_cache, inner_cache = inits
         tally = 0
-        tally += train_batch(self, sentences, alpha, work)
+        tally += train_batch(self, sentences, alpha, sgd_cache, inner_cache)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
-
-    def sent2sent_ng(self, sent, vocab=None):
-        """Transform a sentence to sentence contains n-gram. (in-place)"""
-        if not vocab: vocab = self.vocab
-        idx = 0
-        while idx < len(sent):
-            if idx + 1 < len(sent) and sent[idx] + '|' + sent[idx + 1] in vocab:
-                sent[idx] = sent[idx] + '|' + sent.pop(idx + 1)
-            else:
-                idx += 1
 
     def train(self, sentences, total_words=None, word_count=0,
               total_examples=None, queue_factor=2, report_delay=1.0):
@@ -471,8 +473,8 @@ class fm_ngram(utils.SaveLoad):
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using wPMI=%s neg_mean=%s sample=%s negative=%s",
-            self.workers, len(self.vocab), self.layer1_size, self.wPMI, self.neg_mean, self.sample, self.negative)
+            "neg_mean=%s sample=%s negative=%s",
+            self.workers, len(self.vocab), self.layer1_size, self.neg_mean, self.sample, self.negative)
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
         if not hasattr(self, 'syn0'):
@@ -489,9 +491,9 @@ class fm_ngram(utils.SaveLoad):
 
         job_tally = 0
         # Constants for training
-        if not self.C:
+        if not hasattr(self, 'C') or not self.C:
             self.C = 20
-        logger.info("Constant for modified word2vec: C = %.2f, D = %d\n--------------------------", self.C, self.words_cumnum)
+        logger.info("Constant for fm word2vec: C = %.2f, D = %d, ngram = %d\n--------------------------", self.C, self.words_cumnum, self.ngram)
 
         if self.iter > 1:
             # Create an iterator that repeats sentences self.iter times
@@ -501,7 +503,8 @@ class fm_ngram(utils.SaveLoad):
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
-            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
+            sgd_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL)  # per-thread private work memory
+            inner_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL) # per-thread private work memory
             # neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
             jobs_processed = 0
             while True:
@@ -510,11 +513,12 @@ class fm_ngram(utils.SaveLoad):
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                tally, raw_tally = self._do_train_job(sentences, alpha, work)
+                tally, raw_tally = self._do_train_job(sentences, alpha, (sgd_cache, inner_cache))
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
+        nan_found = False
         def job_producer():
             """Fill jobs queue using the input `sentences` iterator."""
             job_batch, batch_size = [], 0
@@ -526,8 +530,8 @@ class fm_ngram(utils.SaveLoad):
             job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
-                # embedding n-gram features.
-                self.sent2sent_ng(sentence)
+                if nan_found:
+                    break
                 ##
                 sentence_length = self._raw_word_count([sentence])
 
@@ -561,7 +565,7 @@ class fm_ngram(utils.SaveLoad):
                     job_batch, batch_size = [sentence], sentence_length
 
             # add the last job too (may be significantly smaller than batch_words)
-            if job_batch:
+            if job_batch and not nan_found:
                 logger.debug(
                     "queueing job #%i (%i words, %i sentences) at alpha %.05f",
                     job_no, batch_size, len(job_batch), next_alpha)
@@ -588,7 +592,7 @@ class fm_ngram(utils.SaveLoad):
         unfinished_worker_count = len(workers)
         workers.append(threading.Thread(target=job_producer))
 
-        ## debug
+        # # debug
         # workers = [threading.Thread(target=job_producer)]
 
         for thread in workers:
@@ -599,10 +603,8 @@ class fm_ngram(utils.SaveLoad):
         start, next_report = default_timer() - 0.00001, 1.0
 
         while unfinished_worker_count > 0:
-
-            ## debug
-            # sentences, alpha = job_queue.get()
-            # tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
+            # # debug
+            # worker_loop()
 
             report = progress_queue.get()  # blocks if workers too slow
             if report is None:  # a thread reporting that it finished
@@ -621,11 +623,16 @@ class fm_ngram(utils.SaveLoad):
             elapsed = default_timer() - start
             if elapsed >= next_report:
                 if total_examples:
+                    foo = np.linalg.norm(self.syn0[0, 0])
+                    if math.isnan(foo):
+                        nan_found = True
+                        self.fail = True
+                        logger.warning('MISSION FAILED: no convergence.')
                     # examples-based progress %
                     logger.info(
                         "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i, vec_norm %.2f",
                         100.0 * example_count / total_examples, trained_word_count / elapsed,
-                        utils.qsize(job_queue), utils.qsize(progress_queue), np.linalg.norm(self.syn0[1]))
+                        utils.qsize(job_queue), utils.qsize(progress_queue), foo)
                 else:
                     # words-based progress %
                     logger.info(
@@ -659,14 +666,20 @@ class fm_ngram(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        self.syn0 = np.empty((len(self.vocab), self.vector_size), dtype=REAL)
+        self.syn0 = np.empty((len(self.vocab), self.ngram, self.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
-            # construct deterministic seed from word AND seed argument
-            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
-
+            for ng in xrange(self.ngram):
+                # construct deterministic seed from word AND seed argument
+                foo = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
+                self.syn0[i, ng] = foo / np.linalg.norm(foo)
         self.syn0norm = None
-        self.syn0_lockf = np.ones(len(self.vocab), dtype=REAL)  # np.zeros suppress learning
+        if self.optimizer == 'rmsprop':
+            self.sq_grad = np.zeros([len(self.vocab), self.ngram, self.vector_size], dtype=REAL)
+        else:
+            self.sq_grad = np.zeros(1, dtype=REAL)
+        self.syn0_lockf = np.ones((len(self.vocab), self.ngram), dtype=REAL)  # np.zeros suppress learning
+        self.fail = False
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
@@ -699,6 +712,51 @@ class fm_ngram(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / np.sqrt((self.syn0 ** 2).sum(-1))[..., np.newaxis]).astype(REAL)
 
+    def similarity(self, words, unit=True):
+        if len(words) != self.ngram:
+            raise ValueError('The lenght of words does not match ngram.')
+        vectors = np.ones(self.vector_size, dtype=REAL)
+        for idx, w in enumerate(words):
+            if unit:
+                vectors *= matutils.unitvec(self[w][idx, :])
+            else:
+                vectors *= self[w][idx, :]
+        return vectors.sum()
+
+    def get_ngram(self, text, topN=100000, unit=True):
+        dic = set()
+        ngrams = []
+        nline = 95638957
+        for idx, sent in enumerate(text):
+            if idx % 100000 == 0:
+                logger.info('%.2f%% is completed' % (float(idx) / nline * 100))
+            # if idx > 0.4 * nline:
+            #     break
+            for i in range(len(sent) - self.ngram + 1):
+                if any(word not in self.vocab for word in sent[i:i+self.ngram]):
+                    continue
+                if ' '.join(sent[i:i+self.ngram]) in dic:
+                    continue
+                # we select english bigram
+                if any(any(l.isdigit() for l in word) for word in sent[i:i+self.ngram]):
+                    continue
+
+                sim = self.similarity(sent[i:i+self.ngram], unit=unit)
+                if len(ngrams) < topN:
+                    heappush(ngrams, (sim, ' '.join(sent[i:i+self.ngram])))
+                    dic.add(' '.join(sent[i:i+self.ngram]))
+                else:
+                    foo = heappop(ngrams)
+                    if foo[0] < sim:
+                        heappush(ngrams, (sim, ' '.join(sent[i:i+self.ngram])))
+                        dic.discard(foo[1])
+                        dic.add(' '.join(sent[i:i+self.ngram]))
+                    else:
+                        heappush(ngrams, foo)
+        ngrams = sorted(ngrams, reverse=True)
+        return ngrams
+
+
     def __getitem__(self, words):
 
         """
@@ -724,9 +782,9 @@ class fm_ngram(utils.SaveLoad):
         """
         if isinstance(words, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.syn0[self.vocab[words].index]
+            return self.syn0[self.vocab[words].index, :, :]
 
-        return np.vstack([self.syn0[self.vocab[word].index] for word in words])
+        return np.vstack([self.syn0[self.vocab[word].index, :, :] for word in words])
 
     def __contains__(self, word):
         return word in self.vocab
@@ -734,13 +792,13 @@ class fm_ngram(utils.SaveLoad):
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'syn1norm', 'table'])
-        super(mWord2Vec, self).save(*args, **kwargs)
+        super(fm_ngram, self).save(*args, **kwargs)
 
     save.__doc__ = utils.SaveLoad.save.__doc__
 
     @classmethod
     def load(cls, *args, **kwargs):
-        model = super(mWord2Vec, cls).load(*args, **kwargs)
+        model = super(fm_ngram, cls).load(*args, **kwargs)
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table

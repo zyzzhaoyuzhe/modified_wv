@@ -675,7 +675,7 @@ class mWord2Vec(utils.SaveLoad):
         vocab_size = len(self.vocab)
         # self.C = (self.cum_table[int(0.8 * vocab_size)] - self.cum_table[int(0.8 * vocab_size) - 1]) / (
         #     2.0 ** 31 - 1) * self.words_cumnum
-        if not self.C:
+        if not hasattr(self, 'C') or not self.C:
             self.C = 20
         logger.info("Constant for modified word2vec: C = %.2f, D = %d", self.C, self.words_cumnum)
 
@@ -774,7 +774,7 @@ class mWord2Vec(utils.SaveLoad):
         unfinished_worker_count = len(workers)
         workers.append(threading.Thread(target=job_producer))
 
-        ## debug
+        # ## debug
         # workers = [threading.Thread(target=job_producer)]
 
         for thread in workers:
@@ -786,9 +786,8 @@ class mWord2Vec(utils.SaveLoad):
 
         while unfinished_worker_count > 0:
 
-            ## debug
-            # sentences, alpha = job_queue.get()
-            # tally, raw_tally = self._do_train_job(sentences, alpha, (None, None))
+            # ## debug
+            # worker_loop()
 
             report = progress_queue.get()  # blocks if workers too slow
             if report is None:  # a thread reporting that it finished
@@ -965,7 +964,10 @@ class mWord2Vec(utils.SaveLoad):
         # if self.hs:
         #     self.syn1 = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
-            self.syn1neg = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            for i in xrange(len(self.vocab)):
+                self.syn1neg[i] = self.seeded_vector(self.index2word[i] + '1' + str(self.seed))
+            # self.syn1neg = self.syn0
+            # self.syn1neg = np.zeros((len(self.vocab), self.layer1_size), dtype=REAL)
 
         self.syn0norm = None
         self.syn1norm = None

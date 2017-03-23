@@ -11,9 +11,9 @@ import cython
 import numpy as np
 cimport numpy as np
 
-from libc.math cimport exp
-from libc.math cimport log
+from libc.math cimport exp, log, sqrt
 from libc.string cimport memset
+from libc.stdlib cimport malloc, calloc, free
 from libc.stdio cimport printf, getc
 from libc.stdlib cimport exit
 
@@ -34,6 +34,27 @@ cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float 
 cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
 cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
 cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
+cdef dscal_ptr dscal=<dscal_ptr>PyCObject_AsVoidPtr(fblas.dscal._cpointer) # x = alpha * x
+
+cdef void elemul(const int *N, const float *X1, const float *X2, float *Y) nogil:
+    """elementwise multiplication: Y = X1 .* X2"""
+    cdef int i
+    for i from 0 <= i < N[0] by 1:
+        Y[i] = X1[i] * X2[i]
+
+cdef void matrix2vec(const int *N, const int *ngram,
+                     const np.uint32_t *indices,
+                     REAL_t *syn0, REAL_t *inner_cache) nogil:
+    """"""
+    cdef int i, j
+    # initialize inner_cache
+    for i in range(ngram[0] * N[0]):
+        inner_cache[i] = ONEF
+    for i in range(ngram[0]):
+        for j in range(ngram[0]):
+            if i == j:
+                continue
+            elemul(N, &inner_cache[j * N[0]], &syn0[indices[i] * ngram[0] * N[0] + i * N[0]], &inner_cache[j * N[0]])
 
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
@@ -107,158 +128,126 @@ cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:
     else:
         return b
 
-cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table, REAL_t count_adjust) nogil:
+cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:
     if word_index == 0:
-        return <unsigned long long>(cum_table[0] * count_adjust)
+        return <unsigned long long>cum_table[0]
     else:
-        return <unsigned long long>((cum_table[word_index] - cum_table[word_index-1]) * count_adjust)
+        return <unsigned long long>(cum_table[word_index] - cum_table[word_index-1])
 
 ###### V2
-cdef REAL_t jcount2inner(REAL_t jcounts, unsigned long long count1, unsigned long long count2,
-    unsigned long long D, REAL_t C, REAL_t weight_power) nogil:
-    return (jcounts / C) ** weight_power * log(<REAL_t>jcounts / count1 * D / count2)
+cdef void get_inner_min(REAL_t alpha, REAL_t beta, REAL_t *inner_min,
+                       REAL_t *jcount_min) nogil:
+    # Notice: alternative exp(beta-1) + 1
+    jcount_min[0] = exp(beta-1)
+    inner_min[0] = jcount2inner(alpha, jcount_min[0], beta)
 
+cdef REAL_t jcount_newton(REAL_t inner, REAL_t jcount,
+                           REAL_t alpha, REAL_t beta) nogil:
+    cdef REAL_t foo = log(jcount) - beta
+    return jcount - (jcount * foo - inner / alpha) / (foo + ONEF)
 
-cdef void inner_minmax(unsigned long long count1, unsigned long long count2,
-    unsigned long long D, REAL_t C, REAL_t weight_power,
-    REAL_t *jcount_min, REAL_t *inner_min, REAL_t *inner_max) nogil:
-    # min and max of inner product, according to the equation
-    # #(w,c)/C log \frac{#(w,c)*D}{#(w)#(c)}
-    cdef REAL_t foo
-    jcount_min[0] = <REAL_t>count1 / D * count2 * exp(-ONEF/weight_power) + 1
-    inner_min[0] = jcount2inner(jcount_min[0], count1, count2, D, C, weight_power)
-    inner_max[0] = jcount2inner(<REAL_t>min_ull(count1, count2), count1, count2, D, C, weight_power)
+# inner = alpha * x (log(x) - beta)
+cdef REAL_t jcount2inner(REAL_t alpha, REAL_t jcount, REAL_t beta) nogil:
+    return alpha * jcount * (log(jcount) - beta)
 
-
-cdef REAL_t jcount_newton(
-    REAL_t x, unsigned long long count1, unsigned long long count2,
-    unsigned long long D, REAL_t C, REAL_t weight_power,
-    REAL_t inner) nogil:
-    cdef REAL_t foo = log(x / count1 * D / count2)
-    return x - (x * foo - inner * C ** weight_power * x ** (ONEF - weight_power)) / (weight_power * foo + ONEF)
-
-
-cdef REAL_t inner2jcount(
-    unsigned long long count1, unsigned long long count2,
-    unsigned long long D, REAL_t C, REAL_t weight_power,
-    REAL_t inner, int niter) nogil:
-    # Calculate joint count from inner product by the following equation
-    # inner = #(w,c)/C log \frac{#(w,c)*D}{#(w)#(c)}
-    cdef REAL_t jcount_min, jcount_inde
-    cdef REAL_t foo
-    cdef REAL_t inner_min, inner_max, inner_C
-    inner_minmax(count1, count2, D, C, weight_power, &jcount_min, &inner_min, &inner_max)
-    # for debug
-    # printf("jcount_min %f, inner_min %f, inner_max %f\n", jcount_min, inner_min, inner_max)
-    # printf("inner %f\n", inner)
+cdef REAL_t inner2jcount(REAL_t inner, REAL_t alpha, REAL_t beta, REAL_t jcount_max, const int niter) nogil:
+    cdef REAL_t jcount_min
+    cdef REAL_t inner_min
+    cdef REAL_t inner_max
+    cdef REAL_t inner_C
+    cdef REAL_t jcount
+    cdef int i
+    get_inner_min(alpha, beta, &inner_min, &jcount_min)
+    inner_max = jcount2inner(alpha, jcount_max, beta)
     if inner < inner_min:
-        if jcount_min < 1:
-            return ONEF
-        else:
-            return jcount_min
+        return max_real(ONEF, jcount_min)
     elif inner > inner_max:
-        return <REAL_t>min_ull(count1, count2)
+        return jcount_max
     else:
-        # A smart initialization for Newton
-        jcount_inde = <REAL_t>count1 / D * count2
+        #
+        jcount = exp(beta)
         if inner > 0:
-            inner_C = jcount2inner(C, count1, count2, D, C, weight_power)
+            inner_C = jcount2inner(alpha, ONEF/alpha, beta)
             if inner > inner_C:
-                foo = max_real(C, <REAL_t> jcount_inde)
-            else:
-                foo = <REAL_t> jcount_inde
-        else:
-            # starts from gradient transition point; alpha should between (0,0.5)
-            foo = (exp(ONEF / (ONE-weight_power) - ONEF/ weight_power ) * jcount_inde)
-            if foo > max_real(jcount_inde, C):
-                foo = max_real(jcount_inde, C)
-        # # for debug
-        # printf("inner %f, inner_C %f, jcount_inde %f, C %f \n", inner, inner_C, jcount_inde, C)
-        # printf("count1 %d, count2, %d, D %d\n", count1, count2, D)
-        # Newton iterations
+                jcount = max_real(ONEF/alpha, jcount)
         for i in range(niter):
-            # # for debug
-            # printf("foo %f\n", foo)
+            jcount = jcount_newton(inner, jcount, alpha, beta)
+    return jcount if jcount > 1 else ONEF
 
-            foo = jcount_newton(foo, count1, count2, D, C, weight_power, inner)
-        return foo
-
-
+cdef void rmsprop_update(const int *size, REAL_t *sq_grad, const REAL_t *gamma, const REAL_t *epsilon,
+                         REAL_t *syn0, REAL_t *grad, const REAL_t *eta) nogil:
+    cdef int k
+    for k in range(size[0]):
+        sq_grad[k] = gamma[0] * sq_grad[k] + (1-gamma[0]) * grad[k] * grad[k]
+        syn0[k] += eta[0] / sqrt(sq_grad[k] + epsilon[0]) * grad[k]
 
 # modified fast_sentence_sg_neg
 cdef unsigned long long fast_sentence_neg(
-    const int negative, const int neg_mean, REAL_t weight_power,
+    const int ngram, const int negative,
+    const int neg_mean, REAL_t weight_power,
     const long long vocab_size, unsigned long long total_words,
     REAL_t C, np.uint32_t *cum_table,
     REAL_t *syn0, const int size,
-    const np.uint32_t word_index, const np.uint32_t word2_index,
-    const REAL_t alpha, REAL_t *work,
+    const np.uint32_t *word_indices,
+    const int optimizer, REAL_t *sq_grad, REAL_t gamma, REAL_t epsilon,
+    const REAL_t eta, REAL_t *sgd_cache, REAL_t *inner_cache,
     unsigned long long next_random, REAL_t *word_locks) nogil:
 
     cdef long long a
-    cdef long long row1 = word2_index * size, row2
+    cdef REAL_t alpha = ONEF / C
+    cdef REAL_t beta
+    cdef REAL_t logtotal = log(total_words)
+    cdef REAL_t jcount_max
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t inner, f, g, label
     cdef int idx
-    cdef np.uint32_t target_index
-    cdef int d
-    # variables for wPMI mode
-    cdef unsigned long long count1, count2
-    cdef REAL_t jcounts
+    cdef np.uint32_t *indices = <np.uint32_t*>calloc(ngram, cython.sizeof(np.uint32_t))
+    cdef int center_gram
+
+    cdef int sample, tmp, tmp1
+    # variables for wPMI
+    cdef REAL_t jcount
     cdef REAL_t weight, neg_mean_weight
     cdef unsigned long long domain = 2 ** 31 - 1
+    cdef REAL_t logdomain = log(domain)
     cdef REAL_t count_adjust = <REAL_t>total_words/domain
-    # cdef unsigned long long D = total_words
-    # cdef REAL_t C
     cdef REAL_t foo
 
-    # for debug
-    cdef int i_debug
-    cdef REAL_t for_debug = 0
-    cdef int ddd = 0
+    # reset sgd_cache
+    memset(sgd_cache, 0, size * ngram * cython.sizeof(REAL_t))
+    # memset(work, 0, size * cython.sizeof(REAL_t))
 
-    # if wPMI:
-        # C = 344622
-        # D = total_words
-        # C = (cum_table[<int>(vocab_size*0.5)]-cum_table[<int>(vocab_size*0.5)-1]) * count_adjust
-        # printf("C %f, D %d\n",C, D)
-
-    memset(work, 0, size * cython.sizeof(REAL_t))
-
-    for d in range(negative+1):
-        if d == 0:
-            target_index = word_index
+    for sample in range(ngram * negative+1):
+        if sample == 0:
+            for tmp in range(ngram):
+                indices[tmp] = word_indices[tmp]
             label = ONEF
             neg_mean_weight = ONEF
         else:
-            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
-            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
-            if target_index == word_index:
-                continue
+            center_gram = sample % ngram
+            for tmp in range(ngram):
+                indices[tmp] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
+                next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            indices[center_gram] = word_indices[center_gram]
+            # if target_index == word_index:
+            #     continue
             label = <REAL_t>0.0
-            neg_mean_weight = 1.0 / <REAL_t>negative
-
-        row2 = target_index * size
-        inner = our_dot(&size, &syn0[row1], &ONE, &syn0[row2], &ONE)
-        count1 = word_count(word2_index, cum_table, count_adjust)
-        count2 = word_count(target_index, cum_table, count_adjust)
-        # v2
-        # jcounts = inner2jcount(count1, count2, D, C, inner, 3)
-        # weight = jcounts / C
-        # v3
-        jcounts = inner2jcount(count1, count2,
-            total_words, C, weight_power,
-            inner, 3)
-        weight = (jcounts / C) ** weight_power
-
-
-        # for debug
-        # printf("c1 %d, c2 %d, inner %f, jc %f, C %f, D %d, weight %f\n", count1, count2, inner, jcounts, C, total_words, weight)
-        # exit(0)
-        # weight = 0.1
-
+            if neg_mean:
+                neg_mean_weight = ONEF / <REAL_t>negative / ngram
+            else:
+                neg_mean_weight = ONEF / ngram
+        #
+        matrix2vec(&size, &ngram, indices, syn0, inner_cache)
+        inner = our_dot(&size, &syn0[indices[0] * ngram * size], &ONE, inner_cache, &ONE)
+        beta = logtotal - ngram * logdomain
+        jcount_max = <REAL_t>word_count(indices[0], cum_table)
+        for tmp in range(ngram):
+            beta += log(word_count(indices[tmp], cum_table))
+            jcount_max = min_real(jcount_max, <REAL_t>word_count(indices[tmp], cum_table))
+        jcount = inner2jcount(inner, alpha, beta, jcount_max, 3)
+        weight = alpha * jcount
+        # sigmoid(x) = 1 / (1 + exp(-x)) (EXP_TABLE)
         foo = ONEF / weight * inner
-        # foo = inner
         if foo <= -MAX_EXP:
             f = EXP_TABLE[0]
         elif foo >= MAX_EXP:
@@ -271,37 +260,43 @@ cdef unsigned long long fast_sentence_neg(
                 idx = EXP_TABLE_SIZE-1
             else:
                 f = EXP_TABLE[idx]
-            # f = EXP_TABLE[<int>((inner + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        g = (label - f) * alpha / weight
-        # g = (label - f) * alpha
-        if neg_mean:
-            g = g * neg_mean_weight
 
-        our_saxpy(&size, &g, &syn0[row2], &ONE, work, &ONE)
-        our_saxpy(&size, &g, &syn0[row1], &ONE, &syn0[row2], &ONE)
+        # gradient
+        if optimizer == 0:
+            g = (label - f) * eta / weight *  neg_mean_weight
+        elif optimizer == 1:
+            g = (label - f) / weight *  neg_mean_weight
+        if sample == 0:
+            for tmp in range(ngram):
+                our_saxpy(&size, &g, &inner_cache[tmp * size], &ONE, &sgd_cache[tmp * size], &ONE)
+        else:
+            for tmp in range(ngram):
+                if tmp == center_gram:
+                    our_saxpy(&size, &g, &inner_cache[tmp * size], &ONE, &sgd_cache[tmp * size], &ONE)
+                else:
+                    if optimizer == 0:
+                        our_saxpy(&size, &g, &inner_cache[tmp * size], &ONE, &syn0[indices[tmp] * ngram * size + tmp * size], &ONE)
+                    elif optimizer == 1:
+                        our_scal(&size, &g, &inner_cache[tmp * size], &ONE)
+                        rmsprop_update(&size, &sq_grad[indices[tmp] * ngram * size + tmp * size],
+                                       &gamma, &epsilon, &syn0[indices[tmp] * ngram * size + tmp * size],
+                                       &inner_cache[tmp * size], &eta)
 
-        # # debug
-        # for_debug = 0
-        # for i_debug in range(size):
-        #     for_debug += syn1neg[row2+i_debug] * syn1neg[row2+i_debug]
-        # if g>0:
-        #     printf("%d, %d, jcount %d, D %d, C %f, weight %f\n", count1, count2, jcounts, D, C, weight)
-        #     printf("g: %f, inner %f\n", g, inner)
-        #     printf("norm: %f\n", for_debug)
-        #     for_debug = 0
-        #     for i_debug in range(size):
-        #         for_debug += syn0[row1+i_debug] * syn0[row1+i_debug]
-        #     printf("work norm: %f\n", for_debug)
-        #     # exit(0)
-
-    our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
-
+    for tmp in range(ngram):
+        if optimizer == 0:
+            our_saxpy(&size, &word_locks[word_indices[tmp]], &sgd_cache[tmp * size], &ONE, &syn0[word_indices[tmp] * ngram * size + tmp * size], &ONE)
+        elif optimizer == 1:
+            rmsprop_update(&size, &sq_grad[indices[tmp] * ngram * size + tmp * size],
+                                       &gamma, &epsilon, &syn0[indices[tmp] * ngram * size + tmp * size],
+                                       &sgd_cache[tmp * size], &eta)
+    # free memory
+    free(indices)
     return next_random
 
-def train_batch(model, sentences, alpha, _work):
-    # cdef int hs = model.hs
+def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache):
     cdef int sample = (model.sample != 0)
     # Use mean for negative sampling or sum
+    cdef int ngram = model.ngram
     cdef int negative = model.negative
     cdef int neg_mean = model.neg_mean
 
@@ -313,37 +308,45 @@ def train_batch(model, sentences, alpha, _work):
     cdef np.uint32_t *cum_table
 
     cdef int size = model.layer1_size
+    cdef int optimizer = 0
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *sq_grad = <REAL_t *>(np.PyArray_DATA(model.sq_grad))
 
     cdef REAL_t _alpha = alpha
+    cdef REAL_t _gamma = model.gamma
+    cdef REAL_t _epsilon = model.epsilon
     cdef REAL_t *work
+    cdef REAL_t *inner_buffer
+    cdef REAL_t *sgd_cache
     # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
 
+    cdef np.uint32_t *ngram_indices = <np.uint32_t*>malloc(ngram * cython.sizeof(np.uint32_t))
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
-    cdef int window = model.window
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    # for debug
-    cdef int ddd = 0
+    #
+    if model.optimizer == 'rmsprop':
+        optimizer = 1
+        alpha = model.alpha
 
     cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
     next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
+    sgd_cache = <REAL_t *>np.PyArray_DATA(_sgd_cache)
+    inner_cache = <REAL_t *>np.PyArray_DATA(_inner_cache)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
-        if not sent:
+        if not sent or len(sent) < ngram:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
             word = vlookup[token] if token in vlookup else None
@@ -351,11 +354,8 @@ def train_batch(model, sentences, alpha, _work):
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
             if sample and word.sample_int < random_int32(&next_random):
                 continue
+            # container
             indexes[effective_words] = word.index
-            # if hs:
-            #     codelens[effective_words] = <int>len(word.code)
-            #     codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            #     points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -369,34 +369,24 @@ def train_batch(model, sentences, alpha, _work):
         if effective_words == MAX_SENTENCE_LEN:
             break  # TODO: log warning, tally overflow?
 
-    # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, window, effective_words)):
-        reduced_windows[i] = item
-
     # release GIL & train on all sentences
     with nogil:
         for sent_idx in range(effective_sentences):
             idx_start = sentence_idx[sent_idx]
             idx_end = sentence_idx[sent_idx + 1]
-            for i in range(idx_start, idx_end):
-                j = i - window + reduced_windows[i]
-                if j < idx_start:
-                    j = idx_start
-                k = i + window + 1 - reduced_windows[i]
-                if k > idx_end:
-                    k = idx_end
-                for j in range(j, k):
-                    if j == i:
-                        continue
-                    next_random = fast_sentence_neg(
-                        negative, neg_mean, weight_power,
-                        vocab_size, total_words, C, cum_table,
-                        syn0, size, indexes[i], indexes[j],
-                        _alpha, work, next_random, word_locks)
-                        # # for debug
-                        # ddd += 1
-                        # if ddd > 2:
-                        #     exit(0)
+            if idx_end - idx_start < ngram:
+                continue
+            for i in range(idx_start, idx_end-ngram+1):
+                for j in range(ngram):
+                    ngram_indices[j] = indexes[i + j]
+                next_random = fast_sentence_neg(
+                    ngram, negative,
+                    neg_mean, weight_power,
+                    vocab_size, total_words, C, cum_table,
+                    syn0, size, ngram_indices, optimizer, sq_grad, _gamma, _epsilon,
+                    _alpha, sgd_cache, inner_cache, next_random, word_locks)
+
+    free(ngram_indices)
     return effective_words
 
 def init():
@@ -407,6 +397,7 @@ def init():
     """
     global our_dot
     global our_saxpy
+    global our_scal
 
     cdef int i
     cdef float *x = [<float>10.0]
@@ -427,10 +418,12 @@ def init():
     p_res = <float *>&d_res
     if (abs(d_res - expected) < 0.0001):
         our_dot = our_dot_double
+        our_scal = dscal
         our_saxpy = saxpy
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         our_dot = our_dot_float
+        our_scal = sscal
         our_saxpy = saxpy
         return 1  # float
     else:

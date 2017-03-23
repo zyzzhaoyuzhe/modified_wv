@@ -18,6 +18,7 @@ ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const
 ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
 ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
+ctypedef void (*dscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
 
 cdef scopy_ptr scopy
 cdef saxpy_ptr saxpy
@@ -25,6 +26,7 @@ cdef sdot_ptr sdot
 cdef dsdot_ptr dsdot
 cdef snrm2_ptr snrm2
 cdef sscal_ptr sscal
+cdef dscal_ptr dscal
 
 # precalculated sigmoid table
 DEF EXP_TABLE_SIZE = 1000
@@ -34,9 +36,11 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 # function implementations swapped based on BLAS detected in word2vec_inner.pyx init()
 ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
 ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
+ctypedef void (*our_scal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
 
 cdef our_dot_ptr our_dot
 cdef our_saxpy_ptr our_saxpy
+cdef our_scal_ptr our_scal
 
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil

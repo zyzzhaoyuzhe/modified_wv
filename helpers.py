@@ -8,6 +8,8 @@ import nltk
 from gensim import utils
 import heapq
 import logging
+import codecs
+
 logger = logging.getLogger(__name__)
 
 def sigma(x):
@@ -208,11 +210,11 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), append_tag=Fals
 class smartfile(object):
     def __init__(self, filename):
         self.fin = open(filename, 'r')
+        self.unicode = unicode
     def __iter__(self):
         self.fin.seek(0)
         for line in self.fin:
-            yield line.split()
-
+            yield line.decode('utf-8').split()
 
 def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
     dic = {}
