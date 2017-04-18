@@ -425,8 +425,8 @@ def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
             idx_end = sentence_idx[sent_idx + 1]
             if idx_end - idx_start < ngram:
                 continue
-            # for i in range(idx_start, idx_end-ngram+1):
-            for i in range(idx_start, idx_end):
+            for i in range(idx_start, idx_end-ngram+1):
+            # for i in range(idx_start, idx_end):
                 for j in range(ngram):
                     ngram_indices[j] = indexes[i + j]
                 next_random = fast_sentence_neg(

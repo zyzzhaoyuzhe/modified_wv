@@ -3670,7 +3670,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   PyObject *__pyx_t_14 = NULL;
   __pyx_t_5numpy_uint32_t __pyx_t_15;
   int __pyx_t_16;
-  int __pyx_t_17;
+  long __pyx_t_17;
   int __pyx_t_18;
   int __pyx_t_19;
   int __pyx_t_20;
@@ -4379,7 +4379,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:             # <<<<<<<<<<<<<<
  *                 continue
- *             # for i in range(idx_start, idx_end-ngram+1):
+ *             for i in range(idx_start, idx_end-ngram+1):
  */
           __pyx_t_10 = (((__pyx_v_idx_end - __pyx_v_idx_start) < __pyx_v_ngram) != 0);
           if (__pyx_t_10) {
@@ -4388,8 +4388,8 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:
  *                 continue             # <<<<<<<<<<<<<<
- *             # for i in range(idx_start, idx_end-ngram+1):
- *             for i in range(idx_start, idx_end):
+ *             for i in range(idx_start, idx_end-ngram+1):
+ *             # for i in range(idx_start, idx_end):
  */
             goto __pyx_L17_continue;
 
@@ -4398,24 +4398,24 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:             # <<<<<<<<<<<<<<
  *                 continue
- *             # for i in range(idx_start, idx_end-ngram+1):
+ *             for i in range(idx_start, idx_end-ngram+1):
  */
           }
 
-          /* "modified_wv/fm_ngram_inner.pyx":429
+          /* "modified_wv/fm_ngram_inner.pyx":428
+ *             if idx_end - idx_start < ngram:
  *                 continue
- *             # for i in range(idx_start, idx_end-ngram+1):
- *             for i in range(idx_start, idx_end):             # <<<<<<<<<<<<<<
+ *             for i in range(idx_start, idx_end-ngram+1):             # <<<<<<<<<<<<<<
+ *             # for i in range(idx_start, idx_end):
  *                 for j in range(ngram):
- *                     ngram_indices[j] = indexes[i + j]
  */
-          __pyx_t_17 = __pyx_v_idx_end;
+          __pyx_t_17 = ((__pyx_v_idx_end - __pyx_v_ngram) + 1);
           for (__pyx_t_18 = __pyx_v_idx_start; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
             __pyx_v_i = __pyx_t_18;
 
             /* "modified_wv/fm_ngram_inner.pyx":430
- *             # for i in range(idx_start, idx_end-ngram+1):
- *             for i in range(idx_start, idx_end):
+ *             for i in range(idx_start, idx_end-ngram+1):
+ *             # for i in range(idx_start, idx_end):
  *                 for j in range(ngram):             # <<<<<<<<<<<<<<
  *                     ngram_indices[j] = indexes[i + j]
  *                 next_random = fast_sentence_neg(
@@ -4425,7 +4425,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
               __pyx_v_j = __pyx_t_20;
 
               /* "modified_wv/fm_ngram_inner.pyx":431
- *             for i in range(idx_start, idx_end):
+ *             # for i in range(idx_start, idx_end):
  *                 for j in range(ngram):
  *                     ngram_indices[j] = indexes[i + j]             # <<<<<<<<<<<<<<
  *                 next_random = fast_sentence_neg(
