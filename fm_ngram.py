@@ -17,6 +17,7 @@ from timeit import default_timer
 from gensim import utils, matutils
 from heapq import *
 import helpers
+import operator
 try:
     from fm_ngram_inner import train_batch
     from fm_ngram_inner import FAST_VERSION
@@ -61,7 +62,7 @@ class fm_ngram(utils.SaveLoad):
             max_vocab_size=None, min_count=5,
             sample=1e-3, smooth_power=0.75, seed=1,
             hashfxn=hash, epoch=5, null_word=0,
-            sorted_vocab=1, init="uniform",
+            sorted_vocab=1, init="gaussian",
             optimizer='sgd', gamma=0.9, epsilon=0.0001,
             batch_words=MAX_WORDS_IN_BATCH,weight_power=1):
         """
@@ -215,6 +216,7 @@ class fm_ngram(utils.SaveLoad):
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab,
                          trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
+
 
     def scan_vocab(self, sentences, progress_per=100000, trim_rule=None, keep_vocab=False):
         """Do an initial scan of all words appearing in sentences."""
@@ -437,9 +439,9 @@ class fm_ngram(utils.SaveLoad):
         ignoring unknown words and sentence length trimming, total word count)`.
         """
         # work, neu1 = inits
-        sgd_cache, inner_cache = inits
+        sgd_cache, inner_cache, syn0_copy = inits
         tally = 0
-        tally += train_batch(self, sentences, alpha, sgd_cache, inner_cache)
+        tally += train_batch(self, sentences, alpha, sgd_cache, inner_cache, syn0_copy)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
@@ -503,8 +505,10 @@ class fm_ngram(utils.SaveLoad):
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
+            # per-thread private work memory
             sgd_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL)  # per-thread private work memory
             inner_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL) # per-thread private work memory
+            syn0_copy = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL) # per-thread private work memory
             # neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
             jobs_processed = 0
             while True:
@@ -513,7 +517,7 @@ class fm_ngram(utils.SaveLoad):
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                tally, raw_tally = self._do_train_job(sentences, alpha, (sgd_cache, inner_cache))
+                tally, raw_tally = self._do_train_job(sentences, alpha, (sgd_cache, inner_cache, syn0_copy))
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
@@ -542,9 +546,9 @@ class fm_ngram(utils.SaveLoad):
                     batch_size += sentence_length
                 else:
                     # no => submit the existing job
-                    logger.debug(
-                        "queueing job #%i (%i words, %i sentences) at alpha %.05f",
-                        job_no, batch_size, len(job_batch), next_alpha)
+                    # logger.debug(
+                    #     "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                    #     job_no, batch_size, len(job_batch), next_alpha)
                     job_no += 1
                     job_queue.put((job_batch, next_alpha))
 
@@ -566,9 +570,9 @@ class fm_ngram(utils.SaveLoad):
 
             # add the last job too (may be significantly smaller than batch_words)
             if job_batch and not nan_found:
-                logger.debug(
-                    "queueing job #%i (%i words, %i sentences) at alpha %.05f",
-                    job_no, batch_size, len(job_batch), next_alpha)
+                # logger.debug(
+                #     "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                #     job_no, batch_size, len(job_batch), next_alpha)
                 job_no += 1
                 job_queue.put((job_batch, next_alpha))
 
@@ -630,9 +634,18 @@ class fm_ngram(utils.SaveLoad):
                         logger.warning('MISSION FAILED: no convergence.')
                     # examples-based progress %
                     logger.info(
-                        "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i, vec_norm %.2f",
+                        "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                         100.0 * example_count / total_examples, trained_word_count / elapsed,
-                        utils.qsize(job_queue), utils.qsize(progress_queue), foo)
+                        utils.qsize(job_queue), utils.qsize(progress_queue))
+
+                    for i in range(1):
+                        logger.info('MODEL: vec0_0 %.2f, vec0_1 %.2f',
+                                    np.linalg.norm(self.syn0[5*i, 0]), np.linalg.norm(self.syn0[5*i, 1]))
+
+                    if self.optimizer == 'rmsprop':
+                        logger.debug('vec0 sgd_cache %f, vec1 sgd_cache %f',
+                                     self.sq_grad[1, 0], self.sq_grad[1, 1],
+                                     self.sq_grad[3, 0], self.sq_grad[3, 1])
                 else:
                     # words-based progress %
                     logger.info(
@@ -671,13 +684,13 @@ class fm_ngram(utils.SaveLoad):
         for i in xrange(len(self.vocab)):
             for ng in xrange(self.ngram):
                 # construct deterministic seed from word AND seed argument
-                foo = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
-                self.syn0[i, ng] = foo / np.linalg.norm(foo)
+                # foo = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
+                self.syn0[i, ng] = self.seeded_vector(self.index2word[i] + str(self.seed))
         self.syn0norm = None
         if self.optimizer == 'rmsprop':
-            self.sq_grad = np.zeros([len(self.vocab), self.ngram, self.vector_size], dtype=REAL)
+            self.sq_grad = np.ones([len(self.vocab), self.ngram], dtype=REAL)
         else:
-            self.sq_grad = np.zeros(1, dtype=REAL)
+            self.sq_grad = np.ones(1, dtype=REAL)
         self.syn0_lockf = np.ones((len(self.vocab), self.ngram), dtype=REAL)  # np.zeros suppress learning
         self.fail = False
 
@@ -724,36 +737,41 @@ class fm_ngram(utils.SaveLoad):
         return vectors.sum()
 
     def get_ngram(self, text, topN=100000, unit=True):
-        dic = set()
-        ngrams = []
-        nline = 95638957
+        seen = set()
+        ngrams = dict()
+        min_sim = 0
         for idx, sent in enumerate(text):
             if idx % 100000 == 0:
-                logger.info('%.2f%% is completed' % (float(idx) / nline * 100))
+                logger.info('{} lines finished; number of ngrams {}'.format(idx, len(ngrams)))
             # if idx > 0.4 * nline:
             #     break
             for i in range(len(sent) - self.ngram + 1):
                 if any(word not in self.vocab for word in sent[i:i+self.ngram]):
                     continue
-                if ' '.join(sent[i:i+self.ngram]) in dic:
+                if ' '.join(sent[i:i+self.ngram]) in seen:
                     continue
                 # we select english bigram
-                if any(any(l.isdigit() for l in word) for word in sent[i:i+self.ngram]):
-                    continue
-
+                # if any(any(l.isdigit() for l in word) for word in sent[i:i+self.ngram]):
+                #     continue
                 sim = self.similarity(sent[i:i+self.ngram], unit=unit)
-                if len(ngrams) < topN:
-                    heappush(ngrams, (sim, ' '.join(sent[i:i+self.ngram])))
-                    dic.add(' '.join(sent[i:i+self.ngram]))
-                else:
-                    foo = heappop(ngrams)
-                    if foo[0] < sim:
-                        heappush(ngrams, (sim, ' '.join(sent[i:i+self.ngram])))
-                        dic.discard(foo[1])
-                        dic.add(' '.join(sent[i:i+self.ngram]))
-                    else:
-                        heappush(ngrams, foo)
-        ngrams = sorted(ngrams, reverse=True)
+                if sim < 0:
+                    continue
+                ## for word2vec model
+                sim = sim + np.log(sim) + np.sum((np.log(self.vocab[w].count) for w in sent[i:i+self.ngram]))
+
+                ngrams[' '.join(sent[i:i+self.ngram])] = sim
+                seen.add(' '.join(sent[i:i+self.ngram]))
+                # prune if too many
+                firsttimer = 1
+                while len(ngrams) > 2*topN:
+                    # prune
+                    for ng in list(ngrams):
+                        if ngrams[ng] < min_sim:
+                            del ngrams[ng]
+                    if not firsttimer:
+                        min_sim += 0.1
+                    firsttimer = 0
+        ngrams = sorted(ngrams.items(), key=operator.itemgetter(1), reverse=True)
         return ngrams
 
 
