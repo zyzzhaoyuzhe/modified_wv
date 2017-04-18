@@ -685,7 +685,7 @@ class fm_ngram(utils.SaveLoad):
             for ng in xrange(self.ngram):
                 # construct deterministic seed from word AND seed argument
                 # foo = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
-                self.syn0[i, ng] = self.seeded_vector(self.index2word[i] + str(self.seed))
+                self.syn0[i, ng] = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
         self.syn0norm = None
         if self.optimizer == 'rmsprop':
             self.sq_grad = np.ones([len(self.vocab), self.ngram], dtype=REAL)
