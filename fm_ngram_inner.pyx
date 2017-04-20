@@ -10,12 +10,14 @@
 import cython
 import numpy as np
 cimport numpy as np
+cimport scipy.linalg.cython_blas as blas
 
 from libc.math cimport exp, log, sqrt, fabs
 from libc.string cimport memset
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdio cimport printf, getc
 from libc.stdlib cimport exit
+
 
 # scipy <= 0.15
 try:
@@ -28,37 +30,21 @@ REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 10000
 
-cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
-cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
-cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
-cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
-cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
-cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
-cdef dscal_ptr dscal=<dscal_ptr>PyCObject_AsVoidPtr(fblas.dscal._cpointer) # x = alpha * x
-
-cdef void elemul(const int *N, const float *X1, const float *X2, float *Y) nogil:
-    """elementwise multiplication: Y = X1 .* X2"""
-    cdef int i
-    for i in range(N[0]):
-        Y[i] = X1[i] * X2[i]
-
-cdef void matrix2vec(const int *N, const int *ngram,
-                     const np.uint32_t *indices,
-                     const REAL_t *syn0_copy, REAL_t *inner_cache) nogil:
-    """"""
-    cdef int i, j, k
-    cdef REAL_t foo
-    # initialize inner_cache
-    for i in range(ngram[0] * N[0]):
-        inner_cache[i] = 1.0
-    for i in range(ngram[0]):
-        for k in range(N[0]):
-            inner_cache[i*N[0]+k] = 1
-            for j in range(ngram[0]):
-                if j == i:
-                    continue
-                # inner_cache[i*N[0]+k] *= syn0_copy[j * N[0] + k]
-                inner_cache[i*N[0]+k] *= syn0_copy[indices[j] * N[0] * ngram[0] + j * N[0] + k]
+# cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
+cdef scopy_ptr scopy=<scopy_ptr>blas.scopy  # y = x
+# cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
+cdef saxpy_ptr saxpy=<saxpy_ptr>blas.saxpy  # y += alpha * x
+# cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
+cdef sdot_ptr sdot=<sdot_ptr>blas.sdot  # float = dot(x, y)
+# cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
+cdef dsdot_ptr dsdot=<dsdot_ptr>blas.dsdot  # double = dot(x, y)
+# cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
+cdef snrm2_ptr snrm2=<snrm2_ptr>blas.snrm2
+# cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
+cdef sscal_ptr sscal=<sscal_ptr>blas.sscal # x = alpha * x
+# cdef dscal_ptr dscal=<dscal_ptr>PyCObject_AsVoidPtr(fblas.dscal._cpointer) # x = alpha * x
+cdef dscal_ptr dscal=<dscal_ptr>blas.dscal # x = alpha * x
+cdef ssbmv_ptr ssbmv=<ssbmv_ptr>blas.ssbmv # y = alpha * AX + beta * Y
 
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
@@ -67,7 +53,10 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
+cdef int ZERO = 0
 cdef REAL_t ONEF = <REAL_t>1.0
+cdef REAL_t ZEROF = <REAL_t>0.0
+cdef char UPLO = 'L'
 
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
@@ -93,6 +82,41 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
 
+# cdef void elemul(const int *N, const float *X1, const float *X2, float *Y) nogil:
+#     """elementwise multiplication: Y = X1 .* X2"""
+#     cdef int i
+#     for i in range(N[0]):
+#         Y[i] = X1[i] * X2[i]
+
+cdef void matrix2vec(const int *N, const int *ngram,
+                     const np.uint32_t *indices,
+                     const REAL_t *syn0, REAL_t *inner_cache) nogil:
+    """"""
+    cdef int i, j, k
+    # cdef REAL_t foo[1000]
+    # # initialize inner_cache
+    # for i in range(ngram[0] * N[0]):
+    #     inner_cache[i] = ONEF
+    # no_blas
+    for i in range(ngram[0]):
+        for k in range(N[0]):
+            inner_cache[i*N[0]+k] = ONEF
+            for j in range(ngram[0]):
+                if j == i:
+                    continue
+                # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
+                inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * ngram[0] + j * N[0] + k]
+    # # blas
+    # for i in range(ngram[0]):
+    #     for j in range(ngram[0]):
+    #         if j == i:
+    #             continue
+    #         # printf('i: %d - j: %d\n', i, j)
+    #         # printf('%f - %f\n', syn0[indices[i] * N[0] * ngram[0] + i * N[0]+1], inner_cache[j*N[0]+1])
+    #         our_sbmv(&UPLO, N, &ZERO, &ONEF, &syn0[indices[i] * N[0] * ngram[0] + i * N[0]], &ONE,
+    #                  &inner_cache[j*N[0]], &ONE, &ZEROF, foo, &ONE)
+    #         scopy(N, foo, &ONE, &inner_cache[j*N[0]], &ONE)
+    #         # printf('%f\n', inner_cache[j*N[0]+1])
 
 # to support random draws from negative-sampling cum_table
 cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
@@ -253,12 +277,12 @@ cdef unsigned long long fast_sentence_neg(
             # indices[0] = word_indices[0]
 
             label = <REAL_t>0.0
-            if neg_mean:
-                neg_mean_weight = ONEF / <REAL_t>negative / ngram
-            else:
-                neg_mean_weight = ONEF / ngram
+            # if neg_mean:
+            #     neg_mean_weight = ONEF / <REAL_t>negative / ngram
+            # else:
+            #     neg_mean_weight = ONEF / ngram
 
-            # neg_mean_weight = ONEF
+            neg_mean_weight = ONEF
         # syn0 copy to prevent syn0 changed by other thread (there is no lock.)
         # for tmp in range(ngram):
         #     for tmp1 in range(size):
@@ -382,8 +406,8 @@ def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
         optimizer = 0
 
     cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-    # next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-    next_random = 1816045175
+    next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+    # next_random = 1816045175
 
     # convert Python structures to primitive types, so we can release the GIL
     sgd_cache = <REAL_t *>np.PyArray_DATA(_sgd_cache)
@@ -447,6 +471,7 @@ def init():
     global our_dot
     global our_saxpy
     global our_scal
+    global our_sbmv
 
     cdef int i
     cdef float *x = [<float>10.0]
@@ -469,11 +494,13 @@ def init():
         our_dot = our_dot_double
         our_scal = dscal
         our_saxpy = saxpy
+        our_sbmv = ssbmv
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         our_dot = our_dot_float
         our_scal = sscal
         our_saxpy = saxpy
+        our_sbmv = ssbmv
         return 1  # float
     else:
         # neither => use cython loops, no BLAS

@@ -740,6 +740,13 @@ class fm_ngram(utils.SaveLoad):
         seen = set()
         ngrams = dict()
         min_sim = 0
+
+        def prune(ngrams, min_sim):
+            # prune
+            for ng in list(ngrams):
+                if ngrams[ng] < min_sim:
+                    del ngrams[ng]
+
         for idx, sent in enumerate(text):
             if idx % 100000 == 0:
                 logger.info('{} lines finished; number of ngrams {}'.format(idx, len(ngrams)))
@@ -764,13 +771,11 @@ class fm_ngram(utils.SaveLoad):
                 # prune if too many
                 firsttimer = 1
                 while len(ngrams) > 2*topN:
-                    # prune
-                    for ng in list(ngrams):
-                        if ngrams[ng] < min_sim:
-                            del ngrams[ng]
+                    prune(ngrams, min_sim)
                     if not firsttimer:
                         min_sim += 0.1
                     firsttimer = 0
+        prune(ngrams, min_sim)
         ngrams = sorted(ngrams.items(), key=operator.itemgetter(1), reverse=True)
         return ngrams
 
