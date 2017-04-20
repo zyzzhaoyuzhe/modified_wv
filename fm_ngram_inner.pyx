@@ -253,7 +253,7 @@ cdef unsigned long long fast_sentence_neg(
     # reset sgd_cache
     memset(sgd_cache, 0, size * ngram * cython.sizeof(REAL_t))
     # memset(work, 0, size * cython.sizeof(REAL_t))
-    for sample in range(2 * negative+1):
+    for sample in range(ngram * negative+1):
         if sample == 0:
             for tmp in range(ngram):
                 indices[tmp] = word_indices[tmp]
