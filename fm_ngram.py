@@ -728,13 +728,25 @@ class fm_ngram(utils.SaveLoad):
     def similarity(self, words, unit=True):
         if len(words) != self.ngram:
             raise ValueError('The lenght of words does not match ngram.')
-        vectors = np.ones(self.vector_size, dtype=REAL)
-        for idx, w in enumerate(words):
-            if unit:
-                vectors *= matutils.unitvec(self[w][idx, :])
-            else:
-                vectors *= self[w][idx, :]
-        return vectors.sum()
+        # ## Tensor Decomposition
+        # vectors = np.ones(self.vector_size, dtype=REAL)
+        # for idx, w in enumerate(words):
+        #     if unit:
+        #         vectors *= matutils.unitvec(self[w][idx, :])
+        #     else:
+        #         vectors *= self[w][idx, :]
+        # return vectors.sum()
+        # ## --END--
+
+        ## PITF
+        output = 0
+        for i in range(self.ngram-1):
+            for j in range(i+1, self.ngram):
+                output += np.dot(self[words[i]][i, :], self[words[j]][j,:])
+        return output
+        ## --END--
+
+
 
     def get_ngram(self, text, topN=100000, unit=True):
         seen = set()
