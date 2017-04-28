@@ -108,10 +108,10 @@ cdef void _pairwise_interaction(const int *N, const int *ngram,
         for j in range(ngram[0]):
             if j == i:
                 continue
-            # our_saxpy(N, &ONEF, &syn0[indices[j] * ngram[0] * N[0] + j * N[0]], &ONE,
-            #           &inner_cache[i * N[0]], &ONE)
-            our_saxpy(N, &ONEF, &syn0[j * N[0]], &ONE,
+            our_saxpy(N, &ONEF, &syn0[indices[j] * ngram[0] * N[0] + j * N[0]], &ONE,
                       &inner_cache[i * N[0]], &ONE)
+            # our_saxpy(N, &ONEF, &syn0[j * N[0]], &ONE,
+            #           &inner_cache[i * N[0]], &ONE)
 
 
 cdef void matrix2vec(const int *N, const int *ngram,
@@ -292,7 +292,7 @@ cdef unsigned long long fast_sentence_neg(
             center_gram = sample % ngram
             # center_gram = 0
             for i in range(ngram):
-                if i == center_gram:
+                if i != center_gram:
                     indices[i] = word_indices[i]
                 else:
                     while True:
@@ -308,21 +308,21 @@ cdef unsigned long long fast_sentence_neg(
 
             neg_mean_weight = ONEF
 
-        # syn0 copy to prevent syn0 changed by other thread (there is no lock.)
-        for i in range(ngram):
-            scopy(&size, &syn0[indices[i] * size * ngram + i * size], &ONE,
-                  &syn0_copy[i * size], &ONE)
+        # # syn0 copy to prevent syn0 changed by other thread (there is no lock.)
+        # for i in range(ngram):
+        #     scopy(&size, &syn0[indices[i] * size * ngram + i * size], &ONE,
+        #           &syn0_copy[i * size], &ONE)
 
         ## Pairwise Interaction
         # <a,b> + <a,c> + <b,c> = log{ Pr(a,b,c)/Pr(a)Pr(ynb)Pr(c) }
-        _pairwise_interaction(&size, &ngram, indices, syn0_copy, inner_cache)
+        _pairwise_interaction(&size, &ngram, indices, syn0, inner_cache)
         foo = ZEROF
         for i in range(ngram-1):
             for j in range(i+1, ngram):
-                # foo += our_dot(&size, &syn0[indices[i] * ngram * size + i * size], &ONE,
-                #                  &syn0[indices[j] * ngram * size + j * size], &ONE)
-                foo += our_dot(&size, &syn0_copy[i * size], &ONE,
-                                 &syn0_copy[j * size], &ONE)
+                foo += our_dot(&size, &syn0[indices[i] * ngram * size + i * size], &ONE,
+                                 &syn0[indices[j] * ngram * size + j * size], &ONE)
+                # foo += our_dot(&size, &syn0_copy[i * size], &ONE,
+                #                  &syn0_copy[j * size], &ONE)
         # critical
         if foo <= -MAX_EXP or foo >= MAX_EXP:
             continue
@@ -337,7 +337,7 @@ cdef unsigned long long fast_sentence_neg(
                           &sgd_cache[i * size], &ONE)
         else:
             for i in range(ngram):
-                if i == center_gram:
+                if i != center_gram:
                     our_saxpy(&size, &g, &inner_cache[i * size], &ONE,
                               &sgd_cache[i * size], &ONE)
                 else:
@@ -442,10 +442,12 @@ cdef unsigned long long fast_sentence_neg(
                            &syn0[word_indices[i] * ngram * size + i * size])
 
 
+
     # free memory
     free(indices)
     # free(neg_indices)
     return next_random
+
 
 def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
     cdef int sample = (model.sample != 0)

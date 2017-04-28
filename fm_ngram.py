@@ -761,7 +761,7 @@ class fm_ngram(utils.SaveLoad):
 
         for idx, sent in enumerate(text):
             if idx % 100000 == 0:
-                logger.info('{} lines finished; number of ngrams {}'.format(idx, len(ngrams)))
+                logger.info('{} lines finished; number of ngrams {} @ min_similarity {}'.format(idx, len(ngrams), min_sim))
             # if idx > 0.4 * nline:
             #     break
             for i in range(len(sent) - self.ngram + 1):
