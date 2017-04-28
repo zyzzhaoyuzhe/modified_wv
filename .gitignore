@@ -99,3 +99,6 @@ model_*
 tmp
 models/
 results/
+
+# test environment
+TEST_*
