@@ -119,11 +119,8 @@ cdef void matrix2vec(const int *N, const int *ngram,
                      const REAL_t *syn0, REAL_t *inner_cache) nogil:
     """"""
     cdef int i, j, k
-    # cdef REAL_t foo[1000]
-    # # initialize inner_cache
-    # for i in range(ngram[0] * N[0]):
-    #     inner_cache[i] = ONEF
-    # no_blas
+
+    ## no_blas
     for i in range(ngram[0]):
         for k in range(N[0]):
             inner_cache[i*N[0]+k] = ONEF
@@ -132,7 +129,11 @@ cdef void matrix2vec(const int *N, const int *ngram,
                     continue
                 # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
                 inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * ngram[0] + j * N[0] + k]
-    # # blas
+    # ## blas
+    # cdef REAL_t foo[1000]
+    # # initialize inner_cache
+    # for i in range(ngram[0] * N[0]):
+    #     inner_cache[i] = ONEF
     # for i in range(ngram[0]):
     #     for j in range(ngram[0]):
     #         if j == i:
@@ -345,7 +346,7 @@ cdef unsigned long long fast_sentence_neg(
                 our_saxpy(&size, &g, &inner_cache[i * size], &ONE, &sgd_cache[i * size], &ONE)
         else:
             for i in range(ngram):
-                if i == center_gram:
+                if i != center_gram:
                     our_saxpy(&size, &g, &inner_cache[i * size], &ONE, &sgd_cache[i * size], &ONE)
                 else:
                     if optimizer == 0:
