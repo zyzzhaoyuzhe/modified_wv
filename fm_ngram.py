@@ -57,7 +57,7 @@ class fm_ngram(utils.SaveLoad):
 
     def __init__(
             self, sentences=None, size=100,
-            negative=5, ngram=2, neg_mean=1, C=20,
+            negative=5, window=5, ngram=2, neg_mean=1, C=20,
             alpha=0.025, min_alpha=0.0001, workers=4,
             max_vocab_size=None, min_count=5,
             sample=1e-3, smooth_power=0.75, seed=1,
@@ -168,6 +168,7 @@ class fm_ngram(utils.SaveLoad):
         self.batch_words = batch_words
 
         self.negative = negative
+        self.window = window
         self.neg_mean = neg_mean
         self.cum_table = None  # for negative sampling
         self.smooth_power = smooth_power
@@ -640,7 +641,7 @@ class fm_ngram(utils.SaveLoad):
 
                     for i in range(1):
                         logger.info('MODEL: vec0_0 %.2f, vec0_1 %.2f',
-                                    np.linalg.norm(self.syn0[5*i, 0]), np.linalg.norm(self.syn0[5*i, 1]))
+                                    np.linalg.norm(self.syn0[100, 0]), np.linalg.norm(self.syn0[100, 1]))
 
                     if self.optimizer == 'rmsprop':
                         logger.debug('vec0 sgd_cache %f, vec1 sgd_cache %f',

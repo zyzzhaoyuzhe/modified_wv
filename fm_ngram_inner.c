@@ -1177,6 +1177,9 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
   #define __PYX_FORCE_INIT_THREADS 0
 #endif
 
+/* CIntToPy.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_npy_uint32(npy_uint32 value);
+
 /* None.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1425,6 +1428,7 @@ int __pyx_module_is_main_modified_wv__fm_ngram_inner = 0;
 /* Implementation of 'modified_wv.fm_ngram_inner' */
 static PyObject *__pyx_builtin_ImportError;
 static PyObject *__pyx_builtin_range;
+static PyObject *__pyx_builtin_enumerate;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
 static const char __pyx_k_C[] = "C";
@@ -1438,6 +1442,7 @@ static const char __pyx_k_np[] = "np";
 static const char __pyx_k_sgd[] = "sgd";
 static const char __pyx_k_REAL[] = "REAL";
 static const char __pyx_k_init[] = "init";
+static const char __pyx_k_item[] = "item";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_sdot[] = "sdot";
 static const char __pyx_k_sent[] = "sent";
@@ -1467,6 +1472,7 @@ static const char __pyx_k_vocab[] = "vocab";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_random[] = "random";
 static const char __pyx_k_sample[] = "sample";
+static const char __pyx_k_window[] = "window";
 static const char __pyx_k_alpha_2[] = "_alpha";
 static const char __pyx_k_epsilon[] = "epsilon";
 static const char __pyx_k_float32[] = "float32";
@@ -1486,8 +1492,10 @@ static const char __pyx_k_our_sbmv[] = "our_sbmv";
 static const char __pyx_k_our_scal[] = "our_scal";
 static const char __pyx_k_pyx_capi[] = "__pyx_capi__";
 static const char __pyx_k_sent_idx[] = "sent_idx";
+static const char __pyx_k_win_left[] = "win_left";
 static const char __pyx_k_EXP_TABLE[] = "EXP_TABLE";
 static const char __pyx_k_cum_table[] = "cum_table";
+static const char __pyx_k_enumerate[] = "enumerate";
 static const char __pyx_k_epsilon_2[] = "_epsilon";
 static const char __pyx_k_idx_start[] = "idx_start";
 static const char __pyx_k_optimizer[] = "optimizer";
@@ -1495,6 +1503,7 @@ static const char __pyx_k_our_saxpy[] = "our_saxpy";
 static const char __pyx_k_sentences[] = "sentences";
 static const char __pyx_k_sgd_cache[] = "_sgd_cache";
 static const char __pyx_k_syn0_copy[] = "_syn0_copy";
+static const char __pyx_k_win_right[] = "win_right";
 static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_syn0_lockf[] = "syn0_lockf";
 static const char __pyx_k_vocab_size[] = "vocab_size";
@@ -1516,6 +1525,7 @@ static const char __pyx_k_words_cumnum[] = "words_cumnum";
 static const char __pyx_k_inner_cache_2[] = "inner_cache";
 static const char __pyx_k_ngram_indices[] = "ngram_indices";
 static const char __pyx_k_effective_words[] = "effective_words";
+static const char __pyx_k_reduced_windows[] = "reduced_windows";
 static const char __pyx_k_scipy_linalg_blas[] = "scipy.linalg.blas";
 static const char __pyx_k_MAX_WORDS_IN_BATCH[] = "MAX_WORDS_IN_BATCH";
 static const char __pyx_k_effective_sentences[] = "effective_sentences";
@@ -1547,6 +1557,7 @@ static PyObject *__pyx_n_s_dscal;
 static PyObject *__pyx_n_s_dsdot;
 static PyObject *__pyx_n_s_effective_sentences;
 static PyObject *__pyx_n_s_effective_words;
+static PyObject *__pyx_n_s_enumerate;
 static PyObject *__pyx_n_s_epsilon;
 static PyObject *__pyx_n_s_epsilon_2;
 static PyObject *__pyx_n_s_expected;
@@ -1565,6 +1576,7 @@ static PyObject *__pyx_n_s_indices;
 static PyObject *__pyx_n_s_init;
 static PyObject *__pyx_n_s_inner_cache;
 static PyObject *__pyx_n_s_inner_cache_2;
+static PyObject *__pyx_n_s_item;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_k;
 static PyObject *__pyx_n_s_layer1_size;
@@ -1591,6 +1603,7 @@ static PyObject *__pyx_n_s_pyx_capi;
 static PyObject *__pyx_n_s_randint;
 static PyObject *__pyx_n_s_random;
 static PyObject *__pyx_n_s_range;
+static PyObject *__pyx_n_s_reduced_windows;
 static PyObject *__pyx_n_s_rmsprop;
 static PyObject *__pyx_n_s_sample;
 static PyObject *__pyx_n_s_saxpy;
@@ -1622,6 +1635,9 @@ static PyObject *__pyx_n_s_vlookup;
 static PyObject *__pyx_n_s_vocab;
 static PyObject *__pyx_n_s_vocab_size;
 static PyObject *__pyx_n_s_weight_power;
+static PyObject *__pyx_n_s_win_left;
+static PyObject *__pyx_n_s_win_right;
+static PyObject *__pyx_n_s_window;
 static PyObject *__pyx_n_s_word;
 static PyObject *__pyx_n_s_word_locks;
 static PyObject *__pyx_n_s_words_cumnum;
@@ -1939,122 +1955,6 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner__pairwise_interaction(int con
 
 /* "modified_wv/fm_ngram_inner.pyx":117
  * 
- * 
- * cdef void matrix2vec(const int *N, const int *ngram,             # <<<<<<<<<<<<<<
- *                      const np.uint32_t *indices,
- *                      const REAL_t *syn0, REAL_t *inner_cache) nogil:
- */
-
-static void __pyx_f_11modified_wv_14fm_ngram_inner_matrix2vec(int const *__pyx_v_N, int const *__pyx_v_ngram, __pyx_t_5numpy_uint32_t const *__pyx_v_indices, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t const *__pyx_v_syn0, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *__pyx_v_inner_cache) {
-  int __pyx_v_i;
-  int __pyx_v_j;
-  int __pyx_v_k;
-  int __pyx_t_1;
-  int __pyx_t_2;
-  int __pyx_t_3;
-  int __pyx_t_4;
-  int __pyx_t_5;
-  int __pyx_t_6;
-  int __pyx_t_7;
-  int __pyx_t_8;
-
-  /* "modified_wv/fm_ngram_inner.pyx":127
- *     #     inner_cache[i] = ONEF
- *     # no_blas
- *     for i in range(ngram[0]):             # <<<<<<<<<<<<<<
- *         for k in range(N[0]):
- *             inner_cache[i*N[0]+k] = ONEF
- */
-  __pyx_t_1 = (__pyx_v_ngram[0]);
-  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
-    __pyx_v_i = __pyx_t_2;
-
-    /* "modified_wv/fm_ngram_inner.pyx":128
- *     # no_blas
- *     for i in range(ngram[0]):
- *         for k in range(N[0]):             # <<<<<<<<<<<<<<
- *             inner_cache[i*N[0]+k] = ONEF
- *             for j in range(ngram[0]):
- */
-    __pyx_t_3 = (__pyx_v_N[0]);
-    for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-      __pyx_v_k = __pyx_t_4;
-
-      /* "modified_wv/fm_ngram_inner.pyx":129
- *     for i in range(ngram[0]):
- *         for k in range(N[0]):
- *             inner_cache[i*N[0]+k] = ONEF             # <<<<<<<<<<<<<<
- *             for j in range(ngram[0]):
- *                 if j == i:
- */
-      (__pyx_v_inner_cache[((__pyx_v_i * (__pyx_v_N[0])) + __pyx_v_k)]) = __pyx_v_11modified_wv_14fm_ngram_inner_ONEF;
-
-      /* "modified_wv/fm_ngram_inner.pyx":130
- *         for k in range(N[0]):
- *             inner_cache[i*N[0]+k] = ONEF
- *             for j in range(ngram[0]):             # <<<<<<<<<<<<<<
- *                 if j == i:
- *                     continue
- */
-      __pyx_t_5 = (__pyx_v_ngram[0]);
-      for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-        __pyx_v_j = __pyx_t_6;
-
-        /* "modified_wv/fm_ngram_inner.pyx":131
- *             inner_cache[i*N[0]+k] = ONEF
- *             for j in range(ngram[0]):
- *                 if j == i:             # <<<<<<<<<<<<<<
- *                     continue
- *                 # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
- */
-        __pyx_t_7 = ((__pyx_v_j == __pyx_v_i) != 0);
-        if (__pyx_t_7) {
-
-          /* "modified_wv/fm_ngram_inner.pyx":132
- *             for j in range(ngram[0]):
- *                 if j == i:
- *                     continue             # <<<<<<<<<<<<<<
- *                 # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
- *                 inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * ngram[0] + j * N[0] + k]
- */
-          goto __pyx_L7_continue;
-
-          /* "modified_wv/fm_ngram_inner.pyx":131
- *             inner_cache[i*N[0]+k] = ONEF
- *             for j in range(ngram[0]):
- *                 if j == i:             # <<<<<<<<<<<<<<
- *                     continue
- *                 # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
- */
-        }
-
-        /* "modified_wv/fm_ngram_inner.pyx":134
- *                     continue
- *                 # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
- *                 inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * ngram[0] + j * N[0] + k]             # <<<<<<<<<<<<<<
- *     # # blas
- *     # for i in range(ngram[0]):
- */
-        __pyx_t_8 = ((__pyx_v_i * (__pyx_v_N[0])) + __pyx_v_k);
-        (__pyx_v_inner_cache[__pyx_t_8]) = ((__pyx_v_inner_cache[__pyx_t_8]) * (__pyx_v_syn0[(((((__pyx_v_indices[__pyx_v_j]) * (__pyx_v_N[0])) * (__pyx_v_ngram[0])) + (__pyx_v_j * (__pyx_v_N[0]))) + __pyx_v_k)]));
-        __pyx_L7_continue:;
-      }
-    }
-  }
-
-  /* "modified_wv/fm_ngram_inner.pyx":117
- * 
- * 
- * cdef void matrix2vec(const int *N, const int *ngram,             # <<<<<<<<<<<<<<
- *                      const np.uint32_t *indices,
- *                      const REAL_t *syn0, REAL_t *inner_cache) nogil:
- */
-
-  /* function exit code */
-}
-
-/* "modified_wv/fm_ngram_inner.pyx":148
- * 
  * # to support random draws from negative-sampling cum_table
  * cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:             # <<<<<<<<<<<<<<
  *     cdef unsigned long long mid
@@ -2066,7 +1966,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   unsigned PY_LONG_LONG __pyx_r;
   int __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":150
+  /* "modified_wv/fm_ngram_inner.pyx":119
  * cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
  *     cdef unsigned long long mid
  *     while hi > lo:             # <<<<<<<<<<<<<<
@@ -2077,7 +1977,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
     __pyx_t_1 = ((__pyx_v_hi > __pyx_v_lo) != 0);
     if (!__pyx_t_1) break;
 
-    /* "modified_wv/fm_ngram_inner.pyx":151
+    /* "modified_wv/fm_ngram_inner.pyx":120
  *     cdef unsigned long long mid
  *     while hi > lo:
  *         mid = (lo + hi) >> 1             # <<<<<<<<<<<<<<
@@ -2086,7 +1986,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
  */
     __pyx_v_mid = ((__pyx_v_lo + __pyx_v_hi) >> 1);
 
-    /* "modified_wv/fm_ngram_inner.pyx":152
+    /* "modified_wv/fm_ngram_inner.pyx":121
  *     while hi > lo:
  *         mid = (lo + hi) >> 1
  *         if a[mid] >= x:             # <<<<<<<<<<<<<<
@@ -2096,7 +1996,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
     __pyx_t_1 = (((__pyx_v_a[__pyx_v_mid]) >= __pyx_v_x) != 0);
     if (__pyx_t_1) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":153
+      /* "modified_wv/fm_ngram_inner.pyx":122
  *         mid = (lo + hi) >> 1
  *         if a[mid] >= x:
  *             hi = mid             # <<<<<<<<<<<<<<
@@ -2105,7 +2005,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
  */
       __pyx_v_hi = __pyx_v_mid;
 
-      /* "modified_wv/fm_ngram_inner.pyx":152
+      /* "modified_wv/fm_ngram_inner.pyx":121
  *     while hi > lo:
  *         mid = (lo + hi) >> 1
  *         if a[mid] >= x:             # <<<<<<<<<<<<<<
@@ -2115,7 +2015,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
       goto __pyx_L5;
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":155
+    /* "modified_wv/fm_ngram_inner.pyx":124
  *             hi = mid
  *         else:
  *             lo = mid + 1             # <<<<<<<<<<<<<<
@@ -2128,7 +2028,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
     __pyx_L5:;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":156
+  /* "modified_wv/fm_ngram_inner.pyx":125
  *         else:
  *             lo = mid + 1
  *     return lo             # <<<<<<<<<<<<<<
@@ -2138,7 +2038,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   __pyx_r = __pyx_v_lo;
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":148
+  /* "modified_wv/fm_ngram_inner.pyx":117
  * 
  * # to support random draws from negative-sampling cum_table
  * cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:             # <<<<<<<<<<<<<<
@@ -2151,7 +2051,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":160
+/* "modified_wv/fm_ngram_inner.pyx":129
  * # this quick & dirty RNG apparently matches Java's (non-Secure)Random
  * # note this function side-effects next_random to set up the next number
  * cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:             # <<<<<<<<<<<<<<
@@ -2163,7 +2063,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   unsigned PY_LONG_LONG __pyx_v_this_random;
   unsigned PY_LONG_LONG __pyx_r;
 
-  /* "modified_wv/fm_ngram_inner.pyx":161
+  /* "modified_wv/fm_ngram_inner.pyx":130
  * # note this function side-effects next_random to set up the next number
  * cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:
  *     cdef unsigned long long this_random = next_random[0] >> 16             # <<<<<<<<<<<<<<
@@ -2172,7 +2072,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
  */
   __pyx_v_this_random = ((__pyx_v_next_random[0]) >> 16);
 
-  /* "modified_wv/fm_ngram_inner.pyx":162
+  /* "modified_wv/fm_ngram_inner.pyx":131
  * cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:
  *     cdef unsigned long long this_random = next_random[0] >> 16
  *     next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL             # <<<<<<<<<<<<<<
@@ -2181,7 +2081,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
  */
   (__pyx_v_next_random[0]) = ((((__pyx_v_next_random[0]) * ((unsigned PY_LONG_LONG)25214903917ULL)) + 11) & 281474976710655ULL);
 
-  /* "modified_wv/fm_ngram_inner.pyx":163
+  /* "modified_wv/fm_ngram_inner.pyx":132
  *     cdef unsigned long long this_random = next_random[0] >> 16
  *     next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL
  *     return this_random             # <<<<<<<<<<<<<<
@@ -2191,7 +2091,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   __pyx_r = __pyx_v_this_random;
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":160
+  /* "modified_wv/fm_ngram_inner.pyx":129
  * # this quick & dirty RNG apparently matches Java's (non-Secure)Random
  * # note this function side-effects next_random to set up the next number
  * cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:             # <<<<<<<<<<<<<<
@@ -2204,7 +2104,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":167
+/* "modified_wv/fm_ngram_inner.pyx":136
  * ## Function for wPMI implement
  * # min function for ULL
  * cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long b) nogil:             # <<<<<<<<<<<<<<
@@ -2216,7 +2116,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   unsigned PY_LONG_LONG __pyx_r;
   int __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":168
+  /* "modified_wv/fm_ngram_inner.pyx":137
  * # min function for ULL
  * cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long b) nogil:
  *     if a > b:             # <<<<<<<<<<<<<<
@@ -2226,7 +2126,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   __pyx_t_1 = ((__pyx_v_a > __pyx_v_b) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":169
+    /* "modified_wv/fm_ngram_inner.pyx":138
  * cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long b) nogil:
  *     if a > b:
  *         return b             # <<<<<<<<<<<<<<
@@ -2236,7 +2136,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
     __pyx_r = __pyx_v_b;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":168
+    /* "modified_wv/fm_ngram_inner.pyx":137
  * # min function for ULL
  * cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long b) nogil:
  *     if a > b:             # <<<<<<<<<<<<<<
@@ -2245,7 +2145,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":171
+  /* "modified_wv/fm_ngram_inner.pyx":140
  *         return b
  *     else:
  *         return a             # <<<<<<<<<<<<<<
@@ -2257,7 +2157,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
     goto __pyx_L0;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":167
+  /* "modified_wv/fm_ngram_inner.pyx":136
  * ## Function for wPMI implement
  * # min function for ULL
  * cdef inline unsigned long long min_ull(unsigned long long a, unsigned long long b) nogil:             # <<<<<<<<<<<<<<
@@ -2270,7 +2170,7 @@ static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inne
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":173
+/* "modified_wv/fm_ngram_inner.pyx":142
  *         return a
  * 
  * cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:             # <<<<<<<<<<<<<<
@@ -2282,7 +2182,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_r;
   int __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":174
+  /* "modified_wv/fm_ngram_inner.pyx":143
  * 
  * cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:
  *     if a > b:             # <<<<<<<<<<<<<<
@@ -2292,7 +2192,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   __pyx_t_1 = ((__pyx_v_a > __pyx_v_b) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":175
+    /* "modified_wv/fm_ngram_inner.pyx":144
  * cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:
  *     if a > b:
  *         return a             # <<<<<<<<<<<<<<
@@ -2302,7 +2202,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
     __pyx_r = __pyx_v_a;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":174
+    /* "modified_wv/fm_ngram_inner.pyx":143
  * 
  * cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:
  *     if a > b:             # <<<<<<<<<<<<<<
@@ -2311,7 +2211,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":177
+  /* "modified_wv/fm_ngram_inner.pyx":146
  *         return a
  *     else:
  *         return b             # <<<<<<<<<<<<<<
@@ -2323,7 +2223,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
     goto __pyx_L0;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":173
+  /* "modified_wv/fm_ngram_inner.pyx":142
  *         return a
  * 
  * cdef inline REAL_t max_real(REAL_t a, REAL_t b) nogil:             # <<<<<<<<<<<<<<
@@ -2336,7 +2236,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":179
+/* "modified_wv/fm_ngram_inner.pyx":148
  *         return b
  * 
  * cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:             # <<<<<<<<<<<<<<
@@ -2348,7 +2248,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_r;
   int __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":180
+  /* "modified_wv/fm_ngram_inner.pyx":149
  * 
  * cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:
  *     if a < b:             # <<<<<<<<<<<<<<
@@ -2358,7 +2258,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   __pyx_t_1 = ((__pyx_v_a < __pyx_v_b) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":181
+    /* "modified_wv/fm_ngram_inner.pyx":150
  * cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:
  *     if a < b:
  *         return a             # <<<<<<<<<<<<<<
@@ -2368,7 +2268,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
     __pyx_r = __pyx_v_a;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":180
+    /* "modified_wv/fm_ngram_inner.pyx":149
  * 
  * cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:
  *     if a < b:             # <<<<<<<<<<<<<<
@@ -2377,7 +2277,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":183
+  /* "modified_wv/fm_ngram_inner.pyx":152
  *         return a
  *     else:
  *         return b             # <<<<<<<<<<<<<<
@@ -2389,7 +2289,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
     goto __pyx_L0;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":179
+  /* "modified_wv/fm_ngram_inner.pyx":148
  *         return b
  * 
  * cdef inline REAL_t min_real(REAL_t a, REAL_t b) nogil:             # <<<<<<<<<<<<<<
@@ -2402,7 +2302,7 @@ static CYTHON_INLINE __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11mod
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":185
+/* "modified_wv/fm_ngram_inner.pyx":154
  *         return b
  * 
  * cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:             # <<<<<<<<<<<<<<
@@ -2414,7 +2314,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
   unsigned PY_LONG_LONG __pyx_r;
   int __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":186
+  /* "modified_wv/fm_ngram_inner.pyx":155
  * 
  * cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:
  *     if word_index == 0:             # <<<<<<<<<<<<<<
@@ -2424,7 +2324,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
   __pyx_t_1 = ((__pyx_v_word_index == 0) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":187
+    /* "modified_wv/fm_ngram_inner.pyx":156
  * cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:
  *     if word_index == 0:
  *         return <unsigned long long>cum_table[0]             # <<<<<<<<<<<<<<
@@ -2434,7 +2334,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
     __pyx_r = ((unsigned PY_LONG_LONG)(__pyx_v_cum_table[0]));
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":186
+    /* "modified_wv/fm_ngram_inner.pyx":155
  * 
  * cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:
  *     if word_index == 0:             # <<<<<<<<<<<<<<
@@ -2443,7 +2343,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":189
+  /* "modified_wv/fm_ngram_inner.pyx":158
  *         return <unsigned long long>cum_table[0]
  *     else:
  *         return <unsigned long long>(cum_table[word_index] - cum_table[word_index-1])             # <<<<<<<<<<<<<<
@@ -2455,7 +2355,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
     goto __pyx_L0;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":185
+  /* "modified_wv/fm_ngram_inner.pyx":154
  *         return b
  * 
  * cdef unsigned long long word_count(const np.uint32_t word_index, np.uint32_t *cum_table) nogil:             # <<<<<<<<<<<<<<
@@ -2468,7 +2368,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":192
+/* "modified_wv/fm_ngram_inner.pyx":161
  * 
  * ###### V2
  * cdef void get_inner_min(REAL_t alpha, REAL_t beta, REAL_t *inner_min,             # <<<<<<<<<<<<<<
@@ -2478,7 +2378,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_word_count(_
 
 static void __pyx_f_11modified_wv_14fm_ngram_inner_get_inner_min(__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_alpha, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_beta, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *__pyx_v_inner_min, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *__pyx_v_jcount_min) {
 
-  /* "modified_wv/fm_ngram_inner.pyx":195
+  /* "modified_wv/fm_ngram_inner.pyx":164
  *                        REAL_t *jcount_min) nogil:
  *     # Notice: alternative exp(beta-1) + 1
  *     jcount_min[0] = exp(beta-1)             # <<<<<<<<<<<<<<
@@ -2487,7 +2387,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_get_inner_min(__pyx_t_11modif
  */
   (__pyx_v_jcount_min[0]) = exp((__pyx_v_beta - 1.0));
 
-  /* "modified_wv/fm_ngram_inner.pyx":196
+  /* "modified_wv/fm_ngram_inner.pyx":165
  *     # Notice: alternative exp(beta-1) + 1
  *     jcount_min[0] = exp(beta-1)
  *     inner_min[0] = jcount2inner(alpha, jcount_min[0], beta)             # <<<<<<<<<<<<<<
@@ -2496,7 +2396,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_get_inner_min(__pyx_t_11modif
  */
   (__pyx_v_inner_min[0]) = __pyx_f_11modified_wv_14fm_ngram_inner_jcount2inner(__pyx_v_alpha, (__pyx_v_jcount_min[0]), __pyx_v_beta);
 
-  /* "modified_wv/fm_ngram_inner.pyx":192
+  /* "modified_wv/fm_ngram_inner.pyx":161
  * 
  * ###### V2
  * cdef void get_inner_min(REAL_t alpha, REAL_t beta, REAL_t *inner_min,             # <<<<<<<<<<<<<<
@@ -2507,7 +2407,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_get_inner_min(__pyx_t_11modif
   /* function exit code */
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":198
+/* "modified_wv/fm_ngram_inner.pyx":167
  *     inner_min[0] = jcount2inner(alpha, jcount_min[0], beta)
  * 
  * cdef REAL_t jcount_newton(REAL_t inner, REAL_t jcount,             # <<<<<<<<<<<<<<
@@ -2519,7 +2419,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_foo;
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_r;
 
-  /* "modified_wv/fm_ngram_inner.pyx":200
+  /* "modified_wv/fm_ngram_inner.pyx":169
  * cdef REAL_t jcount_newton(REAL_t inner, REAL_t jcount,
  *                            REAL_t alpha, REAL_t beta) nogil:
  *     cdef REAL_t foo = log(jcount) - beta             # <<<<<<<<<<<<<<
@@ -2528,7 +2428,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
   __pyx_v_foo = (log(__pyx_v_jcount) - __pyx_v_beta);
 
-  /* "modified_wv/fm_ngram_inner.pyx":201
+  /* "modified_wv/fm_ngram_inner.pyx":170
  *                            REAL_t alpha, REAL_t beta) nogil:
  *     cdef REAL_t foo = log(jcount) - beta
  *     return jcount - (jcount * foo - inner / alpha) / (foo + ONEF)             # <<<<<<<<<<<<<<
@@ -2538,7 +2438,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_r = (__pyx_v_jcount - (((__pyx_v_jcount * __pyx_v_foo) - (__pyx_v_inner / __pyx_v_alpha)) / (__pyx_v_foo + __pyx_v_11modified_wv_14fm_ngram_inner_ONEF)));
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":198
+  /* "modified_wv/fm_ngram_inner.pyx":167
  *     inner_min[0] = jcount2inner(alpha, jcount_min[0], beta)
  * 
  * cdef REAL_t jcount_newton(REAL_t inner, REAL_t jcount,             # <<<<<<<<<<<<<<
@@ -2551,7 +2451,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":204
+/* "modified_wv/fm_ngram_inner.pyx":173
  * 
  * # inner = alpha * x (log(x) - beta)
  * cdef REAL_t jcount2inner(REAL_t alpha, REAL_t jcount, REAL_t beta) nogil:             # <<<<<<<<<<<<<<
@@ -2562,7 +2462,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
 static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_ngram_inner_jcount2inner(__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_alpha, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_jcount, __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_beta) {
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_r;
 
-  /* "modified_wv/fm_ngram_inner.pyx":205
+  /* "modified_wv/fm_ngram_inner.pyx":174
  * # inner = alpha * x (log(x) - beta)
  * cdef REAL_t jcount2inner(REAL_t alpha, REAL_t jcount, REAL_t beta) nogil:
  *     return alpha * jcount * (log(jcount) - beta)             # <<<<<<<<<<<<<<
@@ -2572,7 +2472,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_r = ((__pyx_v_alpha * __pyx_v_jcount) * (log(__pyx_v_jcount) - __pyx_v_beta));
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":204
+  /* "modified_wv/fm_ngram_inner.pyx":173
  * 
  * # inner = alpha * x (log(x) - beta)
  * cdef REAL_t jcount2inner(REAL_t alpha, REAL_t jcount, REAL_t beta) nogil:             # <<<<<<<<<<<<<<
@@ -2585,7 +2485,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":207
+/* "modified_wv/fm_ngram_inner.pyx":176
  *     return alpha * jcount * (log(jcount) - beta)
  * 
  * cdef REAL_t inner2jcount(REAL_t inner, REAL_t alpha, REAL_t beta, REAL_t jcount_max, const int niter) nogil:             # <<<<<<<<<<<<<<
@@ -2605,7 +2505,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   int __pyx_t_2;
   int __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":214
+  /* "modified_wv/fm_ngram_inner.pyx":183
  *     cdef REAL_t jcount
  *     cdef int i
  *     get_inner_min(alpha, beta, &inner_min, &jcount_min)             # <<<<<<<<<<<<<<
@@ -2614,7 +2514,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
   __pyx_f_11modified_wv_14fm_ngram_inner_get_inner_min(__pyx_v_alpha, __pyx_v_beta, (&__pyx_v_inner_min), (&__pyx_v_jcount_min));
 
-  /* "modified_wv/fm_ngram_inner.pyx":215
+  /* "modified_wv/fm_ngram_inner.pyx":184
  *     cdef int i
  *     get_inner_min(alpha, beta, &inner_min, &jcount_min)
  *     inner_max = jcount2inner(alpha, jcount_max, beta)             # <<<<<<<<<<<<<<
@@ -2623,7 +2523,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
   __pyx_v_inner_max = __pyx_f_11modified_wv_14fm_ngram_inner_jcount2inner(__pyx_v_alpha, __pyx_v_jcount_max, __pyx_v_beta);
 
-  /* "modified_wv/fm_ngram_inner.pyx":216
+  /* "modified_wv/fm_ngram_inner.pyx":185
  *     get_inner_min(alpha, beta, &inner_min, &jcount_min)
  *     inner_max = jcount2inner(alpha, jcount_max, beta)
  *     if inner < inner_min:             # <<<<<<<<<<<<<<
@@ -2633,7 +2533,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_t_1 = ((__pyx_v_inner < __pyx_v_inner_min) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":217
+    /* "modified_wv/fm_ngram_inner.pyx":186
  *     inner_max = jcount2inner(alpha, jcount_max, beta)
  *     if inner < inner_min:
  *         return max_real(ONEF, jcount_min)             # <<<<<<<<<<<<<<
@@ -2643,7 +2543,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
     __pyx_r = __pyx_f_11modified_wv_14fm_ngram_inner_max_real(__pyx_v_11modified_wv_14fm_ngram_inner_ONEF, __pyx_v_jcount_min);
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":216
+    /* "modified_wv/fm_ngram_inner.pyx":185
  *     get_inner_min(alpha, beta, &inner_min, &jcount_min)
  *     inner_max = jcount2inner(alpha, jcount_max, beta)
  *     if inner < inner_min:             # <<<<<<<<<<<<<<
@@ -2652,7 +2552,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":218
+  /* "modified_wv/fm_ngram_inner.pyx":187
  *     if inner < inner_min:
  *         return max_real(ONEF, jcount_min)
  *     elif inner > inner_max:             # <<<<<<<<<<<<<<
@@ -2662,7 +2562,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_t_1 = ((__pyx_v_inner > __pyx_v_inner_max) != 0);
   if (__pyx_t_1) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":219
+    /* "modified_wv/fm_ngram_inner.pyx":188
  *         return max_real(ONEF, jcount_min)
  *     elif inner > inner_max:
  *         return jcount_max             # <<<<<<<<<<<<<<
@@ -2672,7 +2572,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
     __pyx_r = __pyx_v_jcount_max;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":218
+    /* "modified_wv/fm_ngram_inner.pyx":187
  *     if inner < inner_min:
  *         return max_real(ONEF, jcount_min)
  *     elif inner > inner_max:             # <<<<<<<<<<<<<<
@@ -2681,7 +2581,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":222
+  /* "modified_wv/fm_ngram_inner.pyx":191
  *     else:
  *         #
  *         jcount = exp(beta)             # <<<<<<<<<<<<<<
@@ -2691,7 +2591,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   /*else*/ {
     __pyx_v_jcount = exp(__pyx_v_beta);
 
-    /* "modified_wv/fm_ngram_inner.pyx":223
+    /* "modified_wv/fm_ngram_inner.pyx":192
  *         #
  *         jcount = exp(beta)
  *         if inner > 0:             # <<<<<<<<<<<<<<
@@ -2701,7 +2601,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
     __pyx_t_1 = ((__pyx_v_inner > 0.0) != 0);
     if (__pyx_t_1) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":224
+      /* "modified_wv/fm_ngram_inner.pyx":193
  *         jcount = exp(beta)
  *         if inner > 0:
  *             inner_C = jcount2inner(alpha, ONEF/alpha, beta)             # <<<<<<<<<<<<<<
@@ -2710,7 +2610,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
       __pyx_v_inner_C = __pyx_f_11modified_wv_14fm_ngram_inner_jcount2inner(__pyx_v_alpha, (__pyx_v_11modified_wv_14fm_ngram_inner_ONEF / __pyx_v_alpha), __pyx_v_beta);
 
-      /* "modified_wv/fm_ngram_inner.pyx":225
+      /* "modified_wv/fm_ngram_inner.pyx":194
  *         if inner > 0:
  *             inner_C = jcount2inner(alpha, ONEF/alpha, beta)
  *             if inner > inner_C:             # <<<<<<<<<<<<<<
@@ -2720,7 +2620,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
       __pyx_t_1 = ((__pyx_v_inner > __pyx_v_inner_C) != 0);
       if (__pyx_t_1) {
 
-        /* "modified_wv/fm_ngram_inner.pyx":226
+        /* "modified_wv/fm_ngram_inner.pyx":195
  *             inner_C = jcount2inner(alpha, ONEF/alpha, beta)
  *             if inner > inner_C:
  *                 jcount = max_real(ONEF/alpha, jcount)             # <<<<<<<<<<<<<<
@@ -2729,7 +2629,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
         __pyx_v_jcount = __pyx_f_11modified_wv_14fm_ngram_inner_max_real((__pyx_v_11modified_wv_14fm_ngram_inner_ONEF / __pyx_v_alpha), __pyx_v_jcount);
 
-        /* "modified_wv/fm_ngram_inner.pyx":225
+        /* "modified_wv/fm_ngram_inner.pyx":194
  *         if inner > 0:
  *             inner_C = jcount2inner(alpha, ONEF/alpha, beta)
  *             if inner > inner_C:             # <<<<<<<<<<<<<<
@@ -2738,7 +2638,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":223
+      /* "modified_wv/fm_ngram_inner.pyx":192
  *         #
  *         jcount = exp(beta)
  *         if inner > 0:             # <<<<<<<<<<<<<<
@@ -2747,7 +2647,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
  */
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":227
+    /* "modified_wv/fm_ngram_inner.pyx":196
  *             if inner > inner_C:
  *                 jcount = max_real(ONEF/alpha, jcount)
  *         for i in range(niter):             # <<<<<<<<<<<<<<
@@ -2758,7 +2658,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
     for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
       __pyx_v_i = __pyx_t_3;
 
-      /* "modified_wv/fm_ngram_inner.pyx":228
+      /* "modified_wv/fm_ngram_inner.pyx":197
  *                 jcount = max_real(ONEF/alpha, jcount)
  *         for i in range(niter):
  *             jcount = jcount_newton(inner, jcount, alpha, beta)             # <<<<<<<<<<<<<<
@@ -2769,7 +2669,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
     }
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":230
+  /* "modified_wv/fm_ngram_inner.pyx":199
  *             jcount = jcount_newton(inner, jcount, alpha, beta)
  *     # return jcount if jcount > 1 else ONEF
  *     return jcount             # <<<<<<<<<<<<<<
@@ -2779,7 +2679,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   __pyx_r = __pyx_v_jcount;
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":207
+  /* "modified_wv/fm_ngram_inner.pyx":176
  *     return alpha * jcount * (log(jcount) - beta)
  * 
  * cdef REAL_t inner2jcount(REAL_t inner, REAL_t alpha, REAL_t beta, REAL_t jcount_max, const int niter) nogil:             # <<<<<<<<<<<<<<
@@ -2792,7 +2692,7 @@ static __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_f_11modified_wv_14fm_
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":232
+/* "modified_wv/fm_ngram_inner.pyx":201
  *     return jcount
  * 
  * cdef void rmsprop_update(const int *size, REAL_t *sq_grad, const REAL_t *gamma,             # <<<<<<<<<<<<<<
@@ -2804,7 +2704,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_inner;
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_weight;
 
-  /* "modified_wv/fm_ngram_inner.pyx":237
+  /* "modified_wv/fm_ngram_inner.pyx":206
  *     cdef int k
  *     cdef REAL_t inner, weight
  *     inner = our_dot(size, grad, &ONE, grad, &ONE)             # <<<<<<<<<<<<<<
@@ -2813,7 +2713,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
  */
   __pyx_v_inner = __pyx_v_11modified_wv_14fm_ngram_inner_our_dot(__pyx_v_size, __pyx_v_grad, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), __pyx_v_grad, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-  /* "modified_wv/fm_ngram_inner.pyx":238
+  /* "modified_wv/fm_ngram_inner.pyx":207
  *     cdef REAL_t inner, weight
  *     inner = our_dot(size, grad, &ONE, grad, &ONE)
  *     sq_grad[0] = gamma[0] * sq_grad[0] + (1-gamma[0]) * inner             # <<<<<<<<<<<<<<
@@ -2822,7 +2722,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
  */
   (__pyx_v_sq_grad[0]) = (((__pyx_v_gamma[0]) * (__pyx_v_sq_grad[0])) + ((1.0 - (__pyx_v_gamma[0])) * __pyx_v_inner));
 
-  /* "modified_wv/fm_ngram_inner.pyx":239
+  /* "modified_wv/fm_ngram_inner.pyx":208
  *     inner = our_dot(size, grad, &ONE, grad, &ONE)
  *     sq_grad[0] = gamma[0] * sq_grad[0] + (1-gamma[0]) * inner
  *     weight = eta[0] / sqrt(sq_grad[0] + epsilon[0])             # <<<<<<<<<<<<<<
@@ -2831,7 +2731,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
  */
   __pyx_v_weight = ((__pyx_v_eta[0]) / sqrt(((__pyx_v_sq_grad[0]) + (__pyx_v_epsilon[0]))));
 
-  /* "modified_wv/fm_ngram_inner.pyx":240
+  /* "modified_wv/fm_ngram_inner.pyx":209
  *     sq_grad[0] = gamma[0] * sq_grad[0] + (1-gamma[0]) * inner
  *     weight = eta[0] / sqrt(sq_grad[0] + epsilon[0])
  *     our_saxpy(size, &weight, grad, &ONE, syn0, &ONE)             # <<<<<<<<<<<<<<
@@ -2840,7 +2740,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
  */
   __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy(__pyx_v_size, (&__pyx_v_weight), __pyx_v_grad, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), __pyx_v_syn0, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-  /* "modified_wv/fm_ngram_inner.pyx":232
+  /* "modified_wv/fm_ngram_inner.pyx":201
  *     return jcount
  * 
  * cdef void rmsprop_update(const int *size, REAL_t *sq_grad, const REAL_t *gamma,             # <<<<<<<<<<<<<<
@@ -2851,7 +2751,7 @@ static void __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update(int const *__p
   /* function exit code */
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":243
+/* "modified_wv/fm_ngram_inner.pyx":212
  * 
  * # modified fast_sentence_sg_neg
  * cdef unsigned long long fast_sentence_neg(             # <<<<<<<<<<<<<<
@@ -2887,7 +2787,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
   int __pyx_t_7;
   int __pyx_t_8;
 
-  /* "modified_wv/fm_ngram_inner.pyx":255
+  /* "modified_wv/fm_ngram_inner.pyx":224
  * 
  *     # Constants
  *     cdef REAL_t alpha = ONEF / C             # <<<<<<<<<<<<<<
@@ -2896,7 +2796,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_alpha = (__pyx_v_11modified_wv_14fm_ngram_inner_ONEF / __pyx_v_C);
 
-  /* "modified_wv/fm_ngram_inner.pyx":256
+  /* "modified_wv/fm_ngram_inner.pyx":225
  *     # Constants
  *     cdef REAL_t alpha = ONEF / C
  *     cdef REAL_t logtotal = log(total_words)             # <<<<<<<<<<<<<<
@@ -2905,7 +2805,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_logtotal = log(__pyx_v_total_words);
 
-  /* "modified_wv/fm_ngram_inner.pyx":257
+  /* "modified_wv/fm_ngram_inner.pyx":226
  *     cdef REAL_t alpha = ONEF / C
  *     cdef REAL_t logtotal = log(total_words)
  *     cdef unsigned long long domain = 2 ** 31 - 1             # <<<<<<<<<<<<<<
@@ -2914,7 +2814,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_domain = 0x7FFFFFFF;
 
-  /* "modified_wv/fm_ngram_inner.pyx":258
+  /* "modified_wv/fm_ngram_inner.pyx":227
  *     cdef REAL_t logtotal = log(total_words)
  *     cdef unsigned long long domain = 2 ** 31 - 1
  *     cdef REAL_t logdomain = log(domain)             # <<<<<<<<<<<<<<
@@ -2923,7 +2823,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_logdomain = log(__pyx_v_domain);
 
-  /* "modified_wv/fm_ngram_inner.pyx":260
+  /* "modified_wv/fm_ngram_inner.pyx":229
  *     cdef REAL_t logdomain = log(domain)
  *     cdef REAL_t beta
  *     cdef int sizexngram = size * ngram             # <<<<<<<<<<<<<<
@@ -2932,7 +2832,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_sizexngram = (__pyx_v_size * __pyx_v_ngram);
 
-  /* "modified_wv/fm_ngram_inner.pyx":265
+  /* "modified_wv/fm_ngram_inner.pyx":234
  *     cdef int sample
  *     cdef REAL_t jcount_max
  *     cdef unsigned long long modulo = 281474976710655ULL             # <<<<<<<<<<<<<<
@@ -2941,7 +2841,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_modulo = 281474976710655ULL;
 
-  /* "modified_wv/fm_ngram_inner.pyx":275
+  /* "modified_wv/fm_ngram_inner.pyx":244
  * 
  *     # variables for wPMI
  *     cdef REAL_t count_adjust = <REAL_t>total_words/domain             # <<<<<<<<<<<<<<
@@ -2950,7 +2850,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_count_adjust = (((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t)__pyx_v_total_words) / __pyx_v_domain);
 
-  /* "modified_wv/fm_ngram_inner.pyx":279
+  /* "modified_wv/fm_ngram_inner.pyx":248
  *     cdef REAL_t foo
  *     # index caches
  *     cdef np.uint32_t *indices = <np.uint32_t*>calloc(ngram, cython.sizeof(np.uint32_t))             # <<<<<<<<<<<<<<
@@ -2959,29 +2859,29 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   __pyx_v_indices = ((__pyx_t_5numpy_uint32_t *)calloc(__pyx_v_ngram, (sizeof(__pyx_t_5numpy_uint32_t))));
 
-  /* "modified_wv/fm_ngram_inner.pyx":283
+  /* "modified_wv/fm_ngram_inner.pyx":252
  * 
  *     # reset sgd_cache
  *     memset(sgd_cache, 0, size * ngram * cython.sizeof(REAL_t))             # <<<<<<<<<<<<<<
  *     # memset(work, 0, size * cython.sizeof(REAL_t))
- *     for sample in range(ngram * negative+1):
+ * 
  */
   memset(__pyx_v_sgd_cache, 0, ((__pyx_v_size * __pyx_v_ngram) * (sizeof(__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t))));
 
-  /* "modified_wv/fm_ngram_inner.pyx":285
- *     memset(sgd_cache, 0, size * ngram * cython.sizeof(REAL_t))
+  /* "modified_wv/fm_ngram_inner.pyx":255
  *     # memset(work, 0, size * cython.sizeof(REAL_t))
- *     for sample in range(ngram * negative+1):             # <<<<<<<<<<<<<<
+ * 
+ *     for sample in range(negative+1):             # <<<<<<<<<<<<<<
  *         if sample == 0:
  *             for i in range(ngram):
  */
-  __pyx_t_1 = ((__pyx_v_ngram * __pyx_v_negative) + 1);
+  __pyx_t_1 = (__pyx_v_negative + 1);
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_sample = __pyx_t_2;
 
-    /* "modified_wv/fm_ngram_inner.pyx":286
- *     # memset(work, 0, size * cython.sizeof(REAL_t))
- *     for sample in range(ngram * negative+1):
+    /* "modified_wv/fm_ngram_inner.pyx":256
+ * 
+ *     for sample in range(negative+1):
  *         if sample == 0:             # <<<<<<<<<<<<<<
  *             for i in range(ngram):
  *                 indices[i] = word_indices[i]
@@ -2989,8 +2889,8 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     __pyx_t_3 = ((__pyx_v_sample == 0) != 0);
     if (__pyx_t_3) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":287
- *     for sample in range(ngram * negative+1):
+      /* "modified_wv/fm_ngram_inner.pyx":257
+ *     for sample in range(negative+1):
  *         if sample == 0:
  *             for i in range(ngram):             # <<<<<<<<<<<<<<
  *                 indices[i] = word_indices[i]
@@ -3000,7 +2900,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_i = __pyx_t_5;
 
-        /* "modified_wv/fm_ngram_inner.pyx":288
+        /* "modified_wv/fm_ngram_inner.pyx":258
  *         if sample == 0:
  *             for i in range(ngram):
  *                 indices[i] = word_indices[i]             # <<<<<<<<<<<<<<
@@ -3010,7 +2910,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         (__pyx_v_indices[__pyx_v_i]) = (__pyx_v_word_indices[__pyx_v_i]);
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":289
+      /* "modified_wv/fm_ngram_inner.pyx":259
  *             for i in range(ngram):
  *                 indices[i] = word_indices[i]
  *             label = ONEF             # <<<<<<<<<<<<<<
@@ -3019,18 +2919,18 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
       __pyx_v_label = __pyx_v_11modified_wv_14fm_ngram_inner_ONEF;
 
-      /* "modified_wv/fm_ngram_inner.pyx":290
+      /* "modified_wv/fm_ngram_inner.pyx":260
  *                 indices[i] = word_indices[i]
  *             label = ONEF
  *             neg_mean_weight = ONEF             # <<<<<<<<<<<<<<
  *         else:
- *             center_gram = sample % ngram
+ *             center_gram = sample % 2
  */
       __pyx_v_neg_mean_weight = __pyx_v_11modified_wv_14fm_ngram_inner_ONEF;
 
-      /* "modified_wv/fm_ngram_inner.pyx":286
- *     # memset(work, 0, size * cython.sizeof(REAL_t))
- *     for sample in range(ngram * negative+1):
+      /* "modified_wv/fm_ngram_inner.pyx":256
+ * 
+ *     for sample in range(negative+1):
  *         if sample == 0:             # <<<<<<<<<<<<<<
  *             for i in range(ngram):
  *                 indices[i] = word_indices[i]
@@ -3038,19 +2938,28 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       goto __pyx_L5;
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":292
+    /* "modified_wv/fm_ngram_inner.pyx":262
  *             neg_mean_weight = ONEF
  *         else:
- *             center_gram = sample % ngram             # <<<<<<<<<<<<<<
- *             # center_gram = 0
+ *             center_gram = sample % 2             # <<<<<<<<<<<<<<
+ *             center_gram *= 2
  *             for i in range(ngram):
  */
     /*else*/ {
-      __pyx_v_center_gram = (__pyx_v_sample % __pyx_v_ngram);
+      __pyx_v_center_gram = (__pyx_v_sample % 2);
 
-      /* "modified_wv/fm_ngram_inner.pyx":294
- *             center_gram = sample % ngram
- *             # center_gram = 0
+      /* "modified_wv/fm_ngram_inner.pyx":263
+ *         else:
+ *             center_gram = sample % 2
+ *             center_gram *= 2             # <<<<<<<<<<<<<<
+ *             for i in range(ngram):
+ *                 if i != center_gram:
+ */
+      __pyx_v_center_gram = (__pyx_v_center_gram * 2);
+
+      /* "modified_wv/fm_ngram_inner.pyx":264
+ *             center_gram = sample % 2
+ *             center_gram *= 2
  *             for i in range(ngram):             # <<<<<<<<<<<<<<
  *                 if i != center_gram:
  *                     indices[i] = word_indices[i]
@@ -3059,8 +2968,8 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_i = __pyx_t_5;
 
-        /* "modified_wv/fm_ngram_inner.pyx":295
- *             # center_gram = 0
+        /* "modified_wv/fm_ngram_inner.pyx":265
+ *             center_gram *= 2
  *             for i in range(ngram):
  *                 if i != center_gram:             # <<<<<<<<<<<<<<
  *                     indices[i] = word_indices[i]
@@ -3069,7 +2978,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         __pyx_t_3 = ((__pyx_v_i != __pyx_v_center_gram) != 0);
         if (__pyx_t_3) {
 
-          /* "modified_wv/fm_ngram_inner.pyx":296
+          /* "modified_wv/fm_ngram_inner.pyx":266
  *             for i in range(ngram):
  *                 if i != center_gram:
  *                     indices[i] = word_indices[i]             # <<<<<<<<<<<<<<
@@ -3078,8 +2987,8 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
           (__pyx_v_indices[__pyx_v_i]) = (__pyx_v_word_indices[__pyx_v_i]);
 
-          /* "modified_wv/fm_ngram_inner.pyx":295
- *             # center_gram = 0
+          /* "modified_wv/fm_ngram_inner.pyx":265
+ *             center_gram *= 2
  *             for i in range(ngram):
  *                 if i != center_gram:             # <<<<<<<<<<<<<<
  *                     indices[i] = word_indices[i]
@@ -3088,7 +2997,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
           goto __pyx_L10;
         }
 
-        /* "modified_wv/fm_ngram_inner.pyx":298
+        /* "modified_wv/fm_ngram_inner.pyx":268
  *                     indices[i] = word_indices[i]
  *                 else:
  *                     while True:             # <<<<<<<<<<<<<<
@@ -3098,7 +3007,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         /*else*/ {
           while (1) {
 
-            /* "modified_wv/fm_ngram_inner.pyx":299
+            /* "modified_wv/fm_ngram_inner.pyx":269
  *                 else:
  *                     while True:
  *                         indices[i] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)             # <<<<<<<<<<<<<<
@@ -3107,7 +3016,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
             (__pyx_v_indices[__pyx_v_i]) = __pyx_f_11modified_wv_14fm_ngram_inner_bisect_left(__pyx_v_cum_table, ((__pyx_v_next_random >> 16) % (__pyx_v_cum_table[(__pyx_v_vocab_size - 1)])), 0, __pyx_v_vocab_size);
 
-            /* "modified_wv/fm_ngram_inner.pyx":300
+            /* "modified_wv/fm_ngram_inner.pyx":270
  *                     while True:
  *                         indices[i] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
  *                         next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo             # <<<<<<<<<<<<<<
@@ -3116,31 +3025,31 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
             __pyx_v_next_random = (((__pyx_v_next_random * ((unsigned PY_LONG_LONG)25214903917ULL)) + 11) & __pyx_v_modulo);
 
-            /* "modified_wv/fm_ngram_inner.pyx":301
+            /* "modified_wv/fm_ngram_inner.pyx":271
  *                         indices[i] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
  *                         next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *                         if indices[i] != word_indices[i]:             # <<<<<<<<<<<<<<
  *                             break
- *             label = ZEROF
+ * 
  */
             __pyx_t_3 = (((__pyx_v_indices[__pyx_v_i]) != (__pyx_v_word_indices[__pyx_v_i])) != 0);
             if (__pyx_t_3) {
 
-              /* "modified_wv/fm_ngram_inner.pyx":302
+              /* "modified_wv/fm_ngram_inner.pyx":272
  *                         next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *                         if indices[i] != word_indices[i]:
  *                             break             # <<<<<<<<<<<<<<
+ * 
  *             label = ZEROF
- *             # if neg_mean:
  */
               goto __pyx_L12_break;
 
-              /* "modified_wv/fm_ngram_inner.pyx":301
+              /* "modified_wv/fm_ngram_inner.pyx":271
  *                         indices[i] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
  *                         next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
  *                         if indices[i] != word_indices[i]:             # <<<<<<<<<<<<<<
  *                             break
- *             label = ZEROF
+ * 
  */
             }
           }
@@ -3149,16 +3058,16 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         __pyx_L10:;
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":303
- *                         if indices[i] != word_indices[i]:
+      /* "modified_wv/fm_ngram_inner.pyx":274
  *                             break
+ * 
  *             label = ZEROF             # <<<<<<<<<<<<<<
  *             # if neg_mean:
  *             #     neg_mean_weight = ONEF / <REAL_t>negative / ngram
  */
       __pyx_v_label = __pyx_v_11modified_wv_14fm_ngram_inner_ZEROF;
 
-      /* "modified_wv/fm_ngram_inner.pyx":309
+      /* "modified_wv/fm_ngram_inner.pyx":280
  *             #     neg_mean_weight = ONEF / ngram
  * 
  *             neg_mean_weight = ONEF             # <<<<<<<<<<<<<<
@@ -3169,26 +3078,26 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     }
     __pyx_L5:;
 
-    /* "modified_wv/fm_ngram_inner.pyx":318
+    /* "modified_wv/fm_ngram_inner.pyx":289
  *         ## Pairwise Interaction Tensor Factorization
  *         # <a,b> + <a,c> + <b,c> = log{ Pr(a,b,c)/Pr(a)Pr(ynb)Pr(c) }
  *         _pairwise_interaction(&size, &ngram, indices, syn0, inner_cache)             # <<<<<<<<<<<<<<
+ * 
  *         foo = ZEROF
- *         for i in range(ngram-1):
  */
     __pyx_f_11modified_wv_14fm_ngram_inner__pairwise_interaction((&__pyx_v_size), (&__pyx_v_ngram), __pyx_v_indices, __pyx_v_syn0, __pyx_v_inner_cache);
 
-    /* "modified_wv/fm_ngram_inner.pyx":319
- *         # <a,b> + <a,c> + <b,c> = log{ Pr(a,b,c)/Pr(a)Pr(ynb)Pr(c) }
+    /* "modified_wv/fm_ngram_inner.pyx":291
  *         _pairwise_interaction(&size, &ngram, indices, syn0, inner_cache)
+ * 
  *         foo = ZEROF             # <<<<<<<<<<<<<<
  *         for i in range(ngram-1):
  *             for j in range(i+1, ngram):
  */
     __pyx_v_foo = __pyx_v_11modified_wv_14fm_ngram_inner_ZEROF;
 
-    /* "modified_wv/fm_ngram_inner.pyx":320
- *         _pairwise_interaction(&size, &ngram, indices, syn0, inner_cache)
+    /* "modified_wv/fm_ngram_inner.pyx":292
+ * 
  *         foo = ZEROF
  *         for i in range(ngram-1):             # <<<<<<<<<<<<<<
  *             for j in range(i+1, ngram):
@@ -3198,7 +3107,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_6; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "modified_wv/fm_ngram_inner.pyx":321
+      /* "modified_wv/fm_ngram_inner.pyx":293
  *         foo = ZEROF
  *         for i in range(ngram-1):
  *             for j in range(i+1, ngram):             # <<<<<<<<<<<<<<
@@ -3209,7 +3118,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       for (__pyx_t_7 = (__pyx_v_i + 1); __pyx_t_7 < __pyx_t_5; __pyx_t_7+=1) {
         __pyx_v_j = __pyx_t_7;
 
-        /* "modified_wv/fm_ngram_inner.pyx":322
+        /* "modified_wv/fm_ngram_inner.pyx":294
  *         for i in range(ngram-1):
  *             for j in range(i+1, ngram):
  *                 foo += our_dot(&size, &syn0[indices[i] * ngram * size + i * size], &ONE,             # <<<<<<<<<<<<<<
@@ -3220,7 +3129,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       }
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":327
+    /* "modified_wv/fm_ngram_inner.pyx":299
  *                 #                  &syn0_copy[j * size], &ONE)
  *         # critical
  *         if foo <= -MAX_EXP or foo >= MAX_EXP:             # <<<<<<<<<<<<<<
@@ -3238,7 +3147,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     __pyx_L19_bool_binop_done:;
     if (__pyx_t_3) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":328
+      /* "modified_wv/fm_ngram_inner.pyx":300
  *         # critical
  *         if foo <= -MAX_EXP or foo >= MAX_EXP:
  *             continue             # <<<<<<<<<<<<<<
@@ -3247,7 +3156,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
       goto __pyx_L3_continue;
 
-      /* "modified_wv/fm_ngram_inner.pyx":327
+      /* "modified_wv/fm_ngram_inner.pyx":299
  *                 #                  &syn0_copy[j * size], &ONE)
  *         # critical
  *         if foo <= -MAX_EXP or foo >= MAX_EXP:             # <<<<<<<<<<<<<<
@@ -3256,7 +3165,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":329
+    /* "modified_wv/fm_ngram_inner.pyx":301
  *         if foo <= -MAX_EXP or foo >= MAX_EXP:
  *             continue
  *         f = EXP_TABLE[<int>((foo + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]             # <<<<<<<<<<<<<<
@@ -3265,7 +3174,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
     __pyx_v_f = (__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[((int)((__pyx_v_foo + 6.0) * 83.0))]);
 
-    /* "modified_wv/fm_ngram_inner.pyx":331
+    /* "modified_wv/fm_ngram_inner.pyx":303
  *         f = EXP_TABLE[<int>((foo + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  *         # gradient
  *         if optimizer == 0:             # <<<<<<<<<<<<<<
@@ -3275,7 +3184,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     __pyx_t_3 = ((__pyx_v_optimizer == 0) != 0);
     if (__pyx_t_3) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":332
+      /* "modified_wv/fm_ngram_inner.pyx":304
  *         # gradient
  *         if optimizer == 0:
  *             g = (label - f) * eta *  neg_mean_weight             # <<<<<<<<<<<<<<
@@ -3284,7 +3193,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
       __pyx_v_g = (((__pyx_v_label - __pyx_v_f) * __pyx_v_eta) * __pyx_v_neg_mean_weight);
 
-      /* "modified_wv/fm_ngram_inner.pyx":331
+      /* "modified_wv/fm_ngram_inner.pyx":303
  *         f = EXP_TABLE[<int>((foo + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
  *         # gradient
  *         if optimizer == 0:             # <<<<<<<<<<<<<<
@@ -3293,7 +3202,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":334
+    /* "modified_wv/fm_ngram_inner.pyx":306
  *             g = (label - f) * eta *  neg_mean_weight
  * 
  *         if sample == 0:             # <<<<<<<<<<<<<<
@@ -3303,7 +3212,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     __pyx_t_3 = ((__pyx_v_sample == 0) != 0);
     if (__pyx_t_3) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":335
+      /* "modified_wv/fm_ngram_inner.pyx":307
  * 
  *         if sample == 0:
  *             for i in range(ngram):             # <<<<<<<<<<<<<<
@@ -3314,7 +3223,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_i = __pyx_t_5;
 
-        /* "modified_wv/fm_ngram_inner.pyx":336
+        /* "modified_wv/fm_ngram_inner.pyx":308
  *         if sample == 0:
  *             for i in range(ngram):
  *                 our_saxpy(&size, &g, &inner_cache[i * size], &ONE,             # <<<<<<<<<<<<<<
@@ -3324,7 +3233,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), (&(__pyx_v_inner_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), (&(__pyx_v_sgd_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":334
+      /* "modified_wv/fm_ngram_inner.pyx":306
  *             g = (label - f) * eta *  neg_mean_weight
  * 
  *         if sample == 0:             # <<<<<<<<<<<<<<
@@ -3334,7 +3243,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       goto __pyx_L22;
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":339
+    /* "modified_wv/fm_ngram_inner.pyx":311
  *                           &sgd_cache[i * size], &ONE)
  *         else:
  *             for i in range(ngram):             # <<<<<<<<<<<<<<
@@ -3346,7 +3255,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
       for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_i = __pyx_t_5;
 
-        /* "modified_wv/fm_ngram_inner.pyx":340
+        /* "modified_wv/fm_ngram_inner.pyx":312
  *         else:
  *             for i in range(ngram):
  *                 if i != center_gram:             # <<<<<<<<<<<<<<
@@ -3356,7 +3265,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
         __pyx_t_3 = ((__pyx_v_i != __pyx_v_center_gram) != 0);
         if (__pyx_t_3) {
 
-          /* "modified_wv/fm_ngram_inner.pyx":341
+          /* "modified_wv/fm_ngram_inner.pyx":313
  *             for i in range(ngram):
  *                 if i != center_gram:
  *                     our_saxpy(&size, &g, &inner_cache[i * size], &ONE,             # <<<<<<<<<<<<<<
@@ -3365,7 +3274,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
           __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), (&(__pyx_v_inner_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), (&(__pyx_v_sgd_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-          /* "modified_wv/fm_ngram_inner.pyx":340
+          /* "modified_wv/fm_ngram_inner.pyx":312
  *         else:
  *             for i in range(ngram):
  *                 if i != center_gram:             # <<<<<<<<<<<<<<
@@ -3375,7 +3284,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
           goto __pyx_L27;
         }
 
-        /* "modified_wv/fm_ngram_inner.pyx":344
+        /* "modified_wv/fm_ngram_inner.pyx":316
  *                               &sgd_cache[i * size], &ONE)
  *                 else:
  *                     if optimizer == 0:             # <<<<<<<<<<<<<<
@@ -3386,7 +3295,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
           __pyx_t_3 = ((__pyx_v_optimizer == 0) != 0);
           if (__pyx_t_3) {
 
-            /* "modified_wv/fm_ngram_inner.pyx":345
+            /* "modified_wv/fm_ngram_inner.pyx":317
  *                 else:
  *                     if optimizer == 0:
  *                         our_saxpy(&size, &g, &inner_cache[i * size], &ONE,             # <<<<<<<<<<<<<<
@@ -3395,7 +3304,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
             __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), (&(__pyx_v_inner_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), (&(__pyx_v_syn0[((((__pyx_v_indices[__pyx_v_i]) * __pyx_v_ngram) * __pyx_v_size) + (__pyx_v_i * __pyx_v_size))])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-            /* "modified_wv/fm_ngram_inner.pyx":344
+            /* "modified_wv/fm_ngram_inner.pyx":316
  *                               &sgd_cache[i * size], &ONE)
  *                 else:
  *                     if optimizer == 0:             # <<<<<<<<<<<<<<
@@ -3411,56 +3320,56 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     __pyx_L3_continue:;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":349
+  /* "modified_wv/fm_ngram_inner.pyx":320
+ *                                   &syn0[indices[i] * ngram * size + i * size], &ONE)
  *         ## --END--
- * 
  *     for i in range(ngram):             # <<<<<<<<<<<<<<
  *         if optimizer == 0:
- *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
+ * 
  */
   __pyx_t_2 = __pyx_v_ngram;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_2; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "modified_wv/fm_ngram_inner.pyx":350
- * 
+    /* "modified_wv/fm_ngram_inner.pyx":321
+ *         ## --END--
  *     for i in range(ngram):
  *         if optimizer == 0:             # <<<<<<<<<<<<<<
- *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
- *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
+ * 
+ *             # printf('%d lock %f, sgd_cache %e, syn0 %e\n', i, word_locks[word_indices[i]], sgd_cache[i*size], syn0[word_indices[i] * ngram * size + i * size])
  */
     switch (__pyx_v_optimizer) {
       case 0:
 
-      /* "modified_wv/fm_ngram_inner.pyx":351
- *     for i in range(ngram):
- *         if optimizer == 0:
+      /* "modified_wv/fm_ngram_inner.pyx":325
+ *             # printf('%d lock %f, sgd_cache %e, syn0 %e\n', i, word_locks[word_indices[i]], sgd_cache[i*size], syn0[word_indices[i] * ngram * size + i * size])
+ * 
  *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,             # <<<<<<<<<<<<<<
  *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
- *         elif optimizer == 1:
+ * 
  */
       __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy((&__pyx_v_size), (&(__pyx_v_word_locks[(__pyx_v_word_indices[__pyx_v_i])])), (&(__pyx_v_sgd_cache[(__pyx_v_i * __pyx_v_size)])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), (&(__pyx_v_syn0[((((__pyx_v_word_indices[__pyx_v_i]) * __pyx_v_ngram) * __pyx_v_size) + (__pyx_v_i * __pyx_v_size))])), (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-      /* "modified_wv/fm_ngram_inner.pyx":350
- * 
+      /* "modified_wv/fm_ngram_inner.pyx":321
+ *         ## --END--
  *     for i in range(ngram):
  *         if optimizer == 0:             # <<<<<<<<<<<<<<
- *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
- *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
+ * 
+ *             # printf('%d lock %f, sgd_cache %e, syn0 %e\n', i, word_locks[word_indices[i]], sgd_cache[i*size], syn0[word_indices[i] * ngram * size + i * size])
  */
       break;
 
-      /* "modified_wv/fm_ngram_inner.pyx":353
- *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
- *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
+      /* "modified_wv/fm_ngram_inner.pyx":329
+ * 
+ *             # printf('after %e\n', syn0[word_indices[i] * ngram * size + i * size])
  *         elif optimizer == 1:             # <<<<<<<<<<<<<<
  *             rmsprop_update(&size, &sq_grad[word_indices[i] * ngram + i],
  *                            &gamma, &epsilon, &eta,
  */
       case 1:
 
-      /* "modified_wv/fm_ngram_inner.pyx":354
- *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
+      /* "modified_wv/fm_ngram_inner.pyx":330
+ *             # printf('after %e\n', syn0[word_indices[i] * ngram * size + i * size])
  *         elif optimizer == 1:
  *             rmsprop_update(&size, &sq_grad[word_indices[i] * ngram + i],             # <<<<<<<<<<<<<<
  *                            &gamma, &epsilon, &eta,
@@ -3468,9 +3377,9 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
       __pyx_f_11modified_wv_14fm_ngram_inner_rmsprop_update((&__pyx_v_size), (&(__pyx_v_sq_grad[(((__pyx_v_word_indices[__pyx_v_i]) * __pyx_v_ngram) + __pyx_v_i)])), (&__pyx_v_gamma), (&__pyx_v_epsilon), (&__pyx_v_eta), (&(__pyx_v_sgd_cache[(__pyx_v_i * __pyx_v_size)])), (&(__pyx_v_syn0[((((__pyx_v_word_indices[__pyx_v_i]) * __pyx_v_ngram) * __pyx_v_size) + (__pyx_v_i * __pyx_v_size))])));
 
-      /* "modified_wv/fm_ngram_inner.pyx":353
- *             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
- *                       &syn0[word_indices[i] * ngram * size + i * size], &ONE)
+      /* "modified_wv/fm_ngram_inner.pyx":329
+ * 
+ *             # printf('after %e\n', syn0[word_indices[i] * ngram * size + i * size])
  *         elif optimizer == 1:             # <<<<<<<<<<<<<<
  *             rmsprop_update(&size, &sq_grad[word_indices[i] * ngram + i],
  *                            &gamma, &epsilon, &eta,
@@ -3480,7 +3389,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
     }
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":362
+  /* "modified_wv/fm_ngram_inner.pyx":336
  * 
  *     # free memory
  *     free(indices)             # <<<<<<<<<<<<<<
@@ -3489,7 +3398,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
  */
   free(__pyx_v_indices);
 
-  /* "modified_wv/fm_ngram_inner.pyx":364
+  /* "modified_wv/fm_ngram_inner.pyx":338
  *     free(indices)
  *     # free(neg_indices)
  *     return next_random             # <<<<<<<<<<<<<<
@@ -3499,7 +3408,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
   __pyx_r = __pyx_v_next_random;
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":243
+  /* "modified_wv/fm_ngram_inner.pyx":212
  * 
  * # modified fast_sentence_sg_neg
  * cdef unsigned long long fast_sentence_neg(             # <<<<<<<<<<<<<<
@@ -3512,7 +3421,7 @@ static unsigned PY_LONG_LONG __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentenc
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":367
+/* "modified_wv/fm_ngram_inner.pyx":341
  * 
  * 
  * def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):             # <<<<<<<<<<<<<<
@@ -3557,31 +3466,31 @@ static PyObject *__pyx_pw_11modified_wv_14fm_ngram_inner_1train_batch(PyObject *
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_sentences)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 1); __PYX_ERR(0, 367, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 1); __PYX_ERR(0, 341, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_alpha)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 2); __PYX_ERR(0, 367, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 2); __PYX_ERR(0, 341, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_sgd_cache)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 3); __PYX_ERR(0, 367, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 3); __PYX_ERR(0, 341, __pyx_L3_error)
         }
         case  4:
         if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_inner_cache)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 4); __PYX_ERR(0, 367, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 4); __PYX_ERR(0, 341, __pyx_L3_error)
         }
         case  5:
         if (likely((values[5] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_syn0_copy)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 5); __PYX_ERR(0, 367, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, 5); __PYX_ERR(0, 341, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_batch") < 0)) __PYX_ERR(0, 367, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_batch") < 0)) __PYX_ERR(0, 341, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
       goto __pyx_L5_argtuple_error;
@@ -3602,7 +3511,7 @@ static PyObject *__pyx_pw_11modified_wv_14fm_ngram_inner_1train_batch(PyObject *
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 367, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("train_batch", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 341, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("modified_wv.fm_ngram_inner.train_batch", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3620,6 +3529,10 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   int __pyx_v_ngram;
   int __pyx_v_negative;
   int __pyx_v_neg_mean;
+  int __pyx_v_window;
+  __pyx_t_5numpy_uint32_t __pyx_v_win_left;
+  __pyx_t_5numpy_uint32_t __pyx_v_win_right;
+  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x2710];
   __pyx_t_11modified_wv_14fm_ngram_inner_REAL_t __pyx_v_weight_power;
   int __pyx_v_vocab_size;
   unsigned PY_LONG_LONG __pyx_v_total_words;
@@ -3642,6 +3555,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   int __pyx_v_sentence_idx[(0x2710 + 1)];
   int __pyx_v_i;
   int __pyx_v_j;
+  int __pyx_v_k;
   int __pyx_v_effective_words;
   int __pyx_v_effective_sentences;
   int __pyx_v_sent_idx;
@@ -3651,6 +3565,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   PyObject *__pyx_v_sent = NULL;
   PyObject *__pyx_v_token = NULL;
   PyObject *__pyx_v_word = NULL;
+  PyObject *__pyx_v_item = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -3668,133 +3583,149 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   PyObject *(*__pyx_t_13)(PyObject *);
   PyObject *__pyx_t_14 = NULL;
   __pyx_t_5numpy_uint32_t __pyx_t_15;
-  int __pyx_t_16;
-  long __pyx_t_17;
+  PyObject *__pyx_t_16 = NULL;
+  PyObject *__pyx_t_17 = NULL;
   int __pyx_t_18;
   int __pyx_t_19;
   int __pyx_t_20;
+  int __pyx_t_21;
+  int __pyx_t_22;
+  int __pyx_t_23;
   __Pyx_RefNannySetupContext("train_batch", 0);
 
-  /* "modified_wv/fm_ngram_inner.pyx":368
+  /* "modified_wv/fm_ngram_inner.pyx":342
  * 
  * def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
  *     cdef int sample = (model.sample != 0)             # <<<<<<<<<<<<<<
  *     # Use mean for negative sampling or sum
  *     cdef int ngram = model.ngram
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sample); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sample); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 342, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_2 = PyObject_RichCompare(__pyx_t_1, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 342, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 342, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_sample = __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":370
+  /* "modified_wv/fm_ngram_inner.pyx":344
  *     cdef int sample = (model.sample != 0)
  *     # Use mean for negative sampling or sum
  *     cdef int ngram = model.ngram             # <<<<<<<<<<<<<<
  *     cdef int negative = model.negative
  *     cdef int neg_mean = model.neg_mean
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_ngram); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 370, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_ngram); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 344, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 370, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 344, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_ngram = __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":371
+  /* "modified_wv/fm_ngram_inner.pyx":345
  *     # Use mean for negative sampling or sum
  *     cdef int ngram = model.ngram
  *     cdef int negative = model.negative             # <<<<<<<<<<<<<<
  *     cdef int neg_mean = model.neg_mean
- * 
+ *     cdef int window = model.window
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 371, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 345, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 371, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 345, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_negative = __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":372
+  /* "modified_wv/fm_ngram_inner.pyx":346
  *     cdef int ngram = model.ngram
  *     cdef int negative = model.negative
  *     cdef int neg_mean = model.neg_mean             # <<<<<<<<<<<<<<
- * 
- *     cdef REAL_t weight_power = model.weight_power
+ *     cdef int window = model.window
+ *     cdef np.uint32_t win_left, win_right
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_neg_mean); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_neg_mean); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 372, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_neg_mean = __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":374
+  /* "modified_wv/fm_ngram_inner.pyx":347
+ *     cdef int negative = model.negative
  *     cdef int neg_mean = model.neg_mean
+ *     cdef int window = model.window             # <<<<<<<<<<<<<<
+ *     cdef np.uint32_t win_left, win_right
+ *     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 347, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 347, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_window = __pyx_t_3;
+
+  /* "modified_wv/fm_ngram_inner.pyx":351
+ *     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
  * 
  *     cdef REAL_t weight_power = model.weight_power             # <<<<<<<<<<<<<<
  * 
  *     cdef int vocab_size = len(model.vocab)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_weight_power); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_weight_power); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 351, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 351, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_weight_power = __pyx_t_4;
 
-  /* "modified_wv/fm_ngram_inner.pyx":376
+  /* "modified_wv/fm_ngram_inner.pyx":353
  *     cdef REAL_t weight_power = model.weight_power
  * 
  *     cdef int vocab_size = len(model.vocab)             # <<<<<<<<<<<<<<
  *     cdef unsigned long long total_words = model.words_cumnum
  *     cdef REAL_t C = model.C
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 376, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 353, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 376, __pyx_L1_error)
+  __pyx_t_5 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_5 == -1)) __PYX_ERR(0, 353, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_vocab_size = __pyx_t_5;
 
-  /* "modified_wv/fm_ngram_inner.pyx":377
+  /* "modified_wv/fm_ngram_inner.pyx":354
  * 
  *     cdef int vocab_size = len(model.vocab)
  *     cdef unsigned long long total_words = model.words_cumnum             # <<<<<<<<<<<<<<
  *     cdef REAL_t C = model.C
  *     cdef np.uint32_t *cum_table
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_words_cumnum); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 377, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_words_cumnum); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 354, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_6 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_6 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 377, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_6 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 354, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_total_words = __pyx_t_6;
 
-  /* "modified_wv/fm_ngram_inner.pyx":378
+  /* "modified_wv/fm_ngram_inner.pyx":355
  *     cdef int vocab_size = len(model.vocab)
  *     cdef unsigned long long total_words = model.words_cumnum
  *     cdef REAL_t C = model.C             # <<<<<<<<<<<<<<
  *     cdef np.uint32_t *cum_table
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_C); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 378, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_C); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 355, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 378, __pyx_L1_error)
+  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 355, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_C = __pyx_t_4;
 
-  /* "modified_wv/fm_ngram_inner.pyx":381
+  /* "modified_wv/fm_ngram_inner.pyx":358
  *     cdef np.uint32_t *cum_table
  * 
  *     cdef int size = model.layer1_size             # <<<<<<<<<<<<<<
  *     cdef int optimizer = 0
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_layer1_size); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_layer1_size); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 358, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_int(__pyx_t_2); if (unlikely((__pyx_t_3 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 358, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_size = __pyx_t_3;
 
-  /* "modified_wv/fm_ngram_inner.pyx":382
+  /* "modified_wv/fm_ngram_inner.pyx":359
  * 
  *     cdef int size = model.layer1_size
  *     cdef int optimizer = 0             # <<<<<<<<<<<<<<
@@ -3803,82 +3734,82 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
   __pyx_v_optimizer = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":383
+  /* "modified_wv/fm_ngram_inner.pyx":360
  *     cdef int size = model.layer1_size
  *     cdef int optimizer = 0
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *sq_grad = <REAL_t *>(np.PyArray_DATA(model.sq_grad))
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 383, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 383, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 360, __pyx_L1_error)
   __pyx_v_syn0 = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":384
+  /* "modified_wv/fm_ngram_inner.pyx":361
  *     cdef int optimizer = 0
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
  *     cdef REAL_t *sq_grad = <REAL_t *>(np.PyArray_DATA(model.sq_grad))             # <<<<<<<<<<<<<<
  * 
  *     cdef REAL_t _alpha = alpha
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sq_grad); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 384, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_sq_grad); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 361, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 384, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 361, __pyx_L1_error)
   __pyx_v_sq_grad = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":386
+  /* "modified_wv/fm_ngram_inner.pyx":363
  *     cdef REAL_t *sq_grad = <REAL_t *>(np.PyArray_DATA(model.sq_grad))
  * 
  *     cdef REAL_t _alpha = alpha             # <<<<<<<<<<<<<<
  *     cdef REAL_t _gamma = model.gamma
  *     cdef REAL_t _epsilon = model.epsilon
  */
-  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_v_alpha); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 386, __pyx_L1_error)
+  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_v_alpha); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 363, __pyx_L1_error)
   __pyx_v__alpha = __pyx_t_4;
 
-  /* "modified_wv/fm_ngram_inner.pyx":387
+  /* "modified_wv/fm_ngram_inner.pyx":364
  * 
  *     cdef REAL_t _alpha = alpha
  *     cdef REAL_t _gamma = model.gamma             # <<<<<<<<<<<<<<
  *     cdef REAL_t _epsilon = model.epsilon
  *     cdef REAL_t *sgd_cache, *inner_cache, *syn0_copy
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_gamma); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 387, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_gamma); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 387, __pyx_L1_error)
+  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 364, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v__gamma = __pyx_t_4;
 
-  /* "modified_wv/fm_ngram_inner.pyx":388
+  /* "modified_wv/fm_ngram_inner.pyx":365
  *     cdef REAL_t _alpha = alpha
  *     cdef REAL_t _gamma = model.gamma
  *     cdef REAL_t _epsilon = model.epsilon             # <<<<<<<<<<<<<<
  *     cdef REAL_t *sgd_cache, *inner_cache, *syn0_copy
  *     cdef np.uint32_t *indices, *neg_indices
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epsilon); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epsilon); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 388, __pyx_L1_error)
+  __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_2); if (unlikely((__pyx_t_4 == (npy_float32)-1) && PyErr_Occurred())) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v__epsilon = __pyx_t_4;
 
-  /* "modified_wv/fm_ngram_inner.pyx":393
+  /* "modified_wv/fm_ngram_inner.pyx":370
  *     # for sampling (negative and frequent-word downsampling)
  *     cdef unsigned long long next_random
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))             # <<<<<<<<<<<<<<
  * 
  *     cdef np.uint32_t ngram_indices[10]
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0_lockf); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 393, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_syn0_lockf); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 370, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 393, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 370, __pyx_L1_error)
   __pyx_v_word_locks = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":400
+  /* "modified_wv/fm_ngram_inner.pyx":377
  * 
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -3888,20 +3819,20 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   __pyx_v_effective_words = 0;
   __pyx_v_effective_sentences = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":404
+  /* "modified_wv/fm_ngram_inner.pyx":381
  * 
  *     #
  *     if model.optimizer == 'rmsprop':             # <<<<<<<<<<<<<<
  *         optimizer = 1
  *         # alpha = model.alpha
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_optimizer); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 404, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_optimizer); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_7 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_rmsprop, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 404, __pyx_L1_error)
+  __pyx_t_7 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_rmsprop, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_7) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":405
+    /* "modified_wv/fm_ngram_inner.pyx":382
  *     #
  *     if model.optimizer == 'rmsprop':
  *         optimizer = 1             # <<<<<<<<<<<<<<
@@ -3910,7 +3841,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     __pyx_v_optimizer = 1;
 
-    /* "modified_wv/fm_ngram_inner.pyx":404
+    /* "modified_wv/fm_ngram_inner.pyx":381
  * 
  *     #
  *     if model.optimizer == 'rmsprop':             # <<<<<<<<<<<<<<
@@ -3920,20 +3851,20 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
     goto __pyx_L3;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":407
+  /* "modified_wv/fm_ngram_inner.pyx":384
  *         optimizer = 1
  *         # alpha = model.alpha
  *     elif model.optimizer == 'sgd':             # <<<<<<<<<<<<<<
  *         optimizer = 0
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_optimizer); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_optimizer); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 384, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_7 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_sgd, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_7 = (__Pyx_PyString_Equals(__pyx_t_2, __pyx_n_s_sgd, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 384, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_7) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":408
+    /* "modified_wv/fm_ngram_inner.pyx":385
  *         # alpha = model.alpha
  *     elif model.optimizer == 'sgd':
  *         optimizer = 0             # <<<<<<<<<<<<<<
@@ -3942,7 +3873,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     __pyx_v_optimizer = 0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":407
+    /* "modified_wv/fm_ngram_inner.pyx":384
  *         optimizer = 1
  *         # alpha = model.alpha
  *     elif model.optimizer == 'sgd':             # <<<<<<<<<<<<<<
@@ -3952,96 +3883,96 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   }
   __pyx_L3:;
 
-  /* "modified_wv/fm_ngram_inner.pyx":410
+  /* "modified_wv/fm_ngram_inner.pyx":387
  *         optimizer = 0
  * 
  *     cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))             # <<<<<<<<<<<<<<
  *     next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
  *     # next_random = 1816045175
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 410, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 387, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 410, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 387, __pyx_L1_error)
   __pyx_v_cum_table = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":411
+  /* "modified_wv/fm_ngram_inner.pyx":388
  * 
  *     cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *     next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  *     # next_random = 1816045175
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_randint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_randint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_randint); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_randint); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = PyNumber_Add(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_8 = PyNumber_Add(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_6 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_8); if (unlikely((__pyx_t_6 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_8); if (unlikely((__pyx_t_6 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   __pyx_v_next_random = __pyx_t_6;
 
-  /* "modified_wv/fm_ngram_inner.pyx":415
+  /* "modified_wv/fm_ngram_inner.pyx":392
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  *     sgd_cache = <REAL_t *>np.PyArray_DATA(_sgd_cache)             # <<<<<<<<<<<<<<
  *     inner_cache = <REAL_t *>np.PyArray_DATA(_inner_cache)
  *     syn0_copy = <REAL_t *>np.PyArray_DATA(_syn0_copy)
  */
-  if (!(likely(((__pyx_v__sgd_cache) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__sgd_cache, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 415, __pyx_L1_error)
+  if (!(likely(((__pyx_v__sgd_cache) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__sgd_cache, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 392, __pyx_L1_error)
   __pyx_v_sgd_cache = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__sgd_cache)));
 
-  /* "modified_wv/fm_ngram_inner.pyx":416
+  /* "modified_wv/fm_ngram_inner.pyx":393
  *     # convert Python structures to primitive types, so we can release the GIL
  *     sgd_cache = <REAL_t *>np.PyArray_DATA(_sgd_cache)
  *     inner_cache = <REAL_t *>np.PyArray_DATA(_inner_cache)             # <<<<<<<<<<<<<<
  *     syn0_copy = <REAL_t *>np.PyArray_DATA(_syn0_copy)
  * 
  */
-  if (!(likely(((__pyx_v__inner_cache) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__inner_cache, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 416, __pyx_L1_error)
+  if (!(likely(((__pyx_v__inner_cache) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__inner_cache, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 393, __pyx_L1_error)
   __pyx_v_inner_cache = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__inner_cache)));
 
-  /* "modified_wv/fm_ngram_inner.pyx":417
+  /* "modified_wv/fm_ngram_inner.pyx":394
  *     sgd_cache = <REAL_t *>np.PyArray_DATA(_sgd_cache)
  *     inner_cache = <REAL_t *>np.PyArray_DATA(_inner_cache)
  *     syn0_copy = <REAL_t *>np.PyArray_DATA(_syn0_copy)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  if (!(likely(((__pyx_v__syn0_copy) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__syn0_copy, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 417, __pyx_L1_error)
+  if (!(likely(((__pyx_v__syn0_copy) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__syn0_copy, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 394, __pyx_L1_error)
   __pyx_v_syn0_copy = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__syn0_copy)));
 
-  /* "modified_wv/fm_ngram_inner.pyx":421
+  /* "modified_wv/fm_ngram_inner.pyx":398
  * 
  *     # prepare C structures so we can go "full C" and release the Python GIL
  *     vlookup = model.vocab             # <<<<<<<<<<<<<<
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  */
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocab); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 398, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_v_vlookup = __pyx_t_8;
   __pyx_t_8 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":422
+  /* "modified_wv/fm_ngram_inner.pyx":399
  *     # prepare C structures so we can go "full C" and release the Python GIL
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0             # <<<<<<<<<<<<<<
@@ -4050,7 +3981,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
   (__pyx_v_sentence_idx[0]) = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":423
+  /* "modified_wv/fm_ngram_inner.pyx":400
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -4061,26 +3992,26 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
     __pyx_t_8 = __pyx_v_sentences; __Pyx_INCREF(__pyx_t_8); __pyx_t_5 = 0;
     __pyx_t_9 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_8 = PyObject_GetIter(__pyx_v_sentences); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_8 = PyObject_GetIter(__pyx_v_sentences); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 400, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_9 = Py_TYPE(__pyx_t_8)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_9 = Py_TYPE(__pyx_t_8)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 400, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_9)) {
       if (likely(PyList_CheckExact(__pyx_t_8))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_8)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 400, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_8, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_8, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 400, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_8)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_8, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_8, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 400, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_8, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_8, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 400, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       }
@@ -4090,7 +4021,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 423, __pyx_L1_error)
+          else __PYX_ERR(0, 400, __pyx_L1_error)
         }
         break;
       }
@@ -4099,27 +4030,27 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
     __Pyx_XDECREF_SET(__pyx_v_sent, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":424
+    /* "modified_wv/fm_ngram_inner.pyx":401
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if not sent or len(sent) < ngram:             # <<<<<<<<<<<<<<
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:
  */
-    __pyx_t_10 = __Pyx_PyObject_IsTrue(__pyx_v_sent); if (unlikely(__pyx_t_10 < 0)) __PYX_ERR(0, 424, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyObject_IsTrue(__pyx_v_sent); if (unlikely(__pyx_t_10 < 0)) __PYX_ERR(0, 401, __pyx_L1_error)
     __pyx_t_11 = ((!__pyx_t_10) != 0);
     if (!__pyx_t_11) {
     } else {
       __pyx_t_7 = __pyx_t_11;
       goto __pyx_L7_bool_binop_done;
     }
-    __pyx_t_12 = PyObject_Length(__pyx_v_sent); if (unlikely(__pyx_t_12 == -1)) __PYX_ERR(0, 424, __pyx_L1_error)
+    __pyx_t_12 = PyObject_Length(__pyx_v_sent); if (unlikely(__pyx_t_12 == -1)) __PYX_ERR(0, 401, __pyx_L1_error)
     __pyx_t_11 = ((__pyx_t_12 < __pyx_v_ngram) != 0);
     __pyx_t_7 = __pyx_t_11;
     __pyx_L7_bool_binop_done:;
     if (__pyx_t_7) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":425
+      /* "modified_wv/fm_ngram_inner.pyx":402
  *     for sent in sentences:
  *         if not sent or len(sent) < ngram:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged             # <<<<<<<<<<<<<<
@@ -4128,7 +4059,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
       goto __pyx_L4_continue;
 
-      /* "modified_wv/fm_ngram_inner.pyx":424
+      /* "modified_wv/fm_ngram_inner.pyx":401
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if not sent or len(sent) < ngram:             # <<<<<<<<<<<<<<
@@ -4137,7 +4068,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":426
+    /* "modified_wv/fm_ngram_inner.pyx":403
  *         if not sent or len(sent) < ngram:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -4148,26 +4079,26 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       __pyx_t_2 = __pyx_v_sent; __Pyx_INCREF(__pyx_t_2); __pyx_t_12 = 0;
       __pyx_t_13 = NULL;
     } else {
-      __pyx_t_12 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_v_sent); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 426, __pyx_L1_error)
+      __pyx_t_12 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_v_sent); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 403, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_13 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 426, __pyx_L1_error)
+      __pyx_t_13 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 403, __pyx_L1_error)
     }
     for (;;) {
       if (likely(!__pyx_t_13)) {
         if (likely(PyList_CheckExact(__pyx_t_2))) {
           if (__pyx_t_12 >= PyList_GET_SIZE(__pyx_t_2)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_1); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 426, __pyx_L1_error)
+          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_1); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 403, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 426, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 403, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         } else {
           if (__pyx_t_12 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
           #if CYTHON_COMPILING_IN_CPYTHON
-          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_1); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 426, __pyx_L1_error)
+          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_1); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 403, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 426, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 403, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         }
@@ -4177,7 +4108,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 426, __pyx_L1_error)
+            else __PYX_ERR(0, 403, __pyx_L1_error)
           }
           break;
         }
@@ -4186,16 +4117,16 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       __Pyx_XDECREF_SET(__pyx_v_token, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "modified_wv/fm_ngram_inner.pyx":427
+      /* "modified_wv/fm_ngram_inner.pyx":404
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None             # <<<<<<<<<<<<<<
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  */
-      __pyx_t_7 = (__Pyx_PySequence_ContainsTF(__pyx_v_token, __pyx_v_vlookup, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 427, __pyx_L1_error)
+      __pyx_t_7 = (__Pyx_PySequence_ContainsTF(__pyx_v_token, __pyx_v_vlookup, Py_EQ)); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 404, __pyx_L1_error)
       if ((__pyx_t_7 != 0)) {
-        __pyx_t_14 = PyObject_GetItem(__pyx_v_vlookup, __pyx_v_token); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 427, __pyx_L1_error)
+        __pyx_t_14 = PyObject_GetItem(__pyx_v_vlookup, __pyx_v_token); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 404, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __pyx_t_1 = __pyx_t_14;
         __pyx_t_14 = 0;
@@ -4206,7 +4137,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       __Pyx_XDECREF_SET(__pyx_v_word, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "modified_wv/fm_ngram_inner.pyx":428
+      /* "modified_wv/fm_ngram_inner.pyx":405
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:             # <<<<<<<<<<<<<<
@@ -4217,7 +4148,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       __pyx_t_11 = (__pyx_t_7 != 0);
       if (__pyx_t_11) {
 
-        /* "modified_wv/fm_ngram_inner.pyx":429
+        /* "modified_wv/fm_ngram_inner.pyx":406
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:
  *                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window             # <<<<<<<<<<<<<<
@@ -4226,7 +4157,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
         goto __pyx_L9_continue;
 
-        /* "modified_wv/fm_ngram_inner.pyx":428
+        /* "modified_wv/fm_ngram_inner.pyx":405
  *         for token in sent:
  *             word = vlookup[token] if token in vlookup else None
  *             if word is None:             # <<<<<<<<<<<<<<
@@ -4235,20 +4166,20 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":433
+      /* "modified_wv/fm_ngram_inner.pyx":410
  *             #     continue
  *             # container
  *             indexes[effective_words] = word.index             # <<<<<<<<<<<<<<
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:
  */
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_index); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 433, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_word, __pyx_n_s_index); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 410, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_t_1); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 433, __pyx_L1_error)
+      __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_t_1); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 410, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       (__pyx_v_indexes[__pyx_v_effective_words]) = __pyx_t_15;
 
-      /* "modified_wv/fm_ngram_inner.pyx":434
+      /* "modified_wv/fm_ngram_inner.pyx":411
  *             # container
  *             indexes[effective_words] = word.index
  *             effective_words += 1             # <<<<<<<<<<<<<<
@@ -4257,7 +4188,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
       __pyx_v_effective_words = (__pyx_v_effective_words + 1);
 
-      /* "modified_wv/fm_ngram_inner.pyx":435
+      /* "modified_wv/fm_ngram_inner.pyx":412
  *             indexes[effective_words] = word.index
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -4267,7 +4198,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       __pyx_t_11 = ((__pyx_v_effective_words == 0x2710) != 0);
       if (__pyx_t_11) {
 
-        /* "modified_wv/fm_ngram_inner.pyx":436
+        /* "modified_wv/fm_ngram_inner.pyx":413
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:
  *                 break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
@@ -4276,7 +4207,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
         goto __pyx_L10_break;
 
-        /* "modified_wv/fm_ngram_inner.pyx":435
+        /* "modified_wv/fm_ngram_inner.pyx":412
  *             indexes[effective_words] = word.index
  *             effective_words += 1
  *             if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -4285,7 +4216,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":426
+      /* "modified_wv/fm_ngram_inner.pyx":403
  *         if not sent or len(sent) < ngram:
  *             continue  # ignore empty sentences; leave effective_sentences unchanged
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -4297,7 +4228,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
     __pyx_L10_break:;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":441
+    /* "modified_wv/fm_ngram_inner.pyx":418
  *         # across sentence boundaries.
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences += 1             # <<<<<<<<<<<<<<
@@ -4306,7 +4237,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     __pyx_v_effective_sentences = (__pyx_v_effective_sentences + 1);
 
-    /* "modified_wv/fm_ngram_inner.pyx":442
+    /* "modified_wv/fm_ngram_inner.pyx":419
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences += 1
  *         sentence_idx[effective_sentences] = effective_words             # <<<<<<<<<<<<<<
@@ -4315,7 +4246,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     (__pyx_v_sentence_idx[__pyx_v_effective_sentences]) = __pyx_v_effective_words;
 
-    /* "modified_wv/fm_ngram_inner.pyx":444
+    /* "modified_wv/fm_ngram_inner.pyx":421
  *         sentence_idx[effective_sentences] = effective_words
  * 
  *         if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -4325,16 +4256,16 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
     __pyx_t_11 = ((__pyx_v_effective_words == 0x2710) != 0);
     if (__pyx_t_11) {
 
-      /* "modified_wv/fm_ngram_inner.pyx":445
+      /* "modified_wv/fm_ngram_inner.pyx":422
  * 
  *         if effective_words == MAX_SENTENCE_LEN:
  *             break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
  * 
- *     # release GIL & train on all sentences
+ *     # precompute "reduced window" offsets in a single randint() call
  */
       goto __pyx_L5_break;
 
-      /* "modified_wv/fm_ngram_inner.pyx":444
+      /* "modified_wv/fm_ngram_inner.pyx":421
  *         sentence_idx[effective_sentences] = effective_words
  * 
  *         if effective_words == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -4343,7 +4274,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
     }
 
-    /* "modified_wv/fm_ngram_inner.pyx":423
+    /* "modified_wv/fm_ngram_inner.pyx":400
  *     vlookup = model.vocab
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -4355,7 +4286,119 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   __pyx_L5_break:;
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":448
+  /* "modified_wv/fm_ngram_inner.pyx":425
+ * 
+ *     # precompute "reduced window" offsets in a single randint() call
+ *     for i, item in enumerate(model.random.randint(0, window, effective_words)):             # <<<<<<<<<<<<<<
+ *         reduced_windows[i] = item
+ * 
+ */
+  __pyx_t_3 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_randint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_window); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_14);
+  __pyx_t_16 = NULL;
+  __pyx_t_5 = 0;
+  if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_16 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_16)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_16);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+      __pyx_t_5 = 1;
+    }
+  }
+  __pyx_t_17 = PyTuple_New(3+__pyx_t_5); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_17);
+  if (__pyx_t_16) {
+    __Pyx_GIVEREF(__pyx_t_16); PyTuple_SET_ITEM(__pyx_t_17, 0, __pyx_t_16); __pyx_t_16 = NULL;
+  }
+  __Pyx_INCREF(__pyx_int_0);
+  __Pyx_GIVEREF(__pyx_int_0);
+  PyTuple_SET_ITEM(__pyx_t_17, 0+__pyx_t_5, __pyx_int_0);
+  __Pyx_GIVEREF(__pyx_t_2);
+  PyTuple_SET_ITEM(__pyx_t_17, 1+__pyx_t_5, __pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_14);
+  PyTuple_SET_ITEM(__pyx_t_17, 2+__pyx_t_5, __pyx_t_14);
+  __pyx_t_2 = 0;
+  __pyx_t_14 = 0;
+  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_17, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (likely(PyList_CheckExact(__pyx_t_8)) || PyTuple_CheckExact(__pyx_t_8)) {
+    __pyx_t_1 = __pyx_t_8; __Pyx_INCREF(__pyx_t_1); __pyx_t_5 = 0;
+    __pyx_t_9 = NULL;
+  } else {
+    __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_9 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 425, __pyx_L1_error)
+  }
+  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  for (;;) {
+    if (likely(!__pyx_t_9)) {
+      if (likely(PyList_CheckExact(__pyx_t_1))) {
+        if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_1)) break;
+        #if CYTHON_COMPILING_IN_CPYTHON
+        __pyx_t_8 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 425, __pyx_L1_error)
+        #else
+        __pyx_t_8 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 425, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_8);
+        #endif
+      } else {
+        if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
+        #if CYTHON_COMPILING_IN_CPYTHON
+        __pyx_t_8 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(0, 425, __pyx_L1_error)
+        #else
+        __pyx_t_8 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 425, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_8);
+        #endif
+      }
+    } else {
+      __pyx_t_8 = __pyx_t_9(__pyx_t_1);
+      if (unlikely(!__pyx_t_8)) {
+        PyObject* exc_type = PyErr_Occurred();
+        if (exc_type) {
+          if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
+          else __PYX_ERR(0, 425, __pyx_L1_error)
+        }
+        break;
+      }
+      __Pyx_GOTREF(__pyx_t_8);
+    }
+    __Pyx_XDECREF_SET(__pyx_v_item, __pyx_t_8);
+    __pyx_t_8 = 0;
+    __pyx_v_i = __pyx_t_3;
+    __pyx_t_3 = (__pyx_t_3 + 1);
+
+    /* "modified_wv/fm_ngram_inner.pyx":426
+ *     # precompute "reduced window" offsets in a single randint() call
+ *     for i, item in enumerate(model.random.randint(0, window, effective_words)):
+ *         reduced_windows[i] = item             # <<<<<<<<<<<<<<
+ * 
+ *     # release GIL & train on all sentences
+ */
+    __pyx_t_15 = __Pyx_PyInt_As_npy_uint32(__pyx_v_item); if (unlikely((__pyx_t_15 == (npy_uint32)-1) && PyErr_Occurred())) __PYX_ERR(0, 426, __pyx_L1_error)
+    (__pyx_v_reduced_windows[__pyx_v_i]) = __pyx_t_15;
+
+    /* "modified_wv/fm_ngram_inner.pyx":425
+ * 
+ *     # precompute "reduced window" offsets in a single randint() call
+ *     for i, item in enumerate(model.random.randint(0, window, effective_words)):             # <<<<<<<<<<<<<<
+ *         reduced_windows[i] = item
+ * 
+ */
+  }
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "modified_wv/fm_ngram_inner.pyx":429
  * 
  *     # release GIL & train on all sentences
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -4369,7 +4412,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
       #endif
       /*try:*/ {
 
-        /* "modified_wv/fm_ngram_inner.pyx":449
+        /* "modified_wv/fm_ngram_inner.pyx":430
  *     # release GIL & train on all sentences
  *     with nogil:
  *         for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
@@ -4377,10 +4420,10 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  *             idx_end = sentence_idx[sent_idx + 1]
  */
         __pyx_t_3 = __pyx_v_effective_sentences;
-        for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_3; __pyx_t_16+=1) {
-          __pyx_v_sent_idx = __pyx_t_16;
+        for (__pyx_t_18 = 0; __pyx_t_18 < __pyx_t_3; __pyx_t_18+=1) {
+          __pyx_v_sent_idx = __pyx_t_18;
 
-          /* "modified_wv/fm_ngram_inner.pyx":450
+          /* "modified_wv/fm_ngram_inner.pyx":431
  *     with nogil:
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]             # <<<<<<<<<<<<<<
@@ -4389,7 +4432,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
           __pyx_v_idx_start = (__pyx_v_sentence_idx[__pyx_v_sent_idx]);
 
-          /* "modified_wv/fm_ngram_inner.pyx":451
+          /* "modified_wv/fm_ngram_inner.pyx":432
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]
  *             idx_end = sentence_idx[sent_idx + 1]             # <<<<<<<<<<<<<<
@@ -4398,80 +4441,221 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
  */
           __pyx_v_idx_end = (__pyx_v_sentence_idx[(__pyx_v_sent_idx + 1)]);
 
-          /* "modified_wv/fm_ngram_inner.pyx":452
+          /* "modified_wv/fm_ngram_inner.pyx":433
  *             idx_start = sentence_idx[sent_idx]
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:             # <<<<<<<<<<<<<<
  *                 continue
- *             for i in range(idx_start, idx_end-ngram+1):
+ *             # for i in range(idx_start, idx_end-ngram+1):
  */
           __pyx_t_11 = (((__pyx_v_idx_end - __pyx_v_idx_start) < __pyx_v_ngram) != 0);
           if (__pyx_t_11) {
 
-            /* "modified_wv/fm_ngram_inner.pyx":453
+            /* "modified_wv/fm_ngram_inner.pyx":434
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:
  *                 continue             # <<<<<<<<<<<<<<
- *             for i in range(idx_start, idx_end-ngram+1):
- *             # for i in range(idx_start, idx_end):
+ *             # for i in range(idx_start, idx_end-ngram+1):
+ *             for i in range(idx_start, idx_end):
  */
-            goto __pyx_L17_continue;
+            goto __pyx_L19_continue;
 
-            /* "modified_wv/fm_ngram_inner.pyx":452
+            /* "modified_wv/fm_ngram_inner.pyx":433
  *             idx_start = sentence_idx[sent_idx]
  *             idx_end = sentence_idx[sent_idx + 1]
  *             if idx_end - idx_start < ngram:             # <<<<<<<<<<<<<<
  *                 continue
- *             for i in range(idx_start, idx_end-ngram+1):
+ *             # for i in range(idx_start, idx_end-ngram+1):
  */
           }
 
-          /* "modified_wv/fm_ngram_inner.pyx":454
- *             if idx_end - idx_start < ngram:
+          /* "modified_wv/fm_ngram_inner.pyx":436
  *                 continue
- *             for i in range(idx_start, idx_end-ngram+1):             # <<<<<<<<<<<<<<
- *             # for i in range(idx_start, idx_end):
- *                 for j in range(ngram):
+ *             # for i in range(idx_start, idx_end-ngram+1):
+ *             for i in range(idx_start, idx_end):             # <<<<<<<<<<<<<<
+ *                 win_left = i - window + reduced_windows[i]
+ *                 if win_left < idx_start:
  */
-          __pyx_t_17 = ((__pyx_v_idx_end - __pyx_v_ngram) + 1);
-          for (__pyx_t_18 = __pyx_v_idx_start; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
-            __pyx_v_i = __pyx_t_18;
+          __pyx_t_19 = __pyx_v_idx_end;
+          for (__pyx_t_20 = __pyx_v_idx_start; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+            __pyx_v_i = __pyx_t_20;
 
-            /* "modified_wv/fm_ngram_inner.pyx":456
- *             for i in range(idx_start, idx_end-ngram+1):
- *             # for i in range(idx_start, idx_end):
- *                 for j in range(ngram):             # <<<<<<<<<<<<<<
- *                     ngram_indices[j] = indexes[i + j]
- *                 next_random = fast_sentence_neg(
+            /* "modified_wv/fm_ngram_inner.pyx":437
+ *             # for i in range(idx_start, idx_end-ngram+1):
+ *             for i in range(idx_start, idx_end):
+ *                 win_left = i - window + reduced_windows[i]             # <<<<<<<<<<<<<<
+ *                 if win_left < idx_start:
+ *                     win_left = idx_start
  */
-            __pyx_t_19 = __pyx_v_ngram;
-            for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
-              __pyx_v_j = __pyx_t_20;
+            __pyx_v_win_left = ((__pyx_v_i - __pyx_v_window) + (__pyx_v_reduced_windows[__pyx_v_i]));
 
-              /* "modified_wv/fm_ngram_inner.pyx":457
- *             # for i in range(idx_start, idx_end):
- *                 for j in range(ngram):
- *                     ngram_indices[j] = indexes[i + j]             # <<<<<<<<<<<<<<
- *                 next_random = fast_sentence_neg(
- *                     ngram, negative,
+            /* "modified_wv/fm_ngram_inner.pyx":438
+ *             for i in range(idx_start, idx_end):
+ *                 win_left = i - window + reduced_windows[i]
+ *                 if win_left < idx_start:             # <<<<<<<<<<<<<<
+ *                     win_left = idx_start
+ *                 win_right = i + window +1 - reduced_windows[i]
  */
-              (__pyx_v_ngram_indices[__pyx_v_j]) = (__pyx_v_indexes[(__pyx_v_i + __pyx_v_j)]);
+            __pyx_t_11 = ((__pyx_v_win_left < __pyx_v_idx_start) != 0);
+            if (__pyx_t_11) {
+
+              /* "modified_wv/fm_ngram_inner.pyx":439
+ *                 win_left = i - window + reduced_windows[i]
+ *                 if win_left < idx_start:
+ *                     win_left = idx_start             # <<<<<<<<<<<<<<
+ *                 win_right = i + window +1 - reduced_windows[i]
+ *                 if win_right > idx_end:
+ */
+              __pyx_v_win_left = __pyx_v_idx_start;
+
+              /* "modified_wv/fm_ngram_inner.pyx":438
+ *             for i in range(idx_start, idx_end):
+ *                 win_left = i - window + reduced_windows[i]
+ *                 if win_left < idx_start:             # <<<<<<<<<<<<<<
+ *                     win_left = idx_start
+ *                 win_right = i + window +1 - reduced_windows[i]
+ */
             }
 
-            /* "modified_wv/fm_ngram_inner.pyx":458
- *                 for j in range(ngram):
- *                     ngram_indices[j] = indexes[i + j]
- *                 next_random = fast_sentence_neg(             # <<<<<<<<<<<<<<
- *                     ngram, negative,
- *                     neg_mean, weight_power,
+            /* "modified_wv/fm_ngram_inner.pyx":440
+ *                 if win_left < idx_start:
+ *                     win_left = idx_start
+ *                 win_right = i + window +1 - reduced_windows[i]             # <<<<<<<<<<<<<<
+ *                 if win_right > idx_end:
+ *                     win_right = idx_end
  */
-            __pyx_v_next_random = __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentence_neg(__pyx_v_ngram, __pyx_v_negative, __pyx_v_neg_mean, __pyx_v_weight_power, __pyx_v_vocab_size, __pyx_v_total_words, __pyx_v_C, __pyx_v_cum_table, __pyx_v_syn0, __pyx_v_size, __pyx_v_ngram_indices, __pyx_v_optimizer, __pyx_v_sq_grad, __pyx_v__gamma, __pyx_v__epsilon, __pyx_v__alpha, __pyx_v_sgd_cache, __pyx_v_inner_cache, __pyx_v_syn0_copy, __pyx_v_next_random, __pyx_v_word_locks);
+            __pyx_v_win_right = (((__pyx_v_i + __pyx_v_window) + 1) - (__pyx_v_reduced_windows[__pyx_v_i]));
+
+            /* "modified_wv/fm_ngram_inner.pyx":441
+ *                     win_left = idx_start
+ *                 win_right = i + window +1 - reduced_windows[i]
+ *                 if win_right > idx_end:             # <<<<<<<<<<<<<<
+ *                     win_right = idx_end
+ *                 if win_left >= i or win_right <= i+1:
+ */
+            __pyx_t_11 = ((__pyx_v_win_right > __pyx_v_idx_end) != 0);
+            if (__pyx_t_11) {
+
+              /* "modified_wv/fm_ngram_inner.pyx":442
+ *                 win_right = i + window +1 - reduced_windows[i]
+ *                 if win_right > idx_end:
+ *                     win_right = idx_end             # <<<<<<<<<<<<<<
+ *                 if win_left >= i or win_right <= i+1:
+ *                     continue
+ */
+              __pyx_v_win_right = __pyx_v_idx_end;
+
+              /* "modified_wv/fm_ngram_inner.pyx":441
+ *                     win_left = idx_start
+ *                 win_right = i + window +1 - reduced_windows[i]
+ *                 if win_right > idx_end:             # <<<<<<<<<<<<<<
+ *                     win_right = idx_end
+ *                 if win_left >= i or win_right <= i+1:
+ */
+            }
+
+            /* "modified_wv/fm_ngram_inner.pyx":443
+ *                 if win_right > idx_end:
+ *                     win_right = idx_end
+ *                 if win_left >= i or win_right <= i+1:             # <<<<<<<<<<<<<<
+ *                     continue
+ *                 ngram_indices[1] = i
+ */
+            __pyx_t_7 = ((__pyx_v_win_left >= __pyx_v_i) != 0);
+            if (!__pyx_t_7) {
+            } else {
+              __pyx_t_11 = __pyx_t_7;
+              goto __pyx_L27_bool_binop_done;
+            }
+            __pyx_t_7 = ((__pyx_v_win_right <= (__pyx_v_i + 1)) != 0);
+            __pyx_t_11 = __pyx_t_7;
+            __pyx_L27_bool_binop_done:;
+            if (__pyx_t_11) {
+
+              /* "modified_wv/fm_ngram_inner.pyx":444
+ *                     win_right = idx_end
+ *                 if win_left >= i or win_right <= i+1:
+ *                     continue             # <<<<<<<<<<<<<<
+ *                 ngram_indices[1] = i
+ *                 for j in range(win_left, i):
+ */
+              goto __pyx_L22_continue;
+
+              /* "modified_wv/fm_ngram_inner.pyx":443
+ *                 if win_right > idx_end:
+ *                     win_right = idx_end
+ *                 if win_left >= i or win_right <= i+1:             # <<<<<<<<<<<<<<
+ *                     continue
+ *                 ngram_indices[1] = i
+ */
+            }
+
+            /* "modified_wv/fm_ngram_inner.pyx":445
+ *                 if win_left >= i or win_right <= i+1:
+ *                     continue
+ *                 ngram_indices[1] = i             # <<<<<<<<<<<<<<
+ *                 for j in range(win_left, i):
+ *                     for k in range(i+1, win_right):
+ */
+            (__pyx_v_ngram_indices[1]) = __pyx_v_i;
+
+            /* "modified_wv/fm_ngram_inner.pyx":446
+ *                     continue
+ *                 ngram_indices[1] = i
+ *                 for j in range(win_left, i):             # <<<<<<<<<<<<<<
+ *                     for k in range(i+1, win_right):
+ *                         ngram_indices[0] = j
+ */
+            __pyx_t_21 = __pyx_v_i;
+            for (__pyx_t_22 = __pyx_v_win_left; __pyx_t_22 < __pyx_t_21; __pyx_t_22+=1) {
+              __pyx_v_j = __pyx_t_22;
+
+              /* "modified_wv/fm_ngram_inner.pyx":447
+ *                 ngram_indices[1] = i
+ *                 for j in range(win_left, i):
+ *                     for k in range(i+1, win_right):             # <<<<<<<<<<<<<<
+ *                         ngram_indices[0] = j
+ *                         ngram_indices[2] = k
+ */
+              __pyx_t_15 = __pyx_v_win_right;
+              for (__pyx_t_23 = (__pyx_v_i + 1); __pyx_t_23 < __pyx_t_15; __pyx_t_23+=1) {
+                __pyx_v_k = __pyx_t_23;
+
+                /* "modified_wv/fm_ngram_inner.pyx":448
+ *                 for j in range(win_left, i):
+ *                     for k in range(i+1, win_right):
+ *                         ngram_indices[0] = j             # <<<<<<<<<<<<<<
+ *                         ngram_indices[2] = k
+ *                         next_random = fast_sentence_neg(
+ */
+                (__pyx_v_ngram_indices[0]) = __pyx_v_j;
+
+                /* "modified_wv/fm_ngram_inner.pyx":449
+ *                     for k in range(i+1, win_right):
+ *                         ngram_indices[0] = j
+ *                         ngram_indices[2] = k             # <<<<<<<<<<<<<<
+ *                         next_random = fast_sentence_neg(
+ *                             ngram, negative,
+ */
+                (__pyx_v_ngram_indices[2]) = __pyx_v_k;
+
+                /* "modified_wv/fm_ngram_inner.pyx":450
+ *                         ngram_indices[0] = j
+ *                         ngram_indices[2] = k
+ *                         next_random = fast_sentence_neg(             # <<<<<<<<<<<<<<
+ *                             ngram, negative,
+ *                             neg_mean, weight_power,
+ */
+                __pyx_v_next_random = __pyx_f_11modified_wv_14fm_ngram_inner_fast_sentence_neg(__pyx_v_ngram, __pyx_v_negative, __pyx_v_neg_mean, __pyx_v_weight_power, __pyx_v_vocab_size, __pyx_v_total_words, __pyx_v_C, __pyx_v_cum_table, __pyx_v_syn0, __pyx_v_size, __pyx_v_ngram_indices, __pyx_v_optimizer, __pyx_v_sq_grad, __pyx_v__gamma, __pyx_v__epsilon, __pyx_v__alpha, __pyx_v_sgd_cache, __pyx_v_inner_cache, __pyx_v_syn0_copy, __pyx_v_next_random, __pyx_v_word_locks);
+              }
+            }
+            __pyx_L22_continue:;
           }
-          __pyx_L17_continue:;
+          __pyx_L19_continue:;
         }
       }
 
-      /* "modified_wv/fm_ngram_inner.pyx":448
+      /* "modified_wv/fm_ngram_inner.pyx":429
  * 
  *     # release GIL & train on all sentences
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -4483,27 +4667,27 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
           #ifdef WITH_THREAD
           Py_BLOCK_THREADS
           #endif
-          goto __pyx_L16;
+          goto __pyx_L18;
         }
-        __pyx_L16:;
+        __pyx_L18:;
       }
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":465
- *                     _alpha, sgd_cache, inner_cache, syn0_copy,
- *                     next_random, word_locks)
+  /* "modified_wv/fm_ngram_inner.pyx":457
+ *                             _alpha, sgd_cache, inner_cache, syn0_copy,
+ *                             next_random, word_locks)
  *     return effective_words             # <<<<<<<<<<<<<<
  * 
  * def init():
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 465, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_8);
-  __pyx_r = __pyx_t_8;
-  __pyx_t_8 = 0;
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_effective_words); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 457, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":367
+  /* "modified_wv/fm_ngram_inner.pyx":341
  * 
  * 
  * def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):             # <<<<<<<<<<<<<<
@@ -4517,6 +4701,8 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_14);
+  __Pyx_XDECREF(__pyx_t_16);
+  __Pyx_XDECREF(__pyx_t_17);
   __Pyx_AddTraceback("modified_wv.fm_ngram_inner.train_batch", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -4524,12 +4710,13 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_train_batch(CYTHON_UNUS
   __Pyx_XDECREF(__pyx_v_sent);
   __Pyx_XDECREF(__pyx_v_token);
   __Pyx_XDECREF(__pyx_v_word);
+  __Pyx_XDECREF(__pyx_v_item);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "modified_wv/fm_ngram_inner.pyx":467
+/* "modified_wv/fm_ngram_inner.pyx":459
  *     return effective_words
  * 
  * def init():             # <<<<<<<<<<<<<<
@@ -4568,7 +4755,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   int __pyx_t_4;
   __Pyx_RefNannySetupContext("init", 0);
 
-  /* "modified_wv/fm_ngram_inner.pyx":479
+  /* "modified_wv/fm_ngram_inner.pyx":471
  * 
  *     cdef int i
  *     cdef float *x = [<float>10.0]             # <<<<<<<<<<<<<<
@@ -4578,7 +4765,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   __pyx_t_1[0] = ((float)10.0);
   __pyx_v_x = __pyx_t_1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":480
+  /* "modified_wv/fm_ngram_inner.pyx":472
  *     cdef int i
  *     cdef float *x = [<float>10.0]
  *     cdef float *y = [<float>0.01]             # <<<<<<<<<<<<<<
@@ -4588,7 +4775,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   __pyx_t_2[0] = ((float)0.01);
   __pyx_v_y = __pyx_t_2;
 
-  /* "modified_wv/fm_ngram_inner.pyx":481
+  /* "modified_wv/fm_ngram_inner.pyx":473
  *     cdef float *x = [<float>10.0]
  *     cdef float *y = [<float>0.01]
  *     cdef float expected = <float>0.1             # <<<<<<<<<<<<<<
@@ -4597,7 +4784,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   __pyx_v_expected = ((float)0.1);
 
-  /* "modified_wv/fm_ngram_inner.pyx":482
+  /* "modified_wv/fm_ngram_inner.pyx":474
  *     cdef float *y = [<float>0.01]
  *     cdef float expected = <float>0.1
  *     cdef int size = 1             # <<<<<<<<<<<<<<
@@ -4606,7 +4793,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   __pyx_v_size = 1;
 
-  /* "modified_wv/fm_ngram_inner.pyx":487
+  /* "modified_wv/fm_ngram_inner.pyx":479
  * 
  *     # build the sigmoid table
  *     for i in range(EXP_TABLE_SIZE):             # <<<<<<<<<<<<<<
@@ -4616,7 +4803,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   for (__pyx_t_3 = 0; __pyx_t_3 < 0x3E8; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "modified_wv/fm_ngram_inner.pyx":488
+    /* "modified_wv/fm_ngram_inner.pyx":480
  *     # build the sigmoid table
  *     for i in range(EXP_TABLE_SIZE):
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)             # <<<<<<<<<<<<<<
@@ -4625,7 +4812,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     (__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t)exp(((((__pyx_v_i / ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t)0x3E8)) * 2.0) - 1.0) * 6.0)));
 
-    /* "modified_wv/fm_ngram_inner.pyx":489
+    /* "modified_wv/fm_ngram_inner.pyx":481
  *     for i in range(EXP_TABLE_SIZE):
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
  *         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))             # <<<<<<<<<<<<<<
@@ -4634,7 +4821,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     (__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t)((__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[__pyx_v_i]) / ((__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[__pyx_v_i]) + 1.0)));
 
-    /* "modified_wv/fm_ngram_inner.pyx":490
+    /* "modified_wv/fm_ngram_inner.pyx":482
  *         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
  *         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
  *         LOG_TABLE[i] = <REAL_t>log( EXP_TABLE[i] )             # <<<<<<<<<<<<<<
@@ -4644,7 +4831,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
     (__pyx_v_11modified_wv_14fm_ngram_inner_LOG_TABLE[__pyx_v_i]) = ((__pyx_t_11modified_wv_14fm_ngram_inner_REAL_t)log((__pyx_v_11modified_wv_14fm_ngram_inner_EXP_TABLE[__pyx_v_i])));
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":493
+  /* "modified_wv/fm_ngram_inner.pyx":485
  * 
  *     # check whether sdot returns double or float
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)             # <<<<<<<<<<<<<<
@@ -4653,7 +4840,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   __pyx_v_d_res = __pyx_v_11modified_wv_14fm_ngram_inner_dsdot((&__pyx_v_size), __pyx_v_x, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE), __pyx_v_y, (&__pyx_v_11modified_wv_14fm_ngram_inner_ONE));
 
-  /* "modified_wv/fm_ngram_inner.pyx":494
+  /* "modified_wv/fm_ngram_inner.pyx":486
  *     # check whether sdot returns double or float
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res             # <<<<<<<<<<<<<<
@@ -4662,7 +4849,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   __pyx_v_p_res = ((float *)(&__pyx_v_d_res));
 
-  /* "modified_wv/fm_ngram_inner.pyx":495
+  /* "modified_wv/fm_ngram_inner.pyx":487
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4672,7 +4859,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   __pyx_t_4 = ((fabs((__pyx_v_d_res - __pyx_v_expected)) < 0.0001) != 0);
   if (__pyx_t_4) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":496
+    /* "modified_wv/fm_ngram_inner.pyx":488
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):
  *         our_dot = our_dot_double             # <<<<<<<<<<<<<<
@@ -4681,7 +4868,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_dot = __pyx_f_11modified_wv_14fm_ngram_inner_our_dot_double;
 
-    /* "modified_wv/fm_ngram_inner.pyx":497
+    /* "modified_wv/fm_ngram_inner.pyx":489
  *     if (abs(d_res - expected) < 0.0001):
  *         our_dot = our_dot_double
  *         our_scal = dscal             # <<<<<<<<<<<<<<
@@ -4690,7 +4877,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_scal = __pyx_v_11modified_wv_14fm_ngram_inner_dscal;
 
-    /* "modified_wv/fm_ngram_inner.pyx":498
+    /* "modified_wv/fm_ngram_inner.pyx":490
  *         our_dot = our_dot_double
  *         our_scal = dscal
  *         our_saxpy = saxpy             # <<<<<<<<<<<<<<
@@ -4699,7 +4886,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy = __pyx_v_11modified_wv_14fm_ngram_inner_saxpy;
 
-    /* "modified_wv/fm_ngram_inner.pyx":499
+    /* "modified_wv/fm_ngram_inner.pyx":491
  *         our_scal = dscal
  *         our_saxpy = saxpy
  *         our_sbmv = ssbmv             # <<<<<<<<<<<<<<
@@ -4708,7 +4895,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_sbmv = __pyx_v_11modified_wv_14fm_ngram_inner_ssbmv;
 
-    /* "modified_wv/fm_ngram_inner.pyx":500
+    /* "modified_wv/fm_ngram_inner.pyx":492
  *         our_saxpy = saxpy
  *         our_sbmv = ssbmv
  *         return 0  # double             # <<<<<<<<<<<<<<
@@ -4720,7 +4907,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
     __pyx_r = __pyx_int_0;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":495
+    /* "modified_wv/fm_ngram_inner.pyx":487
  *     d_res = dsdot(&size, x, &ONE, y, &ONE)
  *     p_res = <float *>&d_res
  *     if (abs(d_res - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4729,7 +4916,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":501
+  /* "modified_wv/fm_ngram_inner.pyx":493
  *         our_sbmv = ssbmv
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4739,7 +4926,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   __pyx_t_4 = ((fabsf(((__pyx_v_p_res[0]) - __pyx_v_expected)) < 0.0001) != 0);
   if (__pyx_t_4) {
 
-    /* "modified_wv/fm_ngram_inner.pyx":502
+    /* "modified_wv/fm_ngram_inner.pyx":494
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):
  *         our_dot = our_dot_float             # <<<<<<<<<<<<<<
@@ -4748,7 +4935,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_dot = __pyx_f_11modified_wv_14fm_ngram_inner_our_dot_float;
 
-    /* "modified_wv/fm_ngram_inner.pyx":503
+    /* "modified_wv/fm_ngram_inner.pyx":495
  *     elif (abs(p_res[0] - expected) < 0.0001):
  *         our_dot = our_dot_float
  *         our_scal = sscal             # <<<<<<<<<<<<<<
@@ -4757,7 +4944,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_scal = __pyx_v_11modified_wv_14fm_ngram_inner_sscal;
 
-    /* "modified_wv/fm_ngram_inner.pyx":504
+    /* "modified_wv/fm_ngram_inner.pyx":496
  *         our_dot = our_dot_float
  *         our_scal = sscal
  *         our_saxpy = saxpy             # <<<<<<<<<<<<<<
@@ -4766,7 +4953,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy = __pyx_v_11modified_wv_14fm_ngram_inner_saxpy;
 
-    /* "modified_wv/fm_ngram_inner.pyx":505
+    /* "modified_wv/fm_ngram_inner.pyx":497
  *         our_scal = sscal
  *         our_saxpy = saxpy
  *         our_sbmv = ssbmv             # <<<<<<<<<<<<<<
@@ -4775,7 +4962,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_sbmv = __pyx_v_11modified_wv_14fm_ngram_inner_ssbmv;
 
-    /* "modified_wv/fm_ngram_inner.pyx":506
+    /* "modified_wv/fm_ngram_inner.pyx":498
  *         our_saxpy = saxpy
  *         our_sbmv = ssbmv
  *         return 1  # float             # <<<<<<<<<<<<<<
@@ -4787,7 +4974,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
     __pyx_r = __pyx_int_1;
     goto __pyx_L0;
 
-    /* "modified_wv/fm_ngram_inner.pyx":501
+    /* "modified_wv/fm_ngram_inner.pyx":493
  *         our_sbmv = ssbmv
  *         return 0  # double
  *     elif (abs(p_res[0] - expected) < 0.0001):             # <<<<<<<<<<<<<<
@@ -4796,7 +4983,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":510
+  /* "modified_wv/fm_ngram_inner.pyx":502
  *         # neither => use cython loops, no BLAS
  *         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
  *         our_dot = our_dot_noblas             # <<<<<<<<<<<<<<
@@ -4806,7 +4993,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
   /*else*/ {
     __pyx_v_11modified_wv_14fm_ngram_inner_our_dot = __pyx_f_11modified_wv_14fm_ngram_inner_our_dot_noblas;
 
-    /* "modified_wv/fm_ngram_inner.pyx":511
+    /* "modified_wv/fm_ngram_inner.pyx":503
  *         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
  *         our_dot = our_dot_noblas
  *         our_saxpy = our_saxpy_noblas             # <<<<<<<<<<<<<<
@@ -4815,7 +5002,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
  */
     __pyx_v_11modified_wv_14fm_ngram_inner_our_saxpy = __pyx_f_11modified_wv_14fm_ngram_inner_our_saxpy_noblas;
 
-    /* "modified_wv/fm_ngram_inner.pyx":512
+    /* "modified_wv/fm_ngram_inner.pyx":504
  *         our_dot = our_dot_noblas
  *         our_saxpy = our_saxpy_noblas
  *         return 2             # <<<<<<<<<<<<<<
@@ -4828,7 +5015,7 @@ static PyObject *__pyx_pf_11modified_wv_14fm_ngram_inner_2init(CYTHON_UNUSED PyO
     goto __pyx_L0;
   }
 
-  /* "modified_wv/fm_ngram_inner.pyx":467
+  /* "modified_wv/fm_ngram_inner.pyx":459
  *     return effective_words
  * 
  * def init():             # <<<<<<<<<<<<<<
@@ -7008,6 +7195,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_dsdot, __pyx_k_dsdot, sizeof(__pyx_k_dsdot), 0, 0, 1, 1},
   {&__pyx_n_s_effective_sentences, __pyx_k_effective_sentences, sizeof(__pyx_k_effective_sentences), 0, 0, 1, 1},
   {&__pyx_n_s_effective_words, __pyx_k_effective_words, sizeof(__pyx_k_effective_words), 0, 0, 1, 1},
+  {&__pyx_n_s_enumerate, __pyx_k_enumerate, sizeof(__pyx_k_enumerate), 0, 0, 1, 1},
   {&__pyx_n_s_epsilon, __pyx_k_epsilon, sizeof(__pyx_k_epsilon), 0, 0, 1, 1},
   {&__pyx_n_s_epsilon_2, __pyx_k_epsilon_2, sizeof(__pyx_k_epsilon_2), 0, 0, 1, 1},
   {&__pyx_n_s_expected, __pyx_k_expected, sizeof(__pyx_k_expected), 0, 0, 1, 1},
@@ -7026,6 +7214,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_init, __pyx_k_init, sizeof(__pyx_k_init), 0, 0, 1, 1},
   {&__pyx_n_s_inner_cache, __pyx_k_inner_cache, sizeof(__pyx_k_inner_cache), 0, 0, 1, 1},
   {&__pyx_n_s_inner_cache_2, __pyx_k_inner_cache_2, sizeof(__pyx_k_inner_cache_2), 0, 0, 1, 1},
+  {&__pyx_n_s_item, __pyx_k_item, sizeof(__pyx_k_item), 0, 0, 1, 1},
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_k, __pyx_k_k, sizeof(__pyx_k_k), 0, 0, 1, 1},
   {&__pyx_n_s_layer1_size, __pyx_k_layer1_size, sizeof(__pyx_k_layer1_size), 0, 0, 1, 1},
@@ -7052,6 +7241,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_randint, __pyx_k_randint, sizeof(__pyx_k_randint), 0, 0, 1, 1},
   {&__pyx_n_s_random, __pyx_k_random, sizeof(__pyx_k_random), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
+  {&__pyx_n_s_reduced_windows, __pyx_k_reduced_windows, sizeof(__pyx_k_reduced_windows), 0, 0, 1, 1},
   {&__pyx_n_s_rmsprop, __pyx_k_rmsprop, sizeof(__pyx_k_rmsprop), 0, 0, 1, 1},
   {&__pyx_n_s_sample, __pyx_k_sample, sizeof(__pyx_k_sample), 0, 0, 1, 1},
   {&__pyx_n_s_saxpy, __pyx_k_saxpy, sizeof(__pyx_k_saxpy), 0, 0, 1, 1},
@@ -7083,6 +7273,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_vocab, __pyx_k_vocab, sizeof(__pyx_k_vocab), 0, 0, 1, 1},
   {&__pyx_n_s_vocab_size, __pyx_k_vocab_size, sizeof(__pyx_k_vocab_size), 0, 0, 1, 1},
   {&__pyx_n_s_weight_power, __pyx_k_weight_power, sizeof(__pyx_k_weight_power), 0, 0, 1, 1},
+  {&__pyx_n_s_win_left, __pyx_k_win_left, sizeof(__pyx_k_win_left), 0, 0, 1, 1},
+  {&__pyx_n_s_win_right, __pyx_k_win_right, sizeof(__pyx_k_win_right), 0, 0, 1, 1},
+  {&__pyx_n_s_window, __pyx_k_window, sizeof(__pyx_k_window), 0, 0, 1, 1},
   {&__pyx_n_s_word, __pyx_k_word, sizeof(__pyx_k_word), 0, 0, 1, 1},
   {&__pyx_n_s_word_locks, __pyx_k_word_locks, sizeof(__pyx_k_word_locks), 0, 0, 1, 1},
   {&__pyx_n_s_words_cumnum, __pyx_k_words_cumnum, sizeof(__pyx_k_words_cumnum), 0, 0, 1, 1},
@@ -7093,6 +7286,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
 static int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(0, 25, __pyx_L1_error)
   __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(0, 425, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 218, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 799, __pyx_L1_error)
   return 0;
@@ -7104,17 +7298,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "modified_wv/fm_ngram_inner.pyx":411
+  /* "modified_wv/fm_ngram_inner.pyx":388
  * 
  *     cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
  *     next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  *     # next_random = 1816045175
  * 
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 388, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
@@ -7184,29 +7378,29 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "modified_wv/fm_ngram_inner.pyx":367
+  /* "modified_wv/fm_ngram_inner.pyx":341
  * 
  * 
  * def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):             # <<<<<<<<<<<<<<
  *     cdef int sample = (model.sample != 0)
  *     # Use mean for negative sampling or sum
  */
-  __pyx_tuple__10 = PyTuple_Pack(44, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_alpha, __pyx_n_s_sgd_cache, __pyx_n_s_inner_cache, __pyx_n_s_syn0_copy, __pyx_n_s_sample, __pyx_n_s_ngram, __pyx_n_s_negative, __pyx_n_s_neg_mean, __pyx_n_s_weight_power, __pyx_n_s_vocab_size, __pyx_n_s_total_words, __pyx_n_s_C, __pyx_n_s_cum_table, __pyx_n_s_size, __pyx_n_s_optimizer, __pyx_n_s_syn0, __pyx_n_s_sq_grad, __pyx_n_s_alpha_2, __pyx_n_s_gamma_2, __pyx_n_s_epsilon_2, __pyx_n_s_sgd_cache_2, __pyx_n_s_inner_cache_2, __pyx_n_s_syn0_copy_2, __pyx_n_s_indices, __pyx_n_s_neg_indices, __pyx_n_s_next_random, __pyx_n_s_word_locks, __pyx_n_s_ngram_indices, __pyx_n_s_indexes, __pyx_n_s_sentence_idx, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_vlookup, __pyx_n_s_sent, __pyx_n_s_token, __pyx_n_s_word); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 367, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(49, __pyx_n_s_model, __pyx_n_s_sentences, __pyx_n_s_alpha, __pyx_n_s_sgd_cache, __pyx_n_s_inner_cache, __pyx_n_s_syn0_copy, __pyx_n_s_sample, __pyx_n_s_ngram, __pyx_n_s_negative, __pyx_n_s_neg_mean, __pyx_n_s_window, __pyx_n_s_win_left, __pyx_n_s_win_right, __pyx_n_s_reduced_windows, __pyx_n_s_weight_power, __pyx_n_s_vocab_size, __pyx_n_s_total_words, __pyx_n_s_C, __pyx_n_s_cum_table, __pyx_n_s_size, __pyx_n_s_optimizer, __pyx_n_s_syn0, __pyx_n_s_sq_grad, __pyx_n_s_alpha_2, __pyx_n_s_gamma_2, __pyx_n_s_epsilon_2, __pyx_n_s_sgd_cache_2, __pyx_n_s_inner_cache_2, __pyx_n_s_syn0_copy_2, __pyx_n_s_indices, __pyx_n_s_neg_indices, __pyx_n_s_next_random, __pyx_n_s_word_locks, __pyx_n_s_ngram_indices, __pyx_n_s_indexes, __pyx_n_s_sentence_idx, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_vlookup, __pyx_n_s_sent, __pyx_n_s_token, __pyx_n_s_word, __pyx_n_s_item); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 341, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(6, 0, 44, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_train_batch, 367, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 367, __pyx_L1_error)
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(6, 0, 49, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_train_batch, 341, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 341, __pyx_L1_error)
 
-  /* "modified_wv/fm_ngram_inner.pyx":467
+  /* "modified_wv/fm_ngram_inner.pyx":459
  *     return effective_words
  * 
  * def init():             # <<<<<<<<<<<<<<
  *     """
  *     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
  */
-  __pyx_tuple__12 = PyTuple_Pack(7, __pyx_n_s_i, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_expected, __pyx_n_s_size, __pyx_n_s_d_res, __pyx_n_s_p_res); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 467, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(7, __pyx_n_s_i, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_expected, __pyx_n_s_size, __pyx_n_s_d_res, __pyx_n_s_p_res); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 459, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__12);
   __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(0, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_init, 467, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 467, __pyx_L1_error)
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(0, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_vincent_Documents_Research, __pyx_n_s_init, 459, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 459, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -7628,37 +7822,37 @@ PyMODINIT_FUNC PyInit_fm_ngram_inner(void)
  */
   __pyx_v_11modified_wv_14fm_ngram_inner_UPLO = 'L';
 
-  /* "modified_wv/fm_ngram_inner.pyx":367
+  /* "modified_wv/fm_ngram_inner.pyx":341
  * 
  * 
  * def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):             # <<<<<<<<<<<<<<
  *     cdef int sample = (model.sample != 0)
  *     # Use mean for negative sampling or sum
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_14fm_ngram_inner_1train_batch, NULL, __pyx_n_s_modified_wv_fm_ngram_inner); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 367, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_14fm_ngram_inner_1train_batch, NULL, __pyx_n_s_modified_wv_fm_ngram_inner); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 341, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_batch, __pyx_t_2) < 0) __PYX_ERR(0, 367, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_batch, __pyx_t_2) < 0) __PYX_ERR(0, 341, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":467
+  /* "modified_wv/fm_ngram_inner.pyx":459
  *     return effective_words
  * 
  * def init():             # <<<<<<<<<<<<<<
  *     """
  *     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_14fm_ngram_inner_3init, NULL, __pyx_n_s_modified_wv_fm_ngram_inner); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 467, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_11modified_wv_14fm_ngram_inner_3init, NULL, __pyx_n_s_modified_wv_fm_ngram_inner); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 459, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_init, __pyx_t_2) < 0) __PYX_ERR(0, 467, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_init, __pyx_t_2) < 0) __PYX_ERR(0, 459, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":514
+  /* "modified_wv/fm_ngram_inner.pyx":506
  *         return 2
  * 
  * FAST_VERSION = init()  # initialize the module             # <<<<<<<<<<<<<<
  * MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
  */
-  __pyx_t_8 = __Pyx_GetModuleGlobalName(__pyx_n_s_init); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 514, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_GetModuleGlobalName(__pyx_n_s_init); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 506, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_6 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_8))) {
@@ -7671,22 +7865,22 @@ PyMODINIT_FUNC PyInit_fm_ngram_inner(void)
     }
   }
   if (__pyx_t_6) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 514, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 506, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 514, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 506, __pyx_L1_error)
   }
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_FAST_VERSION, __pyx_t_2) < 0) __PYX_ERR(0, 514, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_FAST_VERSION, __pyx_t_2) < 0) __PYX_ERR(0, 506, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "modified_wv/fm_ngram_inner.pyx":515
+  /* "modified_wv/fm_ngram_inner.pyx":507
  * 
  * FAST_VERSION = init()  # initialize the module
  * MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN             # <<<<<<<<<<<<<<
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MAX_WORDS_IN_BATCH, __pyx_int_10000) < 0) __PYX_ERR(0, 515, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MAX_WORDS_IN_BATCH, __pyx_int_10000) < 0) __PYX_ERR(0, 507, __pyx_L1_error)
 
   /* "modified_wv/fm_ngram_inner.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
@@ -8772,6 +8966,33 @@ bad:
         int one = 1; int little = (int)*(unsigned char *)&one;
         unsigned char *bytes = (unsigned char *)&value;
         return _PyLong_FromByteArray(bytes, sizeof(long),
+                                     little, !is_unsigned);
+    }
+}
+
+/* CIntToPy */
+          static CYTHON_INLINE PyObject* __Pyx_PyInt_From_npy_uint32(npy_uint32 value) {
+    const npy_uint32 neg_one = (npy_uint32) -1, const_zero = (npy_uint32) 0;
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(npy_uint32) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(npy_uint32) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+        } else if (sizeof(npy_uint32) <= sizeof(unsigned PY_LONG_LONG)) {
+            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
+        }
+    } else {
+        if (sizeof(npy_uint32) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(npy_uint32) <= sizeof(PY_LONG_LONG)) {
+            return PyLong_FromLongLong((PY_LONG_LONG) value);
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+        return _PyLong_FromByteArray(bytes, sizeof(npy_uint32),
                                      little, !is_unsigned);
     }
 }
