@@ -57,7 +57,7 @@ class fm_ngram(utils.SaveLoad):
 
     def __init__(
             self, sentences=None, size=100,
-            negative=5, ngram=2, neg_mean=1, C=20,
+            negative=5, window=5, ngram=2, neg_mean=1, C=20,
             alpha=0.025, min_alpha=0.0001, workers=4,
             max_vocab_size=None, min_count=5,
             sample=1e-3, smooth_power=0.75, seed=1,
@@ -168,6 +168,7 @@ class fm_ngram(utils.SaveLoad):
         self.batch_words = batch_words
 
         self.negative = negative
+        self.window = window
         self.neg_mean = neg_mean
         self.cum_table = None  # for negative sampling
         self.smooth_power = smooth_power
@@ -218,7 +219,7 @@ class fm_ngram(utils.SaveLoad):
         self.finalize_vocab()  # build tables & arrays
 
 
-    def scan_vocab(self, sentences, progress_per=100000, trim_rule=None, keep_vocab=False):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, keep_vocab=False):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -439,9 +440,9 @@ class fm_ngram(utils.SaveLoad):
         ignoring unknown words and sentence length trimming, total word count)`.
         """
         # work, neu1 = inits
-        sgd_cache, inner_cache, syn0_copy = inits
+        sgd_cache, inner_cache = inits
         tally = 0
-        tally += train_batch(self, sentences, alpha, sgd_cache, inner_cache, syn0_copy)
+        tally += train_batch(self, sentences, alpha, sgd_cache, inner_cache)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, job):
@@ -506,9 +507,9 @@ class fm_ngram(utils.SaveLoad):
         def worker_loop():
             """Train the model, lifting lists of sentences from the job_queue."""
             # per-thread private work memory
-            sgd_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL)  # per-thread private work memory
-            inner_cache = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL) # per-thread private work memory
-            syn0_copy = matutils.zeros_aligned(self.layer1_size * self.ngram, dtype=REAL) # per-thread private work memory
+            sgd_cache = matutils.zeros_aligned(self.layer1_size * (2 * self.ngram + 1), dtype=REAL)  # per-thread private work memory
+            inner_cache = matutils.zeros_aligned(self.layer1_size * (2 * self.ngram + 1), dtype=REAL) # per-thread private work memory
+            # syn0_copy = matutils.zeros_aligned(self.layer1_size * (2 * self.ngram + 1), dtype=REAL) # per-thread private work memory
             # neu1 = mathhelpers.zeros_aligned(self.layer1_size, dtype=REAL)
             jobs_processed = 0
             while True:
@@ -517,7 +518,7 @@ class fm_ngram(utils.SaveLoad):
                     progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
-                tally, raw_tally = self._do_train_job(sentences, alpha, (sgd_cache, inner_cache, syn0_copy))
+                tally, raw_tally = self._do_train_job(sentences, alpha, (sgd_cache, inner_cache))
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
@@ -679,19 +680,19 @@ class fm_ngram(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        self.syn0 = np.empty((len(self.vocab), self.ngram, self.vector_size), dtype=REAL)
+        self.syn0 = np.empty((len(self.vocab), 2 * self.ngram + 1, self.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
-            for ng in xrange(self.ngram):
+            for ng in xrange(2 * self.ngram + 1):
                 # construct deterministic seed from word AND seed argument
                 # foo = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
                 self.syn0[i, ng] = self.seeded_vector(self.index2word[i] + str(self.seed) + str(ng))
         self.syn0norm = None
         if self.optimizer == 'rmsprop':
-            self.sq_grad = np.ones([len(self.vocab), self.ngram], dtype=REAL)
+            self.sq_grad = np.ones([len(self.vocab), 2 * self.ngram + 1], dtype=REAL)
         else:
             self.sq_grad = np.ones(1, dtype=REAL)
-        self.syn0_lockf = np.ones((len(self.vocab), self.ngram), dtype=REAL)  # np.zeros suppress learning
+        self.syn0_lockf = np.ones((len(self.vocab), 2 * self.ngram + 1), dtype=REAL)  # np.zeros suppress learning
         self.fail = False
 
     def seeded_vector(self, seed_string):
@@ -748,48 +749,48 @@ class fm_ngram(utils.SaveLoad):
 
 
 
-    def get_ngram(self, text, topN=100000, unit=True):
-        seen = set()
-        ngrams = dict()
-        min_sim = 0
-
-        def prune(ngrams, min_sim):
-            # prune
-            for ng in list(ngrams):
-                if ngrams[ng] < min_sim:
-                    del ngrams[ng]
-
-        for idx, sent in enumerate(text):
-            if idx % 100000 == 0:
-                logger.info('{} lines finished; number of ngrams {} @ min_similarity {}'.format(idx, len(ngrams), min_sim))
-            # if idx > 0.4 * nline:
-            #     break
-            for i in range(len(sent) - self.ngram + 1):
-                if any(word not in self.vocab for word in sent[i:i+self.ngram]):
-                    continue
-                if ' '.join(sent[i:i+self.ngram]) in seen:
-                    continue
-                # we select english bigram
-                # if any(any(l.isdigit() for l in word) for word in sent[i:i+self.ngram]):
-                #     continue
-                sim = self.similarity(sent[i:i+self.ngram], unit=unit)
-                if sim < 0:
-                    continue
-                ## for word2vec model
-                sim = sim + np.log(sim) + np.sum((np.log(self.vocab[w].count) for w in sent[i:i+self.ngram]))
-
-                ngrams[' '.join(sent[i:i+self.ngram])] = sim
-                seen.add(' '.join(sent[i:i+self.ngram]))
-                # prune if too many
-                firsttimer = 1
-                while len(ngrams) > 2*topN:
-                    prune(ngrams, min_sim)
-                    if not firsttimer:
-                        min_sim += 0.1
-                    firsttimer = 0
-        prune(ngrams, min_sim)
-        ngrams = sorted(ngrams.items(), key=operator.itemgetter(1), reverse=True)
-        return ngrams
+    # def get_ngram(self, text, topN=100000, unit=True):
+    #     seen = set()
+    #     ngrams = dict()
+    #     min_sim = 0
+    #
+    #     def prune(ngrams, min_sim):
+    #         # prune
+    #         for ng in list(ngrams):
+    #             if ngrams[ng] < min_sim:
+    #                 del ngrams[ng]
+    #
+    #     for idx, sent in enumerate(text):
+    #         if idx % 100000 == 0:
+    #             logger.info('{} lines finished; number of ngrams {} @ min_similarity {}'.format(idx, len(ngrams), min_sim))
+    #         # if idx > 0.4 * nline:
+    #         #     break
+    #         for i in range(len(sent) - self.ngram + 1):
+    #             if any(word not in self.vocab for word in sent[i:i+self.ngram]):
+    #                 continue
+    #             if ' '.join(sent[i:i+self.ngram]) in seen:
+    #                 continue
+    #             # we select english bigram
+    #             # if any(any(l.isdigit() for l in word) for word in sent[i:i+self.ngram]):
+    #             #     continue
+    #             sim = self.similarity(sent[i:i+self.ngram], unit=unit)
+    #             if sim < 0:
+    #                 continue
+    #             ## for word2vec model
+    #             sim = sim + np.log(sim) + np.sum((np.log(self.vocab[w].count) for w in sent[i:i+self.ngram]))
+    #
+    #             ngrams[' '.join(sent[i:i+self.ngram])] = sim
+    #             seen.add(' '.join(sent[i:i+self.ngram]))
+    #             # prune if too many
+    #             firsttimer = 1
+    #             while len(ngrams) > 2*topN:
+    #                 prune(ngrams, min_sim)
+    #                 if not firsttimer:
+    #                     min_sim += 0.1
+    #                 firsttimer = 0
+    #     prune(ngrams, min_sim)
+    #     ngrams = sorted(ngrams.items(), key=operator.itemgetter(1), reverse=True)
+    #     return ngrams
 
 
     def __getitem__(self, words):
