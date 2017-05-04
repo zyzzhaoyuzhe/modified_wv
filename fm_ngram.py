@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 A python implementation of modified word2vec (skip gram with negative sampling based on weighted PMI) which builds on gensim.
 """
@@ -739,7 +740,7 @@ class fm_ngram(utils.SaveLoad):
         """
         if word in self.vocab:
             if use_norm:
-                return self.syn0norm[self.vocab[word].index, self.ngram]
+                return self.syn0norm[self.vocab[word].index]
             else:
                 return self.syn0[self.vocab[word].index, self.ngram]
         else:
@@ -958,7 +959,7 @@ class fm_ngram(utils.SaveLoad):
                 if predicted == expected:
                     section['correct'].append((a, b, c, expected))
                 else:
-                    section['incorrect'].append((a, b, c, expected))
+                    section['incorrect'].append((a, b, c, expected, predicted))
         if section:
             # store the last section, too
             sections.append(section)

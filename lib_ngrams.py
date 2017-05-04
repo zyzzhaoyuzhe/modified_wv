@@ -133,18 +133,18 @@ class Wpmi_bag_of_ngrams(Bag_of_ngrams):
 
 
 if __name__ == '__main__':
-    text = smartfile('/media/vincent/Data-adhoc/wiki_dumps/wiki_en/enwiki-basic')
+    text = smartfile('/media/vincent/Data-adhoc/wiki_dumps/wiki_en/enwiki-vocab')
     obj = Wpmi_bag_of_ngrams(5, maxmem=10000000)
     obj.process(text, 1000000, iter=1)
 
-    with open('enwiki-basic-{}gram-freq-list'.format(5), 'w') as h:
+    with open('enwiki-vocab-{}gram-freq-list'.format(5), 'w') as h:
         for idx in xrange(len(obj.ngram)):
             h.write('{}\t{}\t{}\n'.format(idx, obj.ngram[idx][0].encode('utf-8'), obj.ngram[idx][1]))
 
     dic = obj.get_dic()
     obj.process(text, 1000000, iter=1, dic=dic)
 
-    with open('enwiki-basic-{}gram-wpmi-list-iter{}'.format(5, 2), 'w') as h:
+    with open('enwiki-vocab-{}gram-wpmi-list-iter{}'.format(5, 2), 'w') as h:
         for idx in xrange(len(obj.ngram_wpmi)):
             h.write('{}\t{}\t{}\n'.format(idx,
                                           obj.ngram_wpmi[idx][0].encode('utf-8'),
