@@ -100,10 +100,10 @@ cdef void _pairwise_interaction(const int *N, const int *ngram,
     :param inner_cache:
     :return:
     """
-    # initialize inner_cache
     cdef int i, j
-    for i in range(N[0] * ngram[0]):
-        inner_cache[i] = ZEROF
+    # initialize inner_cache
+    memset(inner_cache, 0, N[0] * ngram[0] * cython.sizeof(REAL_t))
+
     for i in range(ngram[0]):
         for j in range(ngram[0]):
             if j == i:
@@ -226,7 +226,8 @@ cdef unsigned long long fast_sentence_neg(
     cdef unsigned long long domain = 2 ** 31 - 1
     cdef REAL_t logdomain = log(domain)
     cdef REAL_t beta
-    cdef int sizexngram = size * ngram
+    cdef int realngram = 2 * ngram + 1
+    cdef int sizexngram = size * realngram
 
     # variable for calculate gradients
     cdef int sample
@@ -234,7 +235,7 @@ cdef unsigned long long fast_sentence_neg(
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t inner, f, g, label
     cdef int idx
-    cdef int center_gram
+    cdef int center_gram, neggram
     cdef REAL_t weight, neg_mean_weight
 
     # variable for Bethe approximation
@@ -245,38 +246,34 @@ cdef unsigned long long fast_sentence_neg(
     cdef REAL_t jcount
     cdef REAL_t foo
     # index caches
-    cdef np.uint32_t *indices = <np.uint32_t*>calloc(ngram, cython.sizeof(np.uint32_t))
+    cdef np.uint32_t *indices = <np.uint32_t*>calloc(realngram, cython.sizeof(np.uint32_t))
     # cdef np.uint32_t *neg_indices = <np.uint32_t*>calloc(ngram, cython.sizeof(np.uint32_t))
 
     # reset sgd_cache
-    memset(sgd_cache, 0, size * ngram * cython.sizeof(REAL_t))
+    memset(sgd_cache, 0, sizexngram * cython.sizeof(REAL_t))
     # memset(work, 0, size * cython.sizeof(REAL_t))
-
     for sample in range(negative+1):
         if sample == 0:
-            for i in range(ngram):
+            for i in range(realngram):
                 indices[i] = word_indices[i]
             label = ONEF
             neg_mean_weight = ONEF
         else:
-            center_gram = sample % 2
-            center_gram *= 2
-            for i in range(ngram):
-                if i != center_gram:
+            neggram = sample % (2 * ngram)
+            if neggram >= ngram:
+                neggram += 1
+            for i in range(realngram):
+                if i != neggram:
                     indices[i] = word_indices[i]
-                else:
-                    while True:
-                        indices[i] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
-                        next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
-                        if indices[i] != word_indices[i]:
-                            break
-
+            indices[neggram] = bisect_left(cum_table, (next_random >> 16) % cum_table[vocab_size-1], 0, vocab_size)
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            if indices[neggram] == word_indices[neggram]:
+                continue
             label = ZEROF
             # if neg_mean:
             #     neg_mean_weight = ONEF / <REAL_t>negative / ngram
             # else:
             #     neg_mean_weight = ONEF / ngram
-
             neg_mean_weight = ONEF
 
         # # syn0 copy to prevent syn0 changed by other thread (there is no lock.)
@@ -286,13 +283,13 @@ cdef unsigned long long fast_sentence_neg(
 
         ## Pairwise Interaction Tensor Factorization
         # <a,b> + <a,c> + <b,c> = log{ Pr(a,b,c)/Pr(a)Pr(ynb)Pr(c) }
-        _pairwise_interaction(&size, &ngram, indices, syn0, inner_cache)
+        _pairwise_interaction(&size, &realngram, indices, syn0, inner_cache)
 
         foo = ZEROF
-        for i in range(ngram-1):
-            for j in range(i+1, ngram):
-                foo += our_dot(&size, &syn0[indices[i] * ngram * size + i * size], &ONE,
-                                 &syn0[indices[j] * ngram * size + j * size], &ONE)
+        for i in range(realngram-1):
+            for j in range(i+1, realngram):
+                foo += our_dot(&size, &syn0[indices[i] * realngram * size + i * size], &ONE,
+                                 &syn0[indices[j] * realngram * size + j * size], &ONE)
                 # foo += our_dot(&size, &syn0_copy[i * size], &ONE,
                 #                  &syn0_copy[j * size], &ONE)
         # critical
@@ -304,33 +301,28 @@ cdef unsigned long long fast_sentence_neg(
             g = (label - f) * eta *  neg_mean_weight
 
         if sample == 0:
-            for i in range(ngram):
+            for i in range(realngram):
                 our_saxpy(&size, &g, &inner_cache[i * size], &ONE,
                           &sgd_cache[i * size], &ONE)
         else:
-            for i in range(ngram):
-                if i != center_gram:
+            for i in range(realngram):
+                if i != neggram:
                     our_saxpy(&size, &g, &inner_cache[i * size], &ONE,
                               &sgd_cache[i * size], &ONE)
                 else:
                     if optimizer == 0:
                         our_saxpy(&size, &g, &inner_cache[i * size], &ONE,
-                                  &syn0[indices[i] * ngram * size + i * size], &ONE)
+                                  &syn0[indices[i] * realngram * size + i * size], &ONE)
         ## --END--
-    for i in range(ngram):
+    for i in range(realngram):
         if optimizer == 0:
-
-            # printf('%d lock %f, sgd_cache %e, syn0 %e\n', i, word_locks[word_indices[i]], sgd_cache[i*size], syn0[word_indices[i] * ngram * size + i * size])
-
             our_saxpy(&size, &word_locks[word_indices[i]], &sgd_cache[i * size], &ONE,
-                      &syn0[word_indices[i] * ngram * size + i * size], &ONE)
-
-            # printf('after %e\n', syn0[word_indices[i] * ngram * size + i * size])
+                      &syn0[word_indices[i] * realngram * size + i * size], &ONE)
         elif optimizer == 1:
-            rmsprop_update(&size, &sq_grad[word_indices[i] * ngram + i],
+            rmsprop_update(&size, &sq_grad[word_indices[i] * realngram + i],
                            &gamma, &epsilon, &eta,
                            &sgd_cache[i * size],
-                           &syn0[word_indices[i] * ngram * size + i * size])
+                           &syn0[word_indices[i] * realngram * size + i * size])
 
     # free memory
     free(indices)
@@ -398,7 +390,7 @@ def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
     vlookup = model.vocab
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
-        if not sent or len(sent) < ngram:
+        if not sent or len(sent) < 2*ngram+1:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
             word = vlookup[token] if token in vlookup else None
@@ -430,7 +422,7 @@ def train_batch(model, sentences, alpha, _sgd_cache, _inner_cache, _syn0_copy):
         for sent_idx in range(effective_sentences):
             idx_start = sentence_idx[sent_idx]
             idx_end = sentence_idx[sent_idx + 1]
-            if idx_end - idx_start < ngram:
+            if idx_end - idx_start < 2 * ngram + 1:
                 continue
             # for i in range(idx_start, idx_end-ngram+1):
             for i in range(idx_start, idx_end):
