@@ -94,30 +94,29 @@ cdef void matrix2vec(const int *N, const int *realngram,
     """"""
     cdef int i, j, k
 
-    ## no_blas
+    # ## no_blas
+    # for i in range(realngram[0]):
+    #     for k in range(N[0]):
+    #         inner_cache[i*N[0]+k] = ONEF
+    #         for j in range(realngram[0]):
+    #             if j == i:
+    #                 continue
+    #             # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
+    #             inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * realngram[0] + j * N[0] + k]
+
+
+    ## blas
+    cdef REAL_t foo[1000]
+    # initialize inner_cache
+    for i in range(realngram[0] * N[0]):
+        inner_cache[i] = ONEF
     for i in range(realngram[0]):
-        for k in range(N[0]):
-            inner_cache[i*N[0]+k] = ONEF
-            for j in range(realngram[0]):
-                if j == i:
-                    continue
-                # inner_cache[i*N[0]+k] *= syn0[j * N[0] + k]
-                inner_cache[i*N[0]+k] *= syn0[indices[j] * N[0] * realngram[0] + j * N[0] + k]
-    # ## blas
-    # cdef REAL_t foo[1000]
-    # # initialize inner_cache
-    # for i in range(ngram[0] * N[0]):
-    #     inner_cache[i] = ONEF
-    # for i in range(ngram[0]):
-    #     for j in range(ngram[0]):
-    #         if j == i:
-    #             continue
-    #         # printf('i: %d - j: %d\n', i, j)
-    #         # printf('%f - %f\n', syn0[indices[i] * N[0] * ngram[0] + i * N[0]+1], inner_cache[j*N[0]+1])
-    #         our_sbmv(&UPLO, N, &ZERO, &ONEF, &syn0[indices[i] * N[0] * ngram[0] + i * N[0]], &ONE,
-    #                  &inner_cache[j*N[0]], &ONE, &ZEROF, foo, &ONE)
-    #         scopy(N, foo, &ONE, &inner_cache[j*N[0]], &ONE)
-    #         # printf('%f\n', inner_cache[j*N[0]+1])
+        for j in range(realngram[0]):
+            if j == i:
+                continue
+            our_sbmv(&UPLO, N, &ZERO, &ONEF, &syn0[indices[i] * N[0] * realngram[0] + i * N[0]], &ONE,
+                     &inner_cache[j*N[0]], &ONE, &ZEROF, foo, &ONE)
+            scopy(N, foo, &ONE, &inner_cache[j*N[0]], &ONE)
 
 # to support random draws from negative-sampling cum_table
 cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
