@@ -216,42 +216,42 @@ class smartfile(object):
         for line in self.fin:
             yield line.decode('utf-8').split()
 
-def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
-    dic = {}
-    bigrams = []
-    nline = 95638957
-    for idx, sent in enumerate(text):
-        if idx % 100000 == 0:
-            logger.info('%.2f%% is completed' % (float(idx)/nline * 100))
-        if idx > 0.4*nline: break
-        model.sent2sent_ng(sent)
-        for i in range(len(sent)-1):
-            if sent[i] not in model.vocab or sent[i+1] not in model.vocab: continue
-            if sent[i] + sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
-            if sent[i] == sent[i+1]: continue
-            # we select english bigrams
-            if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
-            if any(l.isdigit() for l in sent[i]) or any(l.isdigit() for l in sent[i+1]): continue
-
-            if iswc:
-                sim = model.similarity_wc(sent[i], sent[i+1], unit=isnormalize) + model.similarity_wc(sent[i+1], sent[i], unit=isnormalize)
-            else:
-                sim = model.similarity(sent[i], sent[i+1], unit=isnormalize) + model.similarity(sent[i+1], sent[i], unit=isnormalize)
-            sim /= 2
-            # prevent a sim to be too low.
-            if sim < 0.4: continue
-            if len(bigrams) < topN:
-                heapq.heappush(bigrams, (sim, (sent[i], sent[i+1])))
-                dic[sent[i] + sent[i+1]] = 0
-            else:
-                foo = heapq.heappop(bigrams)
-                dic.pop(foo[1][0] + foo[1][1], None)
-                dic.pop(foo[1][1] + foo[1][0], None)
-                if foo[0] < sim:
-                    heapq.heappush(bigrams, (sim,(sent[i], sent[i+1])))
-                    dic[sent[i] + sent[i+1]] = 0
-                else:
-                    heapq.heappush(bigrams, foo)
-                    dic[''.join(foo[1])] = 0
-    bigrams = sorted(bigrams, reverse=True)
-    return bigrams
+# def get_bigram(model, text, topN=100000, iswc=True, isnormalize=True):
+#     dic = {}
+#     bigrams = []
+#     nline = 95638957
+#     for idx, sent in enumerate(text):
+#         if idx % 100000 == 0:
+#             logger.info('%.2f%% is completed' % (float(idx)/nline * 100))
+#         if idx > 0.4*nline: break
+#         model.sent2sent_ng(sent)
+#         for i in range(len(sent)-1):
+#             if sent[i] not in model.vocab or sent[i+1] not in model.vocab: continue
+#             if sent[i] + sent[i+1] in dic or sent[i+1] + sent[i] in dic: continue
+#             if sent[i] == sent[i+1]: continue
+#             # we select english bigrams
+#             if len(sent[i]) < 3 or len(sent[i+1]) < 3: continue
+#             if any(l.isdigit() for l in sent[i]) or any(l.isdigit() for l in sent[i+1]): continue
+#
+#             if iswc:
+#                 sim = model.similarity_wc(sent[i], sent[i+1], unit=isnormalize) + model.similarity_wc(sent[i+1], sent[i], unit=isnormalize)
+#             else:
+#                 sim = model.similarity(sent[i], sent[i+1], unit=isnormalize) + model.similarity(sent[i+1], sent[i], unit=isnormalize)
+#             sim /= 2
+#             # prevent a sim to be too low.
+#             if sim < 0.4: continue
+#             if len(bigrams) < topN:
+#                 heapq.heappush(bigrams, (sim, (sent[i], sent[i+1])))
+#                 dic[sent[i] + sent[i+1]] = 0
+#             else:
+#                 foo = heapq.heappop(bigrams)
+#                 dic.pop(foo[1][0] + foo[1][1], None)
+#                 dic.pop(foo[1][1] + foo[1][0], None)
+#                 if foo[0] < sim:
+#                     heapq.heappush(bigrams, (sim,(sent[i], sent[i+1])))
+#                     dic[sent[i] + sent[i+1]] = 0
+#                 else:
+#                     heapq.heappush(bigrams, foo)
+#                     dic[''.join(foo[1])] = 0
+#     bigrams = sorted(bigrams, reverse=True)
+#     return bigrams
